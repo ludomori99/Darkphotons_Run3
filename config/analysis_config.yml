@@ -1,0 +1,237 @@
+#Section for event extraction
+condor:
+  event_fraction: 10
+  grouping_amount_data: 50
+  #54732/50
+  njobs: 1094
+
+#Folders for dumping large number of events
+locations:
+  public_html: /home/submit/public_html/
+  offline:  
+    #have root://submit50.mit.edu// in front 
+    dump: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
+    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
+  MC:  
+    #have root://submit50.mit.edu// in front 
+    dump: mori25/dark_photons_ludo/DimuonTrees/MC/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/logs/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/
+    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/
+
+ntuple_branches: 
+  - Mm_kin_lxy
+  - Mm_kin_l3d
+  - Mm_kin_sl3d
+  - Mm_kin_vtx_chi2dof
+  - Mm_kin_vtx_prob
+  - Mm_kin_alpha
+  - Mm_kin_alphaBS
+  - Mm_closetrk
+  - Mm_closetrks1
+  - Mm_closetrks2
+  - Mm_kin_pvip
+  - Mm_kin_spvip
+  - Mm_kin_eta    
+  - Mm_kin_pvlip
+  - Mm_kin_slxy
+  - Mm_iso
+  - Mm_otherVtxMaxProb
+  - Mm_otherVtxMaxProb1
+  - Mm_otherVtxMaxProb2
+  - Mm_mass
+  - Mm_mu1_pt
+  - Mm_mu1_eta
+  - Mm_mu1_phi
+  - Mm_mu2_pt
+  - Mm_mu2_eta
+  - Mm_mu2_phi
+  - Muon_softMva1
+  - Muon_softMva2
+  - Muon_charge1
+  - Muon_charge2
+  - Muon_Dxy1
+  - Muon_Dxy2
+  - Muon_Dz1
+  - Muon_Dz2
+
+
+#Section for training 
+BDT_training:
+  Y:
+    limits:
+      inclusive: [8.5,11.2]
+      signal: 
+        - [9.405, 9.505]
+      background:
+        - [8.5,9.1]
+        - [10.6,11.2]
+
+
+    #The model we use by default 
+    modelname: tree_standard
+    models:
+
+
+      # Default, powerful model with standard vertex variables
+      forest_standard:
+        hyperpars:
+          objective: 'binary:logistic'
+          max_depth: 8
+          subsample: 0.3
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 2.0
+          min_child_weight: 0
+          colsample_bytree: 1.0
+          num_parallel_tree: 500
+          eval_metric: "logloss"
+          tree_method: "gpu_hist"
+        num_rounds: 50
+        random_seed: 10
+        train_vars:
+          - Mm_kin_lxy
+          - Mm_kin_l3d
+          - Mm_kin_sl3d
+          - Mm_kin_vtx_chi2dof
+          - Mm_kin_vtx_prob
+          - Mm_kin_alpha
+          - Mm_kin_alphaBS
+          - Mm_closetrk
+          - Mm_closetrks1
+          - Mm_closetrks2
+          - Mm_kin_pvip
+          - Mm_kin_spvip
+          - Mm_kin_eta    
+          - Mm_kin_pvlip
+          - Mm_kin_slxy
+          - Mm_iso
+          - Mm_otherVtxMaxProb
+          - Mm_otherVtxMaxProb1
+          - Mm_otherVtxMaxProb2
+
+      #Simpler but faster model     
+      tree_standard:
+        hyperpars:
+          objective: 'binary:logistic'
+          max_depth: 6
+          nthread: 15
+          eval_metric: "auc"
+          subsample: 1.0
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 0.8
+          min_child_weight: 0.0001
+          colsample_bytree: 1.0
+        num_rounds: 50
+        random_seed: 10
+        train_vars:
+          - Mm_kin_lxy
+          - Mm_kin_l3d
+          - Mm_kin_sl3d
+          - Mm_kin_vtx_chi2dof
+          - Mm_kin_vtx_prob
+          - Mm_kin_alpha
+          - Mm_kin_alphaBS
+          - Mm_closetrk
+          - Mm_closetrks1
+          - Mm_closetrks2
+          - Mm_kin_pvip
+          - Mm_kin_spvip
+          - Mm_kin_eta    
+          - Mm_kin_pvlip
+          - Mm_kin_slxy
+          - Mm_iso
+          - Mm_otherVtxMaxProb
+          - Mm_otherVtxMaxProb1
+          - Mm_otherVtxMaxProb2
+    
+    other_vars: #other variables to be kept in the ntuple
+      - Mm_mass
+      - Mm_mu1_pt
+      - Mm_mu1_eta
+      - Mm_mu1_phi
+      - Mm_mu2_pt
+      - Mm_mu2_eta
+      - Mm_mu2_phi
+      - Muon_softMva1
+      - Muon_softMva2
+      - Muon_charge1
+      - Muon_charge2
+      - Muon_Dxy1
+      - Muon_Dxy2
+      - Muon_Dz1
+      - Muon_Dz2
+    
+  Jpsi:
+    limits:
+      inclusive: [2.6,3.56]
+      signal: 
+        - [3.0886,3.0986]
+      background:
+        - [2.6,2.9]
+        - [3.26,3.56]
+    #The model we use by default
+    reduction_factor: 0.1
+    modelname: forest_standard
+    models:
+      # Default, powerful model with standard vertex variables
+      forest_standard:
+        hyperpars:
+          objective: 'binary:logistic'
+          max_depth: 8
+          subsample: 0.3
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 2.0
+          min_child_weight: 0
+          colsample_bytree: 1.0
+          num_parallel_tree: 500
+          eval_metric: "logloss"
+          tree_method: "gpu_hist"
+        num_rounds: 50
+        random_seed: 10
+        train_vars:
+          - Mm_kin_lxy
+          - Mm_kin_l3d
+          - Mm_kin_sl3d
+          - Mm_kin_vtx_chi2dof
+          - Mm_kin_vtx_prob
+          - Mm_kin_alpha
+          - Mm_kin_alphaBS
+          - Mm_closetrk
+          - Mm_closetrks1
+          - Mm_closetrks2
+          - Mm_kin_pvip
+          - Mm_kin_spvip
+          - Mm_kin_eta    
+          - Mm_kin_pvlip
+          - Mm_kin_slxy
+          - Mm_iso
+          - Mm_otherVtxMaxProb
+          - Mm_otherVtxMaxProb1
+          - Mm_otherVtxMaxProb2
+      tree_standard:
+        hyperpars:
+          blabla: blabla
+    other_vars:
+      - Mm_mass
+      - Mm_mu1_pt
+      - Mm_mu1_eta
+      - Mm_mu1_phi
+      - Mm_mu2_pt
+      - Mm_mu2_eta
+      - Mm_mu2_phi
+      - Muon_softMva1
+      - Muon_softMva2
+      - Muon_charge1
+      - Muon_charge2
+      - Muon_Dxy1
+      - Muon_Dxy2
+      - Muon_Dz1
+      - Muon_Dz2
+
+sPlot: 
+ - 
