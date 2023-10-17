@@ -20,18 +20,25 @@ test_or_depl='depl'
 
 ############### DATA EXTRACTION ############
 ###generate the scripts to extract data and MC 
-# python3 $DPLUDO/utils/generate_scripts_extraction.py $test_or_depl
-# echo Generated scripts
+python3 $DPLUDO/utils/generate_scripts_extraction.py $test_or_depl
+echo Generated scripts
 
 ###If needed., create a list with the offline files to extract
 # bash $DPLUDO/pull_data/offline/make_list.sh
 # echo Made list of files to extract 
 
-
 ###submit the condor batch job to extract the offline data
 # condor_submit $DPLUDO/pull_data/offline/condor_off.sub
 
 # TODO : implement check that extraction was successful
+
+
+## Extract MC 
+python3 $DPLUDO/pull_data/MC/slurm_submit.py
+
+
+# TODO : implement check that extraction was successful
+# bash $DPLUDO/pull_data/MC/merge_final.sh
 
 
 ############# SKIM DATA FOR BDT #######################
@@ -40,8 +47,8 @@ test_or_depl='depl'
 
 
 ############## EXECUTE TRAINING ON SKIMMED DATA #################
-python3 $DPLUDO/BDT/training_offline.py
+# python3 $DPLUDO/BDT/training_offline.py
 
 
 ############# LOOK AT TRAINING RESULTS ###########################
-jupyter nbconvert --to notebook --execute $DPLUDO/BDT/view_training.ipynb --output view_training_compiled.ipynb
+# jupyter nbconvert --to notebook --execute $DPLUDO/BDT/view_training.ipynb --output view_training_compiled.ipynb

@@ -5,9 +5,17 @@ condor:
   #54732/50
   njobs: 1094
 
+MC_slurm:
+  grouping_amount_data: 50
+  #3000/50
+  njobs: 60
+  particles:
+    Y1: 553
+    Jpsi: 443
+
 #Folders for dumping large number of events
 locations:
-  public_html: /home/submit/public_html/
+  public_html: /home/submit/mori25/public_html/
   offline:  
     #have root://submit50.mit.edu// in front 
     dump: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
@@ -20,6 +28,7 @@ locations:
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/
+    MINIAOD: /data/submit/wangzqe/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8+Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5+MINIAODSIM/
 
 ntuple_branches: 
   - Mm_kin_lxy
@@ -65,15 +74,15 @@ BDT_training:
       inclusive: [8.5,11.2]
       signal: 
         - [9.405, 9.505]
+        - [10.305, 10.405]
       background:
-        - [8.5,9.1]
-        - [10.6,11.2]
+        - [8.4,8.9]
+        - [10.8,11.3]
 
 
     #The model we use by default 
-    modelname: tree_standard
+    modelname: forest_standard
     models:
-
 
       # Default, powerful model with standard vertex variables
       forest_standard:

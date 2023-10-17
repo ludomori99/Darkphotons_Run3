@@ -10,8 +10,7 @@
 using namespace std;
 
 
-void generateOffDimuonTree(TString inputfilename = "/work/submit/mori25/Darkphotons_ludo/testing/input.root", 
-                    const char* outfilename = "/work/submit/mori25/Darkphotons_ludo/testing/out.root", int event_fraction) {
+void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID) {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree","tree");
@@ -284,7 +283,6 @@ void generateOffDimuonTree(TString inputfilename = "/work/submit/mori25/Darkphot
     while(reader.Next()) {
         if (counter%10000==0) cout << counter << " events completed" << endl;
 	    counter+=1;
-        
         // if (counter%10!=0) continue;
 
         if (*nMuon<2) continue;
@@ -362,9 +360,8 @@ void generateOffDimuonTree(TString inputfilename = "/work/submit/mori25/Darkphot
                 mm_idx = i;
             }
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
-
-
-        if (mm_gen_pdgId[mm_idx] != 443) continue;        
+        
+        if (mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
         Muon_softMva1 = muon_softMva[idx1];
         Muon_softMva2 = muon_softMva[idx2];

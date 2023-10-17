@@ -5,15 +5,23 @@ from config_loader import load_analysis_config,load_test_config
 
 HOME_USER = os.environ["HOMELUDO"]
 DP_USER = os.environ["DPLUDO"]
-OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" 
+OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/") 
 
 config = load_analysis_config()
 
 #Extract config parameters for submission
-grouping_amount_data = config["condor"]["grouping_amount_data"]
+condor_grouping_amount_data = config["condor"]["grouping_amount_data"]
+MC_grouping_amount_data = config["MC_slurm"]["grouping_amount_data"]
+
+off_event_fraction = config["condor"]["event_fraction"]
 off_njobs = config["condor"]["njobs"]
 off_dump_dir = config["locations"]["offline"]["dump"]
 off_logs_dir = config["locations"]["offline"]["logs"]
+
+MC_miniaod = config["locations"]["MC"]["MINIAOD"]
+MC_Jpsi_dir = config["locations"]["MC"]["Jpsi"]
+MC_Y_dir = config["locations"]["MC"]["Y"]
+MC_logs_dir = config["locations"]["MC"]["logs"]
 
 
 ### BASH SCRIPT for offline data to be submitted in condor 
@@ -32,21 +40,21 @@ cd $RELEASE/src
 eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
 cd ../..
 
-start=$(( $1*{grouping_amount_data}+1 ))
-end=$(( $start+{grouping_amount_data} ))
+start=$(( $1*{condor_grouping_amount_data}+1 ))
+end=$(( $start+{condor_grouping_amount_data} ))
 
-for (( N=start; N<=end; N++ )); do
+for (( N=start; N<end; N++ )); do
 
     file=$(cat ./list.txt | sed -n ''$N'p')
     echo running $file
     xrdcp -f root://eoscms.cern.ch/$file input.root
-    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\)
+    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,  {off_event_fraction} \)
 
 done
 hadd r3tree.root r3tree_*.root
 xrdcp -f r3tree.root root://submit50.mit.edu//{off_dump_dir}/DimuonTree$1.root
 """
-with open(DP_USER+"/pull_data/offline/run_merge_off.sh", "w") as file:
+with open(os.path.join(DP_USER,"pull_data/offline/run_merge_off.sh"), "w") as file:
     file.write(template_offline_bash)
 
 ### CONDOR SCRIPT
@@ -70,7 +78,66 @@ log = {off_logs_dir}job.$(Process).log
 Universe = vanilla
 queue {off_njobs}"""
 
-with open(DP_USER+"pull_data/offline/condor_off.sub", "w") as file:
+with open(os.path.join(DP_USER,"pull_data/offline/condor_off.sub"), "w") as file:
     file.write(template_offline_condor)
+
+
+### BASH SCRIPT for Y meson MC data to be submitted in bash 
+template_MC_Y_bash = rf"""
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cd {DP_USER}CMSSW_13_0_6/src
+eval `scramv1 runtime -sh`
+cd {DP_USER}pull_data/MC/
+
+start=$(( $1*{MC_grouping_amount_data}+1 ))
+end=$(( $start+{MC_grouping_amount_data} ))
+
+for (( N=start; N<end; N++ )); do
+        file=$( cat files.txt | sed -n ''$N'p')
+        echo running $file
+        infile="{MC_miniaod}$file"
+        root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"{MC_Y_dir}MCtree_$N.root\"\,553\)
+    done
+
+hadd -f {MC_Y_dir}MCDimuonTree_merged_$1.root {MC_Y_dir}MCtree_*.root
+"""
+with open(os.path.join(DP_USER,"pull_data/MC/run_merge_MC_Y.sh"), "w") as file:
+    file.write(template_MC_Y_bash)
+
+
+### BASH SCRIPT for Jpsi meson MC data to be submitted in bash 
+template_MC_Jpsi_bash = rf"""
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cd {DP_USER}CMSSW_13_0_6/src
+eval `scramv1 runtime -sh`
+cd {DP_USER}pull_data/MC/
+
+start=$(( $1*{MC_grouping_amount_data}+1 ))
+end=$(( $start+{MC_grouping_amount_data} ))
+
+for (( N=start; N<end; N++ )); do
+        file=$( cat files.txt | sed -n ''$N'p')
+        echo running $file
+        infile="{MC_miniaod}$file"
+        root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"{MC_Jpsi_dir}MCtree_$N.root\"\,443\)
+    done
+
+hadd -f {MC_Jpsi_dir}MCDimuonTree_merged_$1.root {MC_Jpsi_dir}MCtree_*.root
+"""
+with open(os.path.join(DP_USER,"pull_data/MC/run_merge_MC_Jpsi.sh"), "w") as file:
+    file.write(template_MC_Jpsi_bash)
+
+
+### BASH SCRIPT FOR FINAL MERGING OF MC AND CLEANUP #####
+
+template_MC_merge_final_bash = rf"""
+hadd -f {MC_Y_dir}merged.root {MC_Y_dir}MCDimuonTree_merged_*.root
+hadd -f {MC_Jpsi_dir}merged.root {MC_Jpsi_dir}MCDimuonTree_merged_*.root
+
+rm {MC_Y_dir}MC*
+rm {MC_Jpsi_dir}MC*
+"""
+with open(os.path.join(DP_USER,"pull_data/MC/merge_final.sh"), "w") as file:
+    file.write(template_MC_merge_final_bash)
 
 
