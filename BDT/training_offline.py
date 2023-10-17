@@ -8,8 +8,7 @@ from sklearn.metrics import precision_score, accuracy_score
 import uproot as up
 import pandas as pd 
 import awkward as ak
-import os 
-
+import os
 from config_loader import load_analysis_config
 
 """
@@ -68,8 +67,9 @@ class Trainer:
         sig['Score'] = 1
         bkg['Score'] = 0
 
-        trainData = pd.concat([sig,bkg])
-        X_temp, self.X_test, y_temp, self.y_test = train_test_split(trainData[self.train_vars], trainData["Score"], test_size=0.5, shuffle=True, random_state=random_seed)
+        self.trainData = pd.concat([sig,bkg])
+        self.trainData_skinny = self.trainData[self.train_vars]
+        X_temp, self.X_test, y_temp, self.y_test = train_test_split(self.trainData_skinny, self.trainData["Score"], test_size=0.5, shuffle=True, random_state=random_seed)
         self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(X_temp, y_temp, test_size=0.5, shuffle=True, random_state=random_seed)
         self.dtrain = xgb.DMatrix(self.X_train, label=self.y_train)
         self.dval = xgb.DMatrix(self.X_val, label=self.y_val)
@@ -80,7 +80,7 @@ class Trainer:
         evallist = [(self.dtrain, 'train'), (self.dval, 'eval')]
         self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evallist)
         self.bst.save_model(DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json")
-        print("Training successful, model saved to file " + DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json")
+        print("Training successful, model saved to file " + DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname + "_" + self.particle + ".json")
         return
 
     def load_model(self):
@@ -120,12 +120,12 @@ class Trainer:
         if saveas: plt.savefig(saveas)
         return
     
-    def plot_model(self):
+    def plot_model(self,**kwargs):
         self.val_bkg=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==0]))
         self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
         self.train_bkg=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==0]))
         self.train_sig=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==1]))
-        self.plot_hist([self.val_bkg,self.val_sig,self.train_bkg,self.train_sig],["Bkg.","Sig.","Training bkg.","Train sig."],nbins =100, density=True, xlabel="BDT score")
+        self.plot_hist([self.val_bkg,self.val_sig,self.train_bkg,self.train_sig],["Bkg.","Sig.","Training bkg.","Train sig."],nbins =100, density=True, xlabel="BDT score",**kwargs)
 
 
 
@@ -184,7 +184,7 @@ def plot_ROC(train,test,bsts,labels, tmva=None, log = False):
 if __name__ == "__main__":
     Y_trainer = Trainer("Y")
     Y_trainer.complete_train()
-    Y_trainer.plot_model()
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png")
 
     # Jpsi_trainer = Trainer("Jpsi")
     # Jpsi_trainer.complete_train()
