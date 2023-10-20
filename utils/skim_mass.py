@@ -31,42 +31,44 @@ def write_tree_data(particle):
     branches = config["ntuple_branches"]
     branch_dic = {branch: 'float' for branch in branches}
 
-    with up.recreate(off_dir + "merged_A.root") as outfile:
+    with up.recreate(os.path.join(off_dir, "merged_A.root")) as outfile:
+        print("Start processing ",os.path.join(off_dir, "merged_A.root"))
         outfile.mktree("tree",branch_dic)
         error_indices = []
         for i in range(config["condor"]["njobs"]):
-            try: intree = up.open(off_dump_dir+"DimuonTree"+str(i)+".root:tree")
+            if i and i%10 == 0: print("done file #", i)
+            try: 
+                intree = up.open(off_dump_dir+"DimuonTree"+str(i)+".root:tree")
+
+                #define mass cut 
+                mass = intree["Mm_mass"].array()
+                mass_cut = ((mass>mass_range[0])&(mass<mass_range[1]))
+
+                #define reduction factor cut
+                num_events_surviving = int(np.sum(mass_cut)*reduction_factor)
+                cut_reduction_idc = random.sample(range(np.sum(mass_cut)), num_events_surviving)
+
+                #initialize empty dictionary tree
+                tree = {}
+
+                #fill tree with infile with mass cuts
+                for branch in branch_dic.keys(): 
+                    tree[branch] = intree[branch].array()[mass_cut][cut_reduction_idc]
+
+                #extend the outfile with the dictionary for current file
+                outfile["tree"].extend(tree)
+
             except Exception as e: 
                 print(e, " error at ", i)
                 error_indices.append(i)
                 continue
                 
-            #define mass cut 
-            mass = intree["Mm_mass"].array()
-            mass_cut = ((mass>mass_range[0])&(mass<mass_range[1]))
-
-            #define reduction factor cut
-            num_events_surviving = int(np.sum(mass_cut)*reduction_factor)
-            cut_reduction_idc = random.sample(range(np.sum(mass_cut)), num_events_surviving)
-            cut_reduction = np.zeros((np.sum(mass_cut),))
-            cut_reduction[cut_reduction_idc]=1
-
-            #initialize empty dictionary tree
-            tree = {}
-
-            #fill tree with infile with mass cuts
-            for branch in branch_dic.keys(): 
-                tree[branch] = intree[branch].array()[mass_cut][cut_reduction.astype(int)]
-
-            #extend the outfile with the dictionary for current file
-            outfile["tree"].extend(tree)
-            if i%10 == 0: print("done file #", i)
         print("Error extracting files with indices: ", error_indices)
 
     return
 
 
 if __name__ == "__main__":
-    write_tree_data("Y")
+    # write_tree_data("Y")
     write_tree_data("Jpsi")
 

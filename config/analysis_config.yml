@@ -80,11 +80,10 @@ BDT_training:
       background:
         - [8.4,8.9]
         - [10.8,11.3]
-    reduction_factor: 1
+    reduction_factor: 0.1
     #The model we use by default 
     modelname: forest_standard
     models:
-
       # Default, powerful model with standard vertex variables
       forest_standard:
         hyperpars:
@@ -184,7 +183,7 @@ BDT_training:
         - [2.6,2.9]
         - [3.26,3.56]
     #The model we use by default
-    reduction_factor: 0.1
+    reduction_factor: 0.01
     modelname: forest_standard
     models:
       # Default, powerful model with standard vertex variables

@@ -46,6 +46,7 @@ class Trainer:
         return
     
     def load_data(self):
+        print("Start loading data")
         self.off_dir = config["locations"]["offline"][self.particle]
         self.full_mass_range = up.open(self.off_dir+"merged_A.root:tree").arrays(library = 'pd')
         self.mass = self.full_mass_range["Mm_mass"]
@@ -75,6 +76,7 @@ class Trainer:
         bkg = self.full_mass_range[bkg_cut]
         sig['Score'] = 1
         bkg['Score'] = 0
+        sig_frac = len(sig)/(len(sig)+len(bkg))
 
         self.trainData = pd.concat([sig,bkg])
         self.trainData_skinny = self.trainData[self.train_vars]
@@ -82,20 +84,22 @@ class Trainer:
         self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(X_temp, y_temp, test_size=0.5, shuffle=True, random_state=random_seed)
         self.dtrain = xgb.DMatrix(self.X_train, label=self.y_train)
         self.dval = xgb.DMatrix(self.X_val, label=self.y_val)
-        print("Defined training and evaluation datasets")
+        print(f"Defined training and evaluation datasets\nTrain on {len(self.X_train)} events, of which a fraction {sig_frac} is signal, and {len(self.train_vars)} variables")
 
     def train_model(self):
         num_round = self.train_config["models"][self.modelname]["num_rounds"]
         evallist = [(self.dtrain, 'train'), (self.dval, 'eval')]
         self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evallist)
-        self.bst.save_model(DP_USER+"BDT/trained_models"+"/"+ self.modelname +".json")
-        print("Training successful, model saved to file " + DP_USER+"BDT/trained_models"+"/"+ self.modelname + "_" + self.particle + ".json")
+        self.bst.save_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
+        print("Training successful, model saved to file " + os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
         return
 
     def load_model(self):
         self.bst = xgb.Booster()
+        print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
         try:
-            self.bst.load_model(DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json")
+            self.bst.load_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
+            print("loading successful")
         except Exception as e:
             print(e)
         return 
