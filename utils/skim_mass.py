@@ -66,28 +66,7 @@ def write_tree_data(particle):
     return
 
 
-def write_MC_tree():
-    outfile = up.recreate("/data/submit/mori25/DPh/MC/Upsilon/merged_with_BDT_clean.root") #have mvaID as separate branches 
-    dic_mm = {branch: "float" for branch in branches_single}
-    dic = {**dic_mm, "Muon_softMva1" : "float", "Muon_softMva2" : "float", "vtx_BDT_forest": "float"}
-    outfile.mktree("tree", dic)
- 
-    intree = up.open("/data/submit/mori25/DPh/MC/Upsilon/merged_with_BDT.root:tree").arrays()
-
-    out_tree = {}
-    for branch in dic.keys():
-        print("trying to import ", branch) 
-        if branch[:4] == "Muon" : 
-            out_tree[branch] = intree[branch[:-1]][:,int(branch[-1])-1]
-        else : 
-            out_tree[branch] = intree[branch]
-
-    outfile["tree"].extend(out_tree)
-
-    return 
-
-
 if __name__ == "__main__":
-    # write_tree_data("Y")
+    write_tree_data("Y")
     write_tree_data("Jpsi")
 

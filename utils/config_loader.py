@@ -6,7 +6,7 @@ DP_USER = os.environ["DPLUDO"]
     
 def load_test_config():
     try:
-        with open(DP_USER+"config/test_config.yml", "r") as f:
+        with open(os.path.join(DP_USER,"config/test_config.yml"), "r") as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return config
 
@@ -16,7 +16,7 @@ def load_test_config():
 
 def load_analysis_config():
     try:
-        with open(DP_USER+"config/analysis_config.yml", "r") as f:
+        with open(os.path.join(DP_USER,"config/analysis_config.yml"), "r") as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
         return config
 

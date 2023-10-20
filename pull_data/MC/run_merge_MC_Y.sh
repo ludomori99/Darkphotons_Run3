@@ -13,5 +13,3 @@ for (( N=start; N<end; N++ )); do
         infile="/data/submit/wangzqe/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8+Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5+MINIAODSIM/$file"
         root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/MCtree_$N.root\"\,553\)
     done
-
-hadd -f /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/MCDimuonTree_merged_$1.root /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/MCtree_*.root

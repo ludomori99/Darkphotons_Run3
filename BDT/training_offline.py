@@ -9,16 +9,25 @@ import uproot as up
 import pandas as pd 
 import awkward as ak
 import os
-from config_loader import load_analysis_config
+import yaml
 
 """
 Define imports, variables, and functions for later use
 
 """
 
-HOME_USER = os.environ["HOMELUDO"]
-DP_USER = os.environ["DPLUDO"]
-OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" 
+HOME_USER = os.environ["HOMELUDO"] or None
+DP_USER = os.environ["DPLUDO"] or None
+OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" or None
+
+def load_analysis_config():
+    try:
+        with open(os.path.join(DP_USER,"config/analysis_config.yml"), "r") as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+        return config
+
+    except Exception as e: 
+        raise e
 
 config = load_analysis_config()
 
@@ -79,14 +88,14 @@ class Trainer:
         num_round = self.train_config["models"][self.modelname]["num_rounds"]
         evallist = [(self.dtrain, 'train'), (self.dval, 'eval')]
         self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evallist)
-        self.bst.save_model(DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json")
-        print("Training successful, model saved to file " + DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname + "_" + self.particle + ".json")
+        self.bst.save_model(DP_USER+"BDT/trained_models"+"/"+ self.modelname +".json")
+        print("Training successful, model saved to file " + DP_USER+"BDT/trained_models"+"/"+ self.modelname + "_" + self.particle + ".json")
         return
 
     def load_model(self):
         self.bst = xgb.Booster()
         try:
-            self.bst.load_model( DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json" )
+            self.bst.load_model(DP_USER+"BDT/trained_models_"+self.particle+"/"+ self.modelname +".json")
         except Exception as e:
             print(e)
         return 
@@ -182,9 +191,9 @@ def plot_ROC(train,test,bsts,labels, tmva=None, log = False):
 
 
 if __name__ == "__main__":
-    Y_trainer = Trainer("Y")
+    Y_trainer = Trainer("Y", 'tree_standard')
     Y_trainer.complete_train()
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png")
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_tree_standard.png")
 
     # Jpsi_trainer = Trainer("Jpsi")
     # Jpsi_trainer.complete_train()

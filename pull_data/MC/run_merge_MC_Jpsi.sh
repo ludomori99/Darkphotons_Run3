@@ -14,4 +14,3 @@ for (( N=start; N<end; N++ )); do
         root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/MCtree_$N.root\"\,443\)
     done
 
-hadd -f /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/MCDimuonTree_merged_$1.root /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/MCtree_*.root

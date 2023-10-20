@@ -1,3 +1,4 @@
 *.root
 *.json
 CMSSW_13_0_6
+*__pycache__/*

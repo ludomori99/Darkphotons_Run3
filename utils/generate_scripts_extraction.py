@@ -98,9 +98,7 @@ for (( N=start; N<end; N++ )); do
         infile="{MC_miniaod}$file"
         root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"{MC_Y_dir}MCtree_$N.root\"\,553\)
     done
-
-hadd -f {MC_Y_dir}MCDimuonTree_merged_$1.root {MC_Y_dir}MCtree_*.root
-"""
+"""#hadd -f {MC_Y_dir}MCDimuonTree_merged_$1.root {MC_Y_dir}MCtree_*.root
 with open(os.path.join(DP_USER,"pull_data/MC/run_merge_MC_Y.sh"), "w") as file:
     file.write(template_MC_Y_bash)
 
@@ -122,8 +120,8 @@ for (( N=start; N<end; N++ )); do
         root -l -b -q generateMCDimuonTree.C\(\"$infile\"\,\"{MC_Jpsi_dir}MCtree_$N.root\"\,443\)
     done
 
-hadd -f {MC_Jpsi_dir}MCDimuonTree_merged_$1.root {MC_Jpsi_dir}MCtree_*.root
 """
+# hadd -f {MC_Jpsi_dir}MCDimuonTree_merged_$1.root {MC_Jpsi_dir}MCtree_*.root
 with open(os.path.join(DP_USER,"pull_data/MC/run_merge_MC_Jpsi.sh"), "w") as file:
     file.write(template_MC_Jpsi_bash)
 
@@ -131,11 +129,15 @@ with open(os.path.join(DP_USER,"pull_data/MC/run_merge_MC_Jpsi.sh"), "w") as fil
 ### BASH SCRIPT FOR FINAL MERGING OF MC AND CLEANUP #####
 
 template_MC_merge_final_bash = rf"""
-hadd -f {MC_Y_dir}merged.root {MC_Y_dir}MCDimuonTree_merged_*.root
-hadd -f {MC_Jpsi_dir}merged.root {MC_Jpsi_dir}MCDimuonTree_merged_*.root
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cd {DP_USER}CMSSW_13_0_6/src
+eval `scramv1 runtime -sh`
+cd {DP_USER}pull_data/MC/
+hadd -f {MC_Y_dir}merged.root {MC_Y_dir}MCtree*.root
+hadd -f {MC_Jpsi_dir}merged.root {MC_Jpsi_dir}MCtree*.root
 
-rm {MC_Y_dir}MC*
-rm {MC_Jpsi_dir}MC*
+# rm {MC_Y_dir}MC*
+# rm {MC_Jpsi_dir}MC*
 """
 with open(os.path.join(DP_USER,"pull_data/MC/merge_final.sh"), "w") as file:
     file.write(template_MC_merge_final_bash)
