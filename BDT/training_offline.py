@@ -40,28 +40,29 @@ Load data : 0.5 test, 0.25 val, 0.25 train
 class Trainer:
 
     def __init__(self, particle, modelname = None) -> None:
-        self.particle = particle
+        self.particle = particle #the particle on which training was performed
         self.modelname = modelname
-        self.train_config = config["BDT_training"][particle]
+        self.particle_config = config["BDT_training"][particle]
         return
     
-    def load_data(self):
+    def load_data(self, data_particle = None):
         print("Start loading data")
-        self.off_dir = config["locations"]["offline"][self.particle]
+        if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
+        else :  self.off_dir = config["locations"]["offline"][self.particle]
         self.full_mass_range = up.open(self.off_dir+"merged_A.root:tree").arrays(library = 'pd')
         self.mass = self.full_mass_range["Mm_mass"]
         print("Successfully imported data file to memory")
         return
     
-    def prepare_training_set(self):
+    def prepare_training_set(self,data_particle = None):
         #Define signal and background
-        sig_lims = self.train_config["limits"]["signal"]
-        bkg_lims = self.train_config["limits"]["background"]
+        sig_lims = self.particle_config["limits"]["signal"] if not data_particle else config["BDT_training"][data_particle]["limits"]["signal"] 
+        bkg_lims = self.particle_config["limits"]["background"] if not data_particle else config["BDT_training"][data_particle]["limits"]["background"] 
 
-        if self.modelname == None: self.modelname = self.train_config["modelname"]
-        self.hyperpars = self.train_config["models"][self.modelname]["hyperpars"]
-        self.train_vars = self.train_config["models"][self.modelname]["train_vars"] 
-        random_seed = self.train_config["models"][self.modelname]["random_seed"]
+        if self.modelname == None: self.modelname = self.particle_config["modelname"]
+        self.hyperpars = self.particle_config["models"][self.modelname]["hyperpars"]
+        self.train_vars = self.particle_config["models"][self.modelname]["train_vars"] 
+        random_seed = self.particle_config["models"][self.modelname]["random_seed"]
 
         #for loop over pair of extremals of signal/bkg regions, to keep as general as possible in case of multiple signal/bkg intervals
         sig_cut = (self.mass < -1e3)
@@ -72,11 +73,11 @@ class Trainer:
         for lims in bkg_lims:
             bkg_cut = bkg_cut | ((self.mass>lims[0])&(self.mass<lims[1]))
 
-        sig = self.full_mass_range[sig_cut]
-        bkg = self.full_mass_range[bkg_cut]
+        sig = pd.DataFrame(self.full_mass_range[sig_cut])
+        bkg = pd.DataFrame(self.full_mass_range[bkg_cut])
         sig['Score'] = 1
         bkg['Score'] = 0
-        sig_frac = len(sig)/(len(sig)+len(bkg))
+        sig_frac = -1 if (len(sig)+len(bkg)) == 0 else len(sig)/(len(sig)+len(bkg))
 
         self.trainData = pd.concat([sig,bkg])
         self.trainData_skinny = self.trainData[self.train_vars]
@@ -87,18 +88,18 @@ class Trainer:
         print(f"Defined training and evaluation datasets\nTrain on {len(self.X_train)} events, of which a fraction {sig_frac} is signal, and {len(self.train_vars)} variables")
 
     def train_model(self):
-        num_round = self.train_config["models"][self.modelname]["num_rounds"]
+        num_round = self.particle_config["models"][self.modelname]["num_rounds"]
         evallist = [(self.dtrain, 'train'), (self.dval, 'eval')]
-        self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evallist)
-        self.bst.save_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
-        print("Training successful, model saved to file " + os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
+        self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evals=evallist)
+        self.bst.save_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
+        print("Training successful, model saved to file " + os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
         return
 
     def load_model(self):
         self.bst = xgb.Booster()
-        print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
+        print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
         try:
-            self.bst.load_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname,"_",self.particle,".json"))
+            self.bst.load_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
             print("loading successful")
         except Exception as e:
             print(e)
@@ -109,9 +110,9 @@ class Trainer:
         self.prepare_training_set()
         self.train_model()
 
-    def complete_load(self):
-        self.load_data()
-        self.prepare_training_set()
+    def complete_load(self, data_particle = None):
+        self.load_data(data_particle)
+        self.prepare_training_set(data_particle)
         self.load_model()
 
     @staticmethod
@@ -141,28 +142,27 @@ class Trainer:
         self.plot_hist([self.val_bkg,self.val_sig,self.train_bkg,self.train_sig],["Bkg.","Sig.","Training bkg.","Train sig."],nbins =100, density=True, xlabel="BDT score",**kwargs)
 
 
-
-def plot_ROC(train,test,bsts,labels, tmva=None, log = False):
+def plot_ROC(trainers,labels, tmva=None, log = False):
     hep.style.use("CMS")
     colors = plt.cm.tab10.colors
     fig, ax = plt.subplots(figsize=(9,9))
     hep.cms.text("Preliminary")
 
-    true_test_sig = test.get_label()==1
-    true_test_bkg = ~true_test_sig
-
-    true_train_sig = train.get_label()==1
-    true_train_bkg = ~true_train_sig
-
     dis = np.linspace(0.01,0.99,20)
 
-    for bst,c1,c2,l in zip(bsts,colors,colors[3:],labels):
+    for trainer,c1,c2,l in zip(trainers,colors,colors[3:],labels):
+
+        true_test_sig = trainer.dval.get_label()==1
+        true_test_bkg = ~true_test_sig
+        true_train_sig = trainer.dtrain.get_label()==1
+        true_train_bkg = ~true_train_sig
+
         sig_eff_test = []
         bkg_rej_test = []
         sig_eff_train = []
         bkg_rej_train = []
-        preds_test = bst.predict(test)
-        preds_train = bst.predict(train)
+        preds_test = trainer.bst.predict(trainer.dval)
+        preds_train = trainer.bst.predict(trainer.dtrain)
         for d in dis:
             pred_test_sig = preds_test>d
             pred_test_bkg = ~pred_test_sig
@@ -195,9 +195,13 @@ def plot_ROC(train,test,bsts,labels, tmva=None, log = False):
 
 
 if __name__ == "__main__":
-    Y_trainer = Trainer("Y", 'tree_standard')
+    Y_trainer = Trainer("Y", 'forest_ID')
     Y_trainer.complete_train()
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_tree_standard.png")
+    Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
+
+    # Y_trainer = Trainer("Y", 'tree_standard')
+    # Y_trainer.complete_train()
+    # Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
 
     # Jpsi_trainer = Trainer("Jpsi")
     # Jpsi_trainer.complete_train()
