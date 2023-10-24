@@ -48,7 +48,7 @@ void sPlot(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "
    Double_t lowRange;
    Double_t highRange;
 
-   load_config(meson, isMC, file_name, fig_name, model_name, inputfilename, lowRange, highRange, "");
+   load_config(meson, isMC, file_name, fig_name, model_name, inputfilename, lowRange, highRange, "1M");
 
    if (string(meson) == "Jpsi") AddModelJ(wspace,isMC, lowRange, highRange);
    else if (string(meson) == "Y"){
@@ -156,7 +156,7 @@ void AddModelJ(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
       sigYield.setVal(90000);
       sigYield.setRange(0,1000000);
       bkgYield.setVal(10000);
-      bkgYield.setRange(0,100000);
+      bkgYield.setRange(0,1000000);
    }
 
    // now make the combined models
@@ -179,21 +179,21 @@ void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    RooGaussian Gaussian1("Gaussian1", "Gaussian1", Mm_mass, mu1, sigma1);
    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.1, 0.01, 0.1, "GeV");
    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.1, 0.01, 0.1, "GeV");
-   RooRealVar n1("n1", "n CB", 5, 1,10, "");
+   RooRealVar n1("n1", "n CB", 5, 1.5,10, "");
    RooRealVar alpha("alpha", "Alpha  CB", 0.376, 0.001, 3, "");
    RooCrystalBall CB1("CB1", "CB", Mm_mass, mu1, sigmaL, sigmaR, alpha,n1,alpha,n1);
    RooRealVar GaussFraction("GaussFraction", "Fraction of Gaussian", 0.459, 0, 1, "");
    RooAddPdf sig1("sig1", "Y mass model", RooArgList(Gaussian1, CB1), GaussFraction);
 
    RooRealVar mu2("mu2", "Y Mass", 10.01066, lowRange, highRange);
-   RooRealVar sigma2("sigma2", "Width of Gaussian", 0.1, 0.001, 0.2, "GeV");
+   RooRealVar sigma2("sigma2", "Width of Gaussian", 0.1, 0.01, 0.2, "GeV");
    RooGaussian Gaussian2("Gaussian2", "Gaussian2", Mm_mass, mu2, sigma2);
-   RooRealVar n2("n2", "nL CB", 2, 1,10, "");
+   RooRealVar n2("n2", "nL CB", 2, 1.5,10, "");
    RooCrystalBall CB2("CB2", "CB", Mm_mass, mu2, sigmaL, sigmaR, alpha,n2,alpha,n2);
    RooAddPdf sig2("sig2", "Y mass model", RooArgList(Gaussian2, CB2), GaussFraction);
 
    RooRealVar mu3("mu3", "Y Mass", 10.339, lowRange, highRange);
-   RooRealVar sigma3("sigma3", "Width of Gaussian", 0.0888, 0.001, 0.2, "GeV");
+   RooRealVar sigma3("sigma3", "Width of Gaussian", 0.0888, 0.01, 0.2, "GeV");
    RooGaussian Gaussian3("Gaussian3", "Gaussian3", Mm_mass, mu3, sigma3);
    RooRealVar n3("n3", "nL CB", 10, 2,10, "");
    RooCrystalBall CB3("CB3", "CB", Mm_mass, mu3, sigmaL, sigmaR, alpha,n3,alpha,n3);
@@ -205,7 +205,7 @@ void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    
    // make bkg model
    std::cout << "make bkg model" << std::endl;
-   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -0.353, -100, 100, "1/GeV");
+   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -0.353, -10, 10, "1/GeV");
    RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);
  
    // --------------------------------------
@@ -221,10 +221,10 @@ void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    }
 
    else{
-      sigYield.setVal(4000000);
-      sigYield.setRange(0,10000000);
+      sigYield.setVal(400000);
+      sigYield.setRange(0,1000000);
       bkgYield.setVal(500000);
-      bkgYield.setRange(0,10000000);
+      bkgYield.setRange(0,1000000);
    }
 
    // now make the combined models
@@ -312,10 +312,31 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
 
    RooRealVar Muon_softMva1("Muon_softMva1", "Muon_softMva1", -1, 1);
    RooRealVar Muon_softMva2("Muon_softMva2", "Muon_softMva2", -1, 1);
-   RooRealVar Mm_kin_lxy("Mm_kin_lxy", "Mm_kin_lxy", 0, 0.1);
+   RooRealVar Mm_kin_lxy("Mm_kin_lxy", "Mm_kin_lxy", 0, 100);
    RooRealVar Mm_kin_eta("Mm_kin_eta", "Mm_kin_eta", -10, 10);
 
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, forest_standard_Y_mva,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta), Import(*tree));
+   //training vars
+   RooRealVar Mm_kin_l3d("Mm_kin_l3d", "Mm_kin_l3d", -1000000, 1000000);
+   RooRealVar Mm_kin_sl3d("Mm_kin_sl3d", "Mm_kin_sl3d", -1000000, 1000000);
+   RooRealVar Mm_kin_vtx_chi2dof("Mm_kin_vtx_chi2dof", "Mm_kin_vtx_chi2dof", -1000000, 1000000);
+   RooRealVar Mm_kin_vtx_prob("Mm_kin_vtx_prob", "Mm_kin_vtx_prob", -1000000, 1000000);
+   RooRealVar Mm_kin_alpha("Mm_kin_alpha", "Mm_kin_alpha", -1000000, 1000000);
+   RooRealVar Mm_kin_alphaBS("Mm_kin_alphaBS", "Mm_kin_alphaBS", -1000000, 1000000);
+   RooRealVar Mm_closetrk("Mm_closetrk", "Mm_closetrk", -1000000, 1000000);
+   RooRealVar Mm_closetrks1("Mm_closetrks1", "Mm_closetrks1", -1000000, 1000000);
+   RooRealVar Mm_closetrks2("Mm_closetrks2", "Mm_closetrks2", -1000000, 1000000);
+   RooRealVar Mm_kin_pvip("Mm_kin_pvip", "Mm_kin_pvip", -1000000, 1000000);
+   RooRealVar Mm_kin_spvip("Mm_kin_spvip", "Mm_kin_spvip", -1000000, 1000000);
+   RooRealVar Mm_kin_pvlip("Mm_kin_pvlip", "Mm_kin_pvlip", -1000000, 1000000);
+   RooRealVar Mm_kin_slxy("Mm_kin_slxy", "Mm_kin_slxy", -1000000, 1000000);
+   RooRealVar Mm_iso("Mm_iso", "Mm_iso", -1000000, 1000000);
+   RooRealVar Mm_otherVtxMaxProb("Mm_otherVtxMaxProb", "Mm_otherVtxMaxProb", -1000000, 1000000);
+   RooRealVar Mm_otherVtxMaxProb1("Mm_otherVtxMaxProb1", "Mm_otherVtxMaxProb1", -1000000, 1000000);
+   RooRealVar Mm_otherVtxMaxProb2("Mm_otherVtxMaxProb2", "Mm_otherVtxMaxProb2", -1000000, 1000000);
+
+   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, forest_standard_Y_mva,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
+      Mm_kin_vtx_prob,Mm_kin_alpha,Mm_kin_alphaBS,Mm_closetrk,Mm_closetrks1,Mm_closetrks2,Mm_kin_pvip,Mm_kin_spvip,Mm_kin_pvlip,Mm_kin_slxy,Mm_iso,Mm_otherVtxMaxProb,
+      Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree));
 
    Int_t numEntries = data_full.numEntries();
    TBits outputBits = TBits(numEntries);
