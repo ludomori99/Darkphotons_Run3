@@ -67,7 +67,7 @@ def evaluate_BDT(meson, model):
             chunk[model+"_mva"] = pred_off
             output_file["tree"].extend(chunk)
             i+=1
-            print(f"Finished chunk {i}/{n_chunks} in from {meson} meson")
+            print(f"Finished chunk {i}/{n_chunks} in from {meson} meson", end = '\r')
         print("Finished processing data")
 
     subprocess.run('mv '+os.path.join(config["locations"]["offline"][meson], "tmp.root") + ' ' + os.path.join(config["locations"]["offline"][meson], "merged_A.root"), shell=True)
