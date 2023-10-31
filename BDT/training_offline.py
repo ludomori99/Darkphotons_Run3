@@ -10,15 +10,18 @@ import pandas as pd
 import awkward as ak
 import os
 import yaml
+from numba_stats import expon # crystalball,crystalball_ex, norm, expon, voigt, truncexpon
+from iminuit.cost import LeastSquares #,  ExtendedBinnedNLL,ExtendedUnbinnedNLL,
+from iminuit import Minuit
 
 """
 Define imports, variables, and functions for later use
 
 """
 
-HOME_USER = os.environ["HOMELUDO"] or None
-DP_USER = os.environ["DPLUDO"] or None
-OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" or None
+HOME_USER = os.environ.get("HOMELUDO", None)
+DP_USER = os.environ.get("DPLUDO", None)
+OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" if DP_USER else None
 
 def load_analysis_config():
     try:
@@ -41,8 +44,9 @@ class Trainer:
 
     def __init__(self, particle, modelname = None) -> None:
         self.particle = particle #the particle on which training was performed
-        self.modelname = modelname
         self.particle_config = config["BDT_training"][particle]
+        if modelname is not None: self.modelname = modelname
+        else: self.modelname = self.particle_config["BDT_training"]["modelname"]
         return
     
     def load_data(self, data_particle = None):
@@ -54,7 +58,13 @@ class Trainer:
         print("Successfully imported data file to memory")
         return
     
-    def prepare_training_set(self,data_particle = None):
+    def prepare_training_set(self,data_particle = None, data_override=None, weights = None):
+        """
+        data_particle: if want to evaluate on particle different from particle from training given in __init__
+        """
+        if data_override is not None: 
+            self.full_mass_range = data_override
+            self.mass = self.full_mass_range["Mm_mass"]
         #Define signal and background
         sig_lims = self.particle_config["limits"]["signal"] if not data_particle else config["BDT_training"][data_particle]["limits"]["signal"] 
         bkg_lims = self.particle_config["limits"]["background"] if not data_particle else config["BDT_training"][data_particle]["limits"]["background"] 
@@ -75,16 +85,26 @@ class Trainer:
 
         sig = pd.DataFrame(self.full_mass_range[sig_cut])
         bkg = pd.DataFrame(self.full_mass_range[bkg_cut])
+
         sig['Score'] = 1
         bkg['Score'] = 0
         sig_frac = -1 if (len(sig)+len(bkg)) == 0 else len(sig)/(len(sig)+len(bkg))
 
-        self.trainData = pd.concat([sig,bkg])
+        self.trainData = pd.concat([sig,bkg]).reset_index(drop=True)
         self.trainData_skinny = self.trainData[self.train_vars]
+
+        if weights is not None: 
+            sig_weights = weights[sig_cut]
+            bkg_weights = np.ones_like(bkg_cut)
+            weights = np.concatenate((sig_weights,bkg_weights))     
+            print(f"Total signal weight: {np.sum(sig_weights)}, {np.round(np.sum(sig_weights)/(np.sum(sig_weights)+np.sum(bkg_weights)),2)} of total weight")
+        
+        #NB: train_test_split conserves row indexing throughout splitting. Indexing range remains that of trainData (meaning X_train and X_val will be smaller than trainData but retain the corresponding indices)
+
         X_temp, self.X_test, y_temp, self.y_test = train_test_split(self.trainData_skinny, self.trainData["Score"], test_size=0.5, shuffle=True, random_state=random_seed)
         self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(X_temp, y_temp, test_size=0.5, shuffle=True, random_state=random_seed)
-        self.dtrain = xgb.DMatrix(self.X_train, label=self.y_train)
-        self.dval = xgb.DMatrix(self.X_val, label=self.y_val)
+        self.dtrain = xgb.DMatrix(self.X_train, label=self.y_train, weight = weights[self.X_train.index] if weights is not None else None) 
+        self.dval = xgb.DMatrix(self.X_val, label=self.y_val, weight = weights[self.X_val.index] if weights is not None else None)
         print(f"Defined training and evaluation datasets\nTrain on {len(self.X_train)} events, of which a fraction {sig_frac} is signal, and {len(self.train_vars)} variables")
 
     def train_model(self):
@@ -106,6 +126,7 @@ class Trainer:
         return 
     
     def complete_train(self):
+        #out-of-the-box for training
         self.load_data()
         self.prepare_training_set()
         self.train_model()
@@ -116,14 +137,88 @@ class Trainer:
         self.load_model()
 
     @staticmethod
-    def plot_hist(data,names,nbins=100,xlabel = None, saveas=None, text = None, xlim=None, log = False, density=False, int_xticks = False):
+    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False):
+        """
+        data: ak array, dic-like, containing all events
+        variable: string, name of var to compute the reweighing. e.g.: Mm_kin_lxy
+        fitting_func: function to fit to histogram in range fit_range. signature f(variable,N,*args) w/ N normalization
+        nbins: int, obv
+        range: range we compute the histogram
+        fitting_limits: array of 2-tuples, with length #args - 2
+        """
+
+        n_vars_fit_func = fitting_func.__code__.co_argcount   
+        assert n_vars_fit_func > 1 and type(n_vars_fit_func)==int, "fit function has too few arguments"
+        if fit_range == None: fit_range = (min(data[variable]),max(data[variable]))
+
+        ### Fitting 
+        print("Start fitting function ",fitting_func,"to variable ",variable)
+        costMethod = LeastSquares
+        n_fit,xe_fit = np.histogram(ak.to_numpy(data[variable]), nbins_fit)
+        x_fit = 0.5*(xe_fit[1:] + xe_fit[:-1])
+        dx_fit = xe_fit[1]-xe_fit[0]
+        mask = (x_fit > fit_range[0]) & (x_fit < fit_range[1])
+        cf_data = costMethod(x_fit[mask],n_fit[mask], n_fit[mask]**0.5, fitting_func)
+        ivData = [len(data[variable])] + [1 for i in range(n_vars_fit_func - 2)] #we assume the first variable to always be the normalization 
+        mData = Minuit(cf_data,*ivData)
+        mData.limits = [(0,len(data[variable]))] + fitting_limits if fitting_limits else [(0,len(data[variable]))] + [None for i in range(n_vars_fit_func - 2)] 
+        mData.migrad()
+        mData.hesse()
+        print("Done fitting. Parameters: ", *mData.values)
+
+        histSlxy,xe_corr = np.histogram(ak.to_numpy(data[variable]),nbins_corrections)
+        x_corr = 0.5*(xe_corr[1:] + xe_corr[:-1])
+        dx_corr = xe_corr[1]-xe_corr[0]
+        weight_hist = np.where(histSlxy==0,0, (histSlxy-fitting_func(x_corr,*mData.values)/dx_fit*dx_corr)/histSlxy)
+        weights = weight_hist[np.digitize(data[variable], xe_corr, right=True) - 1]   
+
+        import scipy
+        Nonprompt_in_prompt,_ = scipy.integrate.quad(lambda x: fitting_func(x,*mData.values)/dx_fit, 0, xe_corr[-1])
+        prompt = np.sum(histSlxy) - Nonprompt_in_prompt
+
+        print(f"""\nSome General infos:\n
+                Total number of events considered: {len(data)} \n
+                Sum of weights: {np.sum(weights)} \n
+                Fitted prompt: {prompt}\n
+                Sum of weights>0 {np.sum(weights[weights>=0])}\n\n""")
+
+        if plot:
+            hep.style.use("CMS")
+            fig, ax = plt.subplots(figsize=(10,6))
+            x = np.linspace(0,xe_corr[-1], 1000)
+            ax.plot(x,fitting_func(x,*mData.values), label = "Nonprompt tail fit")
+            ax.errorbar(0.5*(xe_corr[:-1] + xe_corr[1:]),histSlxy-fitting_func(0.5*(xe_corr[:-1] + xe_corr[1:]),*mData.values)/dx_fit*dx_corr,xerr = dx_corr/2, label="$J/\psi$ prompt data", color = "green", zorder=0,marker = '.')
+            ax.hist(data["Mm_kin_lxy"], nbins_corrections,   label="$J/\psi$ data", color = "orange", zorder=0, histtype='step', linewidth = 1.8)
+            ax.hist(data["Mm_kin_lxy"], nbins_corrections,  weights=weights, label="$J/\psi$ data reweighed", color = "brown", zorder=0, histtype='step', linewidth = 1.8)
+            # ax.hist(data["Mm_kin_lxy"], nbins_corrections,  weights = (data["Mm_kin_lxy"]>fit_range[0]), color = "purple", zorder=0, histtype='bar', linewidth = 1.8, alpha = .2)
+            ax.text(0.2,0.9, f"J/$\psi$ data, sPlot-unfolded $l_{{xy}}$ distribution \nShaded area is nonprompt tail", fontsize = 12, transform=ax.transAxes)
+            ax.grid()
+            ax.legend()    
+            ax.set_xlim(0,10)
+            ax.set_ylim(1e-2,1e6)
+            ax.set_xlabel("$l_{xy}$")
+            # ax.set_ylim(0,20000)
+            ax.set_yscale('log')
+            ax.set_ylabel("Frequency")    
+            plt.show()
+    
+        return weights
+    
+
+    @staticmethod
+    def plot_hist(data,names,nbins=100, weights = None, xlabel = None, saveas=None, text = None, xlim=None, log = False, density=False, int_xticks = False):
         hep.style.use("CMS")
         colors = plt.cm.tab10.colors
         fig, ax = plt.subplots(figsize=(12,9))
         hep.cms.text("Preliminary")
-        for d,name,c in zip(data,names,colors[:len(data)]):
-            ax.hist(d, bins = nbins, range = xlim, label=name, color=c, density = density, log=log, histtype='step', linewidth=2)
-            # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
+        if weights is not None:
+            for d,w,name,c in zip(data,weights,names,colors[:len(data)]):
+                ax.hist(d, bins = nbins, weights=w, range = xlim, label=name, color=c, density = density, log=log, histtype='step', linewidth=2)
+                # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
+        else: 
+            for d,name,c in zip(data,names,colors[:len(data)]):
+                ax.hist(d, bins = nbins, range = xlim, label=name, color=c, density = density, log=log, histtype='step', linewidth=2)
+                # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
         if (xlabel): ax.set_xlabel(xlabel)
         if text!=None: ax.text(0.02, .8, text, fontsize=11, bbox=dict(facecolor='white', edgecolor='black'), transform=ax.transAxes) 
         if int_xticks: ax.xaxis.get_major_locator().set_params(integer=True)
@@ -131,7 +226,9 @@ class Trainer:
         ax.set_xlim(xlim)
         ax.legend()
         ax.grid(True)
-        if saveas: plt.savefig(saveas)
+        if saveas: 
+            plt.savefig(saveas)
+            print(f"saved figure as {saveas}")
         return
     
     def plot_model(self,**kwargs):
@@ -194,10 +291,41 @@ def plot_ROC(trainers,labels, tmva=None, log = False):
     return 
 
 
+def train_prompt_Jpsi():
+    """
+    Just to keep the main clean
+    """
+    def nonPrompt_tail(x,N,b):
+        return  N*expon.pdf(x,0,b)
+
+    modelname = "forest_prompt"
+
+    Jpsi_trainer = Trainer("Jpsi", modelname)
+    Jpsi_trainer.load_data()
+
+    #import reweighing parameters
+    lxy_cutoff = Jpsi_trainer.particle_config["models"][modelname]["reweighing"]["lxy_cutoff"]
+    nbins_fit = Jpsi_trainer.particle_config["models"][modelname]["reweighing"]["nbins_fit"]
+    nbins_corrections = Jpsi_trainer.particle_config["models"][modelname]["reweighing"]["nbins_corrections"]
+
+    #Define data and compute weights
+    data_prompt = Jpsi_trainer.full_mass_range[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff]
+    weights = Jpsi_trainer.compute_reweight(data_prompt,'Mm_kin_lxy', nonPrompt_tail,nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,fit_range=(0.1,0.5),fitting_limits=[(0,1)],plot=True)
+    weights = np.where(weights<0, 0, weights)
+
+    #Perform training and plot
+    Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights)
+    Jpsi_trainer.train_model()
+    Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+".png")
+
+    return 
+
 if __name__ == "__main__":
-    Y_trainer = Trainer("Y", 'forest_ID')
-    Y_trainer.complete_train()
-    Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
+    train_prompt_Jpsi()
+
+    # Y_trainer = Trainer("Y", 'forest_ID')
+    # Y_trainer.complete_train()
+    # Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
 
     # Y_trainer = Trainer("Y", 'tree_standard')
     # Y_trainer.complete_train()

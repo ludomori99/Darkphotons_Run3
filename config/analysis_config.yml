@@ -220,7 +220,7 @@ BDT_training:
         - [3.26,3.56]
     #The model we use by default
     reduction_factor: 0.05
-    modelname: forest_standard
+    modelname: forest_prompt
     models:
       # Default, powerful model with standard vertex variables
       forest_standard:
@@ -236,8 +236,89 @@ BDT_training:
           num_parallel_tree: 500
           eval_metric: "logloss"
           tree_method: "gpu_hist"
-        num_rounds: 50
+        reweighing:
+          do: False
+        num_rounds: 30
         random_seed: 10
+        train_vars:
+          - Mm_kin_lxy
+          - Mm_kin_l3d
+          - Mm_kin_sl3d
+          - Mm_kin_vtx_chi2dof
+          - Mm_kin_vtx_prob
+          - Mm_kin_alpha
+          - Mm_kin_alphaBS
+          - Mm_closetrk
+          - Mm_closetrks1
+          - Mm_closetrks2
+          - Mm_kin_pvip
+          - Mm_kin_spvip
+          - Mm_kin_eta    
+          - Mm_kin_pvlip
+          - Mm_kin_slxy
+          - Mm_iso
+          - Mm_otherVtxMaxProb
+          - Mm_otherVtxMaxProb1
+          - Mm_otherVtxMaxProb2
+      forest_prompt:
+        hyperpars:
+          objective: 'binary:logistic'
+          max_depth: 8
+          subsample: 0.3
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 2.0
+          min_child_weight: 0
+          colsample_bytree: 1.0
+          num_parallel_tree: 500
+          eval_metric: "logloss"
+          tree_method: "gpu_hist"
+        reweighing:
+          do: True
+          lxy_cutoff: 0.5
+          nbins_fit: 100
+          nbins_corrections: 100 
+        num_rounds: 30
+        random_seed: 10
+        train_vars:
+          - Mm_kin_lxy
+          - Mm_kin_l3d
+          - Mm_kin_sl3d
+          - Mm_kin_vtx_chi2dof
+          - Mm_kin_vtx_prob
+          - Mm_kin_alpha
+          - Mm_kin_alphaBS
+          - Mm_closetrk
+          - Mm_closetrks1
+          - Mm_closetrks2
+          - Mm_kin_pvip
+          - Mm_kin_spvip
+          - Mm_kin_eta    
+          - Mm_kin_pvlip
+          - Mm_kin_slxy
+          - Mm_iso
+          - Mm_otherVtxMaxProb
+          - Mm_otherVtxMaxProb1
+          - Mm_otherVtxMaxProb2
+      forest_prompt_noPromptCut:
+        hyperpars:
+          objective: 'binary:logistic'
+          max_depth: 8
+          subsample: 0.3
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 2.0
+          min_child_weight: 0
+          colsample_bytree: 1.0
+          num_parallel_tree: 500
+          eval_metric: "logloss"
+          tree_method: "gpu_hist"
+        reweighing:
+          lxy_cutoff: 10
+          nbins_fit: 1000
+          nbins_corrections: 1000
+        num_rounds: 30
+        random_seed: 12
         train_vars:
           - Mm_kin_lxy
           - Mm_kin_l3d
