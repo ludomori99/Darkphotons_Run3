@@ -1,16 +1,9 @@
 import numpy as np
-import mplhep as hep
 import xgboost as xgb
-import matplotlib.pyplot as plt
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, accuracy_score
 import uproot as up
-import pandas as pd 
 import awkward as ak
 import subprocess
-
-import os, sys
+import os
 from config_loader import load_analysis_config,load_test_config
 
 # Script to write the bash scripts with proper current configuration 
@@ -35,7 +28,7 @@ def evaluate_BDT(meson, model):
     print('successfully extracted offline data')
     
     #extract MC
-    MC_file_name = os.path.join(config["locations"]["MC"][meson], "merged.root")
+    MC_file_name = os.path.join(config["locations"]["MCRun3"][meson], "merged.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
 

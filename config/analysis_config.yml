@@ -1,10 +1,18 @@
 #Section for event extraction
-condor:
+condor_off:
   event_fraction: 10
   grouping_amount_data: 50
   #54732/50
   njobs: 1094
 
+#Run3 MC is on lxplus hence use condor
+condor_MC:
+  event_fraction: 1
+  grouping_amount_data: 53
+  #14840/53
+  njobs: 280
+
+#Run2 MC is on submit already hence use slurm 
 MC_slurm:
   grouping_amount_data: 50
   #3000/50
@@ -23,12 +31,17 @@ locations:
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
   MC:  
-    #have root://submit50.mit.edu// in front 
+    #dump: have root://submit50.mit.edu// in front 
     dump: mori25/dark_photons_ludo/DimuonTrees/MC/dump/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/
     MINIAOD: /data/submit/wangzqe/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8+Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5+MINIAODSIM/
+  MCRun3:
+    dump:  mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/logs/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/
+    Y:    /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/
   sPlot: /data/submit/mori25/dark_photons_ludo/DimuonTrees/sPlot/
 
 
@@ -98,6 +111,11 @@ BDT_training:
           num_parallel_tree: 500
           eval_metric: "logloss"
           tree_method: "gpu_hist"
+        reweighing:
+          do: True
+          lxy_cutoff: 0.5
+          nbins_fit: 100
+          nbins_corrections: 100 
         num_rounds: 30
         random_seed: 10
         train_vars:
@@ -263,13 +281,13 @@ BDT_training:
       forest_prompt:
         hyperpars:
           objective: 'binary:logistic'
-          max_depth: 8
+          max_depth: 9
           subsample: 0.3
-          alpha: 8.0
-          gamma: 2.0
-          lambda: 2.0
-          min_child_weight: 0
-          colsample_bytree: 1.0
+          # alpha: 8.0
+          # gamma: 2.0
+          # lambda: 2.0
+          min_child_weight: 0.1
+          colsample_bytree: 0.4
           num_parallel_tree: 500
           eval_metric: "logloss"
           tree_method: "gpu_hist"
