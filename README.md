@@ -14,4 +14,4 @@ Main steps are:
 
 **Hardcoded parts**
 - Set of variables stored in the ntuples. Can be changed in `pull_data/MC/generateMCDimuonTree.C` and `pull_data/offline/generateOffDimuonTree.C`. They must necessarily be a superset of the variables used for training and selection as defined in the `config`. Current choice from extraction process is hardcoded to result in skimmed merged datasets defined as `merged_A.root:tree`. Will generalize when needed. 
-- 
+- Paths of files in sPlot.C. For time being need to change manually. In future might integrate the config to be read by the C++ script as well.
