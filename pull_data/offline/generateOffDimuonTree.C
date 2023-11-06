@@ -344,7 +344,7 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
             if (mpt[k] > mpt[idx1]) {
                 idx1 = k;
             }
-        }//Now idx1 is the highest pt muon
+        }//Now idx1 is the highest pt muon among goodmuons
         
         unsigned idx2 = 99;
         unsigned mm_idx;
@@ -361,8 +361,8 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
             }
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
 
-
-
+        if(mpt[idx2]<4 || abs(meta[idx2])>1.9) continue;
+        
         Muon_softMva1 = muon_softMva[idx1];
         Muon_softMva2 = muon_softMva[idx2];
         Muon_charge1 = mcharge[idx1];

@@ -364,7 +364,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
                 mm_idx = i;
             }
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
-
+        
+        if(mpt[idx2]<4 || abs(meta[idx2])>1.9) continue;
         if (mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
         Muon_softMva1 = muon_softMva[idx1];
