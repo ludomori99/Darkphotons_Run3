@@ -35,7 +35,7 @@ def write_tree_data(particle):
         print("Start processing ",os.path.join(off_dir, "merged_A.root"))
         outfile.mktree("tree",branch_dic)
         error_indices = []
-        for i in range(config["condor"]["njobs"]):
+        for i in range(config["condor_off"]["njobs"]):
             if i and i%10 == 0: print("done file #", i)
             try: 
                 intree = up.open(off_dump_dir+"DimuonTree"+str(i)+".root:tree")

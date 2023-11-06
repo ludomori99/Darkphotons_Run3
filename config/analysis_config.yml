@@ -66,6 +66,7 @@ ntuple_branches:
   - Mm_otherVtxMaxProb1
   - Mm_otherVtxMaxProb2
   - Mm_mass
+  - Mm_kin_pt
   - Mm_mu1_pt
   - Mm_mu1_eta
   - Mm_mu1_phi
