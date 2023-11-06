@@ -17,8 +17,8 @@ config = load_analysis_config()
 
 def evaluate_BDT(meson, model):
     """
-    Meson: Jpsi or Y
-    model: forest_standard_Y ...  
+    Meson (data): Jpsi or Y
+    model (name of BDT to evaluate): forest_standard_Y ...  
     
     """
 
@@ -28,9 +28,10 @@ def evaluate_BDT(meson, model):
     print('successfully extracted offline data')
     
     #extract MC
-    MC_file_name = os.path.join(config["locations"]["MCRun3"][meson], "merged.root")
+    MC_file_name = os.path.join(config["locations"]["MCRun3"][meson], "merged_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
+    print('successfully extracted MC data')
 
 
     #load model
@@ -40,7 +41,7 @@ def evaluate_BDT(meson, model):
     all_branches = off_file.keys()
     bst = xgb.Booster()
     bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
-    print("Model loaded")
+    print(f"Model {model} loaded")
 
     # extend tree using BDT prediction
     with up.create(os.path.join(config["locations"]["offline"][meson], "tmp.root")) as output_file:
@@ -79,3 +80,5 @@ def evaluate_BDT(meson, model):
 if __name__=="__main__":
     evaluate_BDT("Y", "forest_standard_Y")
     evaluate_BDT("Jpsi", "forest_standard_Y")
+    evaluate_BDT("Y", "forest_prompt_Jpsi")
+    evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
