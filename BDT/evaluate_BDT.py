@@ -25,27 +25,26 @@ def evaluate_BDT(meson, model):
     # extract offline data
     off_file_name = os.path.join(config["locations"]["offline"][meson], "merged_A.root")
     off_file=up.open(off_file_name)["tree"]
-    print('successfully extracted offline data')
+    print(f'successfully extracted offline data: {off_file_name}')
     
     #extract MC
     MC_file_name = os.path.join(config["locations"]["MCRun3"][meson], "merged_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
-    print('successfully extracted MC data')
+    print(f'successfully extracted MC data: {MC_file_name}')
 
 
     #load model
     method = model[:model.rfind("_")]
     train_meson = model[1+model.rfind("_"):]
     vars = config["BDT_training"][train_meson]["models"][method]["train_vars"] 
-    all_branches = off_file.keys()
     bst = xgb.Booster()
     bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
     print(f"Model {model} loaded")
 
     # extend tree using BDT prediction
     with up.create(os.path.join(config["locations"]["offline"][meson], "tmp.root")) as output_file:
-        dic_mm = {branch: "float" for branch in all_branches}
+        dic_mm = {branch: "float" for branch in off_file.keys()}
         dic = {**dic_mm, model+"_mva" : "float"}
         output_file.mktree("tree", dic)
 
@@ -61,7 +60,7 @@ def evaluate_BDT(meson, model):
             chunk[model+"_mva"] = pred_off
             output_file["tree"].extend(chunk)
             i+=1
-            print(f"Finished chunk {i}/{n_chunks} in from {meson} meson", end = '\r')
+            print(f"Finished chunk {i}/{n_chunks} from {meson} meson", end = '\r')
         print("Finished processing data")
 
     subprocess.run('mv '+os.path.join(config["locations"]["offline"][meson], "tmp.root") + ' ' + os.path.join(config["locations"]["offline"][meson], "merged_A.root"), shell=True)
@@ -72,13 +71,13 @@ def evaluate_BDT(meson, model):
     MC_data[model+"_mva"] = pred_MC
     with up.recreate(MC_file_name) as output_file:
         output_file["tree"] = MC_data
-    print("Finished processing MC")
+    print("Finished processing MC\n\n")
 
     return
 
 
 if __name__=="__main__":
-    evaluate_BDT("Y", "forest_standard_Y")
+    # evaluate_BDT("Y", "forest_standard_Y")
     evaluate_BDT("Jpsi", "forest_standard_Y")
-    evaluate_BDT("Y", "forest_prompt_Jpsi")
+    # evaluate_BDT("Y", "forest_prompt_Jpsi")
     evaluate_BDT("Jpsi", "forest_prompt_Jpsi")

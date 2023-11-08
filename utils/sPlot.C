@@ -13,7 +13,6 @@
 #include "RooFitResult.h"
 #include "RooWorkspace.h"
 #include "RooConstVar.h"
- 
 #include "TCanvas.h"
 #include "TLegend.h"
 #include <iomanip>
@@ -40,7 +39,6 @@ void sPlot(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "
 
    // Create a workspace to manage the project.
    RooWorkspace wspace{"myWS"};
-  
    const char* file_name;
    const char* fig_name;
    const char* model_name; 
@@ -97,13 +95,13 @@ void load_config(const char* meson, bool isMC,
    if (string(meson) == string("Jpsi")) {
       lowRange = 2.6;
       highRange = 3.56;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/merged.root"; //JPsi MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/merged_A.root"; //JPsi MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/merged_A.root"; //Jpsi data
    }
    else if(string(meson) == string("Y")){
       lowRange = 8.5;
       highRange = 11.2;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/merged.root"; //Upsilon MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root"; //Upsilon MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root"; //Upsilon data
    }
    else {cout<<"type of meson not recognized";}
@@ -308,6 +306,8 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
     
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange); 
    RooRealVar forest_standard_Y_mva("forest_standard_Y_mva", "forest_standard_Y_mva", 0, 1);
+   RooRealVar forest_prompt_Jpsi_mva("forest_prompt_Jpsi_mva", "forest_prompt_Jpsi_mva", 0, 1);
+   RooRealVar weights_prompt("weights_prompt", "weights_prompt", 0, 10);
    // RooRealVar vtx_BDT_Y_forest("vtx_BDT_Y_forest", "vtx_BDT_Y_forest", 0, 1);
 
    RooRealVar Muon_softMva1("Muon_softMva1", "Muon_softMva1", -1, 1);
@@ -334,7 +334,7 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    RooRealVar Mm_otherVtxMaxProb1("Mm_otherVtxMaxProb1", "Mm_otherVtxMaxProb1", -1000000, 1000000);
    RooRealVar Mm_otherVtxMaxProb2("Mm_otherVtxMaxProb2", "Mm_otherVtxMaxProb2", -1000000, 1000000);
 
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, forest_standard_Y_mva,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
+   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, forest_standard_Y_mva,forest_prompt_Jpsi_mva,weights_prompt,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
       Mm_kin_vtx_prob,Mm_kin_alpha,Mm_kin_alphaBS,Mm_closetrk,Mm_closetrks1,Mm_closetrks2,Mm_kin_pvip,Mm_kin_spvip,Mm_kin_pvlip,Mm_kin_slxy,Mm_iso,Mm_otherVtxMaxProb,
       Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree));
 
@@ -441,25 +441,179 @@ void SaveData(RooWorkspace &ws, const char* file_name)
    cout<<"\n\n saving file as "<<file_name<<"\n\n";
 
 }
+
+TStyle *tdrStyle;
+// tdrGrid: Turns the grid lines on (true) or off (false)
+void tdrGrid(bool gridOn) {
+  tdrStyle->SetPadGridX(gridOn);
+  tdrStyle->SetPadGridY(gridOn);
+}
+
+// fixOverlay: Redraws the axis
+void fixOverlay() {
+  gPad->RedrawAxis();
+}
+
+void setTDRStyle() {
+  tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
+// For the canvas:
+  tdrStyle->SetCanvasBorderMode(0);
+  tdrStyle->SetCanvasColor(kWhite);
+  tdrStyle->SetCanvasDefH(600); //Height of canvas
+  tdrStyle->SetCanvasDefW(600); //Width of canvas
+  tdrStyle->SetCanvasDefX(0);   //POsition on screen
+  tdrStyle->SetCanvasDefY(0);
+
+// For the Pad:
+  tdrStyle->SetPadBorderMode(0);
+  // tdrStyle->SetPadBorderSize(Width_t size = 1);
+  tdrStyle->SetPadColor(kWhite);
+  tdrStyle->SetPadGridX(false);
+  tdrStyle->SetPadGridY(false);
+  tdrStyle->SetGridColor(0);
+  tdrStyle->SetGridStyle(3);
+  tdrStyle->SetGridWidth(1);
+
+// For the frame:
+  tdrStyle->SetFrameBorderMode(0);
+  tdrStyle->SetFrameBorderSize(1);
+  tdrStyle->SetFrameFillColor(0);
+  tdrStyle->SetFrameFillStyle(0);
+  tdrStyle->SetFrameLineColor(1);
+  tdrStyle->SetFrameLineStyle(1);
+  tdrStyle->SetFrameLineWidth(1);
+  
+// For the histo:
+  // tdrStyle->SetHistFillColor(1);
+  // tdrStyle->SetHistFillStyle(0);
+  tdrStyle->SetHistLineColor(1);
+  tdrStyle->SetHistLineStyle(0);
+  tdrStyle->SetHistLineWidth(1);
+  // tdrStyle->SetLegoInnerR(Float_t rad = 0.5);
+  // tdrStyle->SetNumberContours(Int_t number = 20);
+
+  tdrStyle->SetEndErrorSize(2);
+  // tdrStyle->SetErrorMarker(20);
+  //tdrStyle->SetErrorX(0.);
+  
+  tdrStyle->SetMarkerStyle(20);
+  
+//For the fit/function:
+  tdrStyle->SetOptFit(1);
+  tdrStyle->SetFitFormat("5.4g");
+  tdrStyle->SetFuncColor(2);
+  tdrStyle->SetFuncStyle(1);
+  tdrStyle->SetFuncWidth(1);
+
+//For the date:
+  tdrStyle->SetOptDate(0);
+  // tdrStyle->SetDateX(Float_t x = 0.01);
+  // tdrStyle->SetDateY(Float_t y = 0.01);
+
+// For the statistics box:
+  tdrStyle->SetOptFile(0);
+  tdrStyle->SetOptStat(0); // To display the mean and RMS:   SetOptStat("mr");
+  tdrStyle->SetStatColor(kWhite);
+  tdrStyle->SetStatFont(42);
+  tdrStyle->SetStatFontSize(0.025);
+  tdrStyle->SetStatTextColor(1);
+  tdrStyle->SetStatFormat("6.4g");
+  tdrStyle->SetStatBorderSize(1);
+  tdrStyle->SetStatH(0.1);
+  tdrStyle->SetStatW(0.15);
+  // tdrStyle->SetStatStyle(Style_t style = 1001);
+  // tdrStyle->SetStatX(Float_t x = 0);
+  // tdrStyle->SetStatY(Float_t y = 0);
+
+// Margins:
+  tdrStyle->SetPadTopMargin(0.05);
+  tdrStyle->SetPadBottomMargin(0.13);
+  tdrStyle->SetPadLeftMargin(0.16);
+  tdrStyle->SetPadRightMargin(0.02);
+
+// For the Global title:
+
+  tdrStyle->SetOptTitle(0);
+  tdrStyle->SetTitleFont(42);
+  tdrStyle->SetTitleColor(1);
+  tdrStyle->SetTitleTextColor(1);
+  tdrStyle->SetTitleFillColor(10);
+  tdrStyle->SetTitleFontSize(0.05);
+  // tdrStyle->SetTitleH(0); // Set the height of the title box
+  // tdrStyle->SetTitleW(0); // Set the width of the title box
+  // tdrStyle->SetTitleX(0); // Set the position of the title box
+  // tdrStyle->SetTitleY(0.985); // Set the position of the title box
+  // tdrStyle->SetTitleStyle(Style_t style = 1001);
+  // tdrStyle->SetTitleBorderSize(2);
+
+// For the axis titles:
+
+  tdrStyle->SetTitleColor(1, "XYZ");
+  tdrStyle->SetTitleFont(42, "XYZ");
+  tdrStyle->SetTitleSize(0.06, "XYZ");
+  // tdrStyle->SetTitleXSize(Float_t size = 0.02); // Another way to set the size?
+  // tdrStyle->SetTitleYSize(Float_t size = 0.02);
+  tdrStyle->SetTitleXOffset(0.9);
+  tdrStyle->SetTitleYOffset(1.25);
+  // tdrStyle->SetTitleOffset(1.1, "Y"); // Another way to set the Offset
+
+// For the axis labels:
+
+  tdrStyle->SetLabelColor(1, "XYZ");
+  tdrStyle->SetLabelFont(42, "XYZ");
+  tdrStyle->SetLabelOffset(0.007, "XYZ");
+  tdrStyle->SetLabelSize(0.05, "XYZ");
+
+// For the axis:
+
+  tdrStyle->SetAxisColor(1, "XYZ");
+  tdrStyle->SetStripDecimals(kTRUE);
+  tdrStyle->SetTickLength(0.03, "XYZ");
+  tdrStyle->SetNdivisions(510, "XYZ");
+  tdrStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
+  tdrStyle->SetPadTickY(1);
+
+// Change for log plots:
+  tdrStyle->SetOptLogx(0);
+  tdrStyle->SetOptLogy(0);
+  tdrStyle->SetOptLogz(0);
+
+// Postscript options:
+  tdrStyle->SetPaperSize(20.,20.);
+  // tdrStyle->SetLineScalePS(Float_t scale = 3);
+  // tdrStyle->SetLineStyleString(Int_t i, const char* text);
+  // tdrStyle->SetHeaderPS(const char* header);
+  // tdrStyle->SetTitlePS(const char* pstitle);
+
+  // tdrStyle->SetBarOffset(Float_t baroff = 0.5);
+  // tdrStyle->SetBarWidth(Float_t barwidth = 0.5);
+  // tdrStyle->SetPaintTextFormat(const char* format = "g");
+  // tdrStyle->SetPalette(Int_t ncolors = 0, Int_t* colors = 0);
+  // tdrStyle->SetTimeOffset(Double_t toffset);
+  // tdrStyle->SetHistMinimumZero(kTRUE);
+
+  tdrStyle->SetHatchesLineWidth(5);
+  tdrStyle->SetHatchesSpacing(0.05);
+
+  tdrStyle->cd();
+}
  
 void MakePlots(RooWorkspace &ws, const char* fig_name)
 {
- 
    // Here we make plots of the discriminating variable (invMass) after the fit
    // and of the control variable (isolation) after unfolding with sPlot.
    std::cout << "make plots" << std::endl;
+   setTDRStyle();
 
- 
    // make our canvas
-   TCanvas *cdata = new TCanvas("sPlot", "sPlot demo", 2000, 3000);
-   cdata->Divide(1, 3);
+   TCanvas *cdata = new TCanvas("sPlot", "sPlot demo", 2000, 1500);
+   // cdata->Divide(1, 3);
  
    // get what we need out of the workspace
    RooAbsPdf *sigModel = ws.pdf("sigModel");
    RooAbsPdf *bkgModel = ws.pdf("bkgModel");
    RooAbsPdf *massModel = ws.pdf("massModel");
 
- 
    RooRealVar *forest_standard_Y_mva = ws.var("forest_standard_Y_mva");
    RooRealVar *Mm_mass = ws.var("Mm_mass");
  
@@ -467,15 +621,14 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    auto& data = static_cast<RooDataSet&>(*ws.data("dataWithSWeights"));
  
    // create weighted data sets
-   
    RooDataSet data_mass{data.GetName(), data.GetTitle(), &data, RooArgSet(*Mm_mass), nullptr};
-   RooDataSet dataw_sig{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "sigYield_sw"};
-   RooDataSet dataw_bkg{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "bkgYield_sw"};
+   // RooDataSet dataw_sig{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "sigYield_sw"};
+   // RooDataSet dataw_bkg{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "bkgYield_sw"};
 
    std::cout << "Print data";
    data.Print();
 
-   cdata->cd(1);
+   // cdata->cd(1);
    RooPlot *frame = Mm_mass->frame(Title("Fit of model to discriminating variable"));
    data_mass.plotOn(frame);
    massModel->plotOn(frame, Name("FullModel"));
@@ -498,25 +651,25 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    // Do this by plotting all events weighted by the sWeight for the Z component.
    // The SPlot class adds a new variable that has the name of the corresponding
    // yield + "_sw".
-   cdata->cd(2);
+   // cdata->cd(2);
  
-   RooPlot *frame2 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out signal"));
-   // Since the data are weighted, we use SumW2 to compute the errors.
-   dataw_sig.plotOn(frame2, DataError(RooAbsData::SumW2));
-   // sigModel->plotOn(frame2, LineStyle(kDashed), LineColor(kRed));
+   // RooPlot *frame2 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out signal"));
+   // // Since the data are weighted, we use SumW2 to compute the errors.
+   // dataw_sig.plotOn(frame2, DataError(RooAbsData::SumW2));
+   // // sigModel->plotOn(frame2, LineStyle(kDashed), LineColor(kRed));
  
-   frame2->Draw();
+   // frame2->Draw();
  
-   // Plot isolation for QCD component.
-   // Eg. plot all events weighted by the sWeight for the QCD component.
-   // The SPlot class adds a new variable that has the name of the corresponding
-   // yield + "_sw".
-   cdata->cd(3);
-   RooPlot *frame3 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out bkg"));
-   dataw_bkg.plotOn(frame3, DataError(RooAbsData::SumW2));
-   // bkgModel->plotOn(frame3, LineStyle(kDashed), LineColor(kGreen));
+   // // Plot isolation for QCD component.
+   // // Eg. plot all events weighted by the sWeight for the QCD component.
+   // // The SPlot class adds a new variable that has the name of the corresponding
+   // // yield + "_sw".
+   // cdata->cd(3);
+   // RooPlot *frame3 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out bkg"));
+   // dataw_bkg.plotOn(frame3, DataError(RooAbsData::SumW2));
+   // // bkgModel->plotOn(frame3, LineStyle(kDashed), LineColor(kGreen));
  
-   frame3->Draw();
+   // frame3->Draw();
  
    cdata->SaveAs(fig_name);
    cout<<"\n\n saving file as "<<fig_name<<"\n\n";
