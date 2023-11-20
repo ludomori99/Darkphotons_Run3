@@ -69,6 +69,6 @@ def write_tree_data(particle):
 
 
 if __name__ == "__main__":
-    write_tree_data("Y")
+    # write_tree_data("Y")
     write_tree_data("Jpsi")
 

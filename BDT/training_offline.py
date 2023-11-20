@@ -8,6 +8,7 @@ import uproot as up
 import pandas as pd 
 import awkward as ak
 import os
+import subprocess
 import yaml
 from numba_stats import expon # crystalball,crystalball_ex, norm, expon, voigt, truncexpon
 from iminuit.cost import LeastSquares #,  ExtendedBinnedNLL,ExtendedUnbinnedNLL,
@@ -20,7 +21,7 @@ Define imports, variables, and functions for later use
 """
 
 HOME_USER = os.environ.get("HOMELUDO", None)
-DP_USER = os.environ.get("DPLUDO", None)
+DP_USER = os.environ.get("DPUSER", None)
 OFFLINE_FOLDER = DP_USER+"/pull_data/offline/" if DP_USER else None
 
 def load_analysis_config():
@@ -49,14 +50,23 @@ class Trainer:
         else: self.modelname = self.particle_config["BDT_training"]["modelname"]
         return
     
-    def load_data(self, data_particle = None):
+    def load_data(self, data_particle = None,include_MC=False):
         print("Start loading data")
         if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
         else :  self.off_dir = config["locations"]["offline"][self.particle]
-        filename=self.off_dir+"merged_A.root:tree"
-        self.full_mass_range = up.open(filename).arrays(library = 'pd')
+        self.filename=self.off_dir+"merged_A.root"
+        self.full_mass_range = up.open(self.filename + ":tree").arrays(library = 'pd')
         self.mass = self.full_mass_range["Mm_mass"]
-        print(f"Successfully imported data file {filename} to memory")
+        print(f"Successfully imported data file {self.filename} to memory")
+
+        if include_MC: 
+            print("Start loading MC data")
+            if data_particle: self.MC_dir = config["locations"]["MCRun3"][data_particle]
+            else :  self.MC_dir = config["locations"]["MCRun3"][self.particle]
+            self.MC_filename=self.MC_dir+"merged_A.root"
+            self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd')
+            self.MC_mass = self.MC_full_mass_range["Mm_mass"]
+            print(f"Successfully imported data file {self.MC_filename} to memory")
         return
     
     def prepare_training_set(self,data_particle = None, data_override=None, weights = None,w_frac_bkg=0.1):
@@ -134,13 +144,41 @@ class Trainer:
         self.prepare_training_set()
         self.train_model()
 
-    def complete_load(self, data_particle = None):
-        self.load_data(data_particle)
-        self.prepare_training_set(data_particle)
+    def complete_load(self, data_particle = None, include_MC=False, weights=None):
+        self.load_data(data_particle,include_MC=include_MC)
+        self.prepare_training_set(data_particle,weights=weights)
         self.load_model()
 
+    def plot_model(self,plot_training=False,plot_MC=False, apply_weights=False,density=True,**kwargs):
+
+        if plot_MC and 'MC_full_mass_range' not in dir(self):
+            print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
+            return
+
+        self.val_bkg=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==0]))
+        self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
+        self.train_bkg=None
+        self.train_sig=None
+        self.val_MC=None
+        if plot_training:
+            self.train_bkg=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==0]))
+            self.train_sig=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==1]))
+        if plot_MC:
+            self.val_MC=self.bst.predict(xgb.DMatrix(self.MC_full_mass_range[self.train_vars]))
+
+        data_to_plot = [self.val_bkg,self.val_sig]+plot_training*[self.train_bkg,self.train_sig]+plot_MC*[self.val_MC]
+        labels = ["Bkg.","Sig."]+plot_training*["Training bkg.","Train sig."]+plot_MC*["MC sig."]
+        weights=None
+        if apply_weights:
+            weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
+                        plot_training*[self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]] + 
+                        plot_MC*[self.MC_full_mass_range["weights_prompt"]])
+
+        self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="BDT score",**kwargs)
+       
+
     @staticmethod
-    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False, xrange=None, plot_logscale=False):
+    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False, nonnegative=False, xrange=None, plot_logscale=False):
         """
         data: ak array, dic-like, containing all events
         variable: string, name of var to compute the reweighing. e.g.: Mm_kin_lxy
@@ -204,8 +242,23 @@ class Trainer:
             if plot_logscale: ax.set_yscale('log')
             ax.set_ylabel("Frequency")    
             plt.show()
-    
+        
+        if nonnegative: weights = np.where(weights<0, 0, weights)
         return weights
+    
+    @staticmethod
+    def save_weight_to_tree(data_path,weights,weight_name):
+        if not os.path.isabs(data_path):
+            raise ValueError("Input path is not a full path.")
+        data_file=up.open(data_path)["tree"].arrays()
+        len_tree=len(data_file["Mm_mass"])
+        if(len_tree != len(weights)): 
+            print("error: weights and data have a different shape")
+            return
+        data_file[weight_name]=weights
+        with up.recreate(data_path) as output_file:
+            output_file["tree"] = data_file 
+        return
     
 
     @staticmethod
@@ -234,24 +287,6 @@ class Trainer:
             print(f"saved figure as {saveas}")
         return
     
-    def plot_model(self,plot_training=False, apply_weights=False,density=True,**kwargs):
-        self.val_bkg=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==0]))
-        self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
-        self.train_bkg=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==0]))
-        self.train_sig=self.bst.predict(xgb.DMatrix(self.X_train[self.y_train==1]))
-
-        j=4 if plot_training else 2
-        
-        if apply_weights: 
-            self.plot_hist([self.val_bkg,self.val_sig,self.train_bkg,self.train_sig][:j],
-                       ["Bkg.","Sig.","Training bkg.","Train sig."][:j],
-                       weights = [self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]],self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]][:j],
-                       nbins =100, density=density, xlabel="BDT score",**kwargs)
-        else : 
-            self.plot_hist([self.val_bkg,self.val_sig,self.train_bkg,self.train_sig][:j],
-                       ["Bkg.","Sig.","Training bkg.","Train sig."][:j],
-                       nbins =100, density=density, xlabel="BDT score",**kwargs)
-
 #deprecated
 def plot_ROC_train_test(trainers,labels, tmva=None, log = False,n_points=20):
     hep.style.use("CMS")
@@ -321,8 +356,6 @@ def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
         true_test_sig = eval.get_label()==1
         true_test_bkg = ~true_test_sig
 
-        sig_eff_test = []
-        bkg_rej_test = []
         preds_test = trainer.bst.predict(eval)
 
         w = eval.get_weight()
@@ -337,7 +370,7 @@ def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
                     np.sum(w[true_test_bkg & pred_test_bkg])/w_bkg)
 
         sig_eff_test,bkg_rej_test = np.vectorize(compute_ROC_point)(dis)        
-        ax.scatter(sig_eff_test, bkg_rej_test, color =c1, zorder=0, label = l+" test")
+        ax.scatter(sig_eff_test, bkg_rej_test, color =c1, zorder=0, label = l)
         ax.plot(sig_eff_test, bkg_rej_test, lw=1.3, color = c1)
     
     ax.set_xlabel('Signal efficiency')
@@ -354,14 +387,14 @@ def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
     plt.show()
     return 
 
+def nonPrompt_tail(x,N,b):
+    return  N*expon.pdf(x,0,b)
 
 def train_prompt_Jpsi():
     """
-    Just to keep the main clean
+    Just to keep the main clean. Essentially the same as a complete_train call, however taking the prompt corrections into account 
+    (and storing weights into tree file)
     """
-    def nonPrompt_tail(x,N,b):
-        return  N*expon.pdf(x,0,b)
-
     modelname = "forest_prompt"
 
     Jpsi_trainer = Trainer("Jpsi", modelname)
@@ -374,18 +407,68 @@ def train_prompt_Jpsi():
 
     #Define data and compute weights
     data_prompt = Jpsi_trainer.full_mass_range[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff]
-    weights = Jpsi_trainer.compute_reweight(data_prompt,'Mm_kin_lxy', nonPrompt_tail,nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,fit_range=(0.1,0.5),fitting_limits=[(0,1)],plot=True)
-    weights = np.where(weights<0, 0, weights)
+    weights = Jpsi_trainer.compute_reweight(data_prompt,
+                                            'Mm_kin_lxy', 
+                                            nonPrompt_tail,
+                                            nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,
+                                            fit_range=(0.1,0.5),fitting_limits=[(0,1)],nonnegative=True,plot=False)
+    weights_extended = np.zeros_like(Jpsi_trainer.full_mass_range["Mm_mass"])
+    weights_extended[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff] = weights
+    Jpsi_trainer.save_weight_to_tree(Jpsi_trainer.filename, weights_extended,"weights_prompt")
 
     #Perform training and plot
-    Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights)
-    Jpsi_trainer.train_model()
-    Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+".png")
+    # Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights)
+    # Jpsi_trainer.train_model()
+    # Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+".png")
 
     return 
 
+def Jpsi_MC_weights():
+    MC_file_name = os.path.join(config["locations"]["MCRun3"]["Jpsi"], "merged_A.root")
+    MC_file=up.open(MC_file_name)
+    MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
+
+    lxy_cutoff = config["BDT_training"]["Jpsi"]["models"]["forest_prompt"]["reweighing"]["lxy_cutoff"]
+    nbins_fit = config["BDT_training"]["Jpsi"]["models"]["forest_prompt"]["reweighing"]["nbins_fit"]
+    nbins_corrections = config["BDT_training"]["Jpsi"]["models"]["forest_prompt"]["reweighing"]["nbins_corrections"]
+
+    #Define data and compute weights
+    MC_data_prompt=MC_data[MC_data["Mm_kin_lxy"]<lxy_cutoff]
+    weights = Trainer.compute_reweight(MC_data_prompt,
+                                            'Mm_kin_lxy', 
+                                            nonPrompt_tail,
+                                            nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,
+                                            fit_range=(0.1,0.5),fitting_limits=[(0,1)],nonnegative=True,plot=False)
+    
+    weights_extended = np.zeros_like(MC_data["Mm_mass"])
+    weights_extended[MC_data["Mm_kin_lxy"]<lxy_cutoff] = np.array(weights)
+    Trainer.save_weight_to_tree(MC_file_name, weights_extended,"weights_prompt")
+    return
+
+def add_branch_weights_prompt():
+    """
+    Add branch "weights_prompt" to Y data and MC. quick fix to be able to work with sPlot consistently
+    """
+    MC_file_name = os.path.join(config["locations"]["MCRun3"]["Y"], "merged_A.root")
+    MC_file=up.open(MC_file_name)
+    MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
+    weights_extended = np.ones_like(MC_data["Mm_mass"])
+    Trainer.save_weight_to_tree(MC_file_name, weights_extended,"weights_prompt")
+
+    off_file_name = os.path.join(config["locations"]["offline"]["Y"], "merged_A.root")
+    off_file=up.open(off_file_name)
+    off_data = off_file["tree"].arrays(library = 'pd')    #import reweighing parameters
+    weights_extended = np.ones_like(off_data["Mm_mass"])
+    Trainer.save_weight_to_tree(off_file_name, weights_extended,"weights_prompt")
+    return
+
+
+
 if __name__ == "__main__":
+    print("Executing training block")
     train_prompt_Jpsi()
+    # Jpsi_MC_weights()
+    # add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
     # Y_trainer.complete_train()

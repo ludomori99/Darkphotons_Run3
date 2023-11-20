@@ -9,7 +9,7 @@ from config_loader import load_analysis_config,load_test_config
 # Script to write the bash scripts with proper current configuration 
 
 HOME_USER = os.environ["HOMELUDO"]
-DP_USER = os.environ["DPLUDO"]
+DP_USER = os.environ["DPUSER"]
 OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/") 
 
 config = load_analysis_config()
