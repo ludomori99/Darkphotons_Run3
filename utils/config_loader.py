@@ -1,7 +1,7 @@
 import os
 import yaml
 
-DP_USER = os.environ["DPLUDO"]
+DP_USER = os.environ["DPUSER"]
 
     
 def load_test_config():

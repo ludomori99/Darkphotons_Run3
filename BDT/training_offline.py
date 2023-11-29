@@ -103,6 +103,7 @@ class Trainer:
 
         self.trainData = pd.concat([sig,bkg]).reset_index(drop=True)
         self.trainData_skinny = self.trainData[self.train_vars]
+        self.full_mass_range_skinny = self.full_mass_range[self.train_vars]
 
         if weights is not None:
             sig_weights = weights[sig_cut]
@@ -189,7 +190,7 @@ class Trainer:
         """
 
         n_vars_fit_func = fitting_func.__code__.co_argcount   
-        assert n_vars_fit_func > 1 and type(n_vars_fit_func)==int, "fit function has too few arguments"
+        assert  type(n_vars_fit_func)==int and n_vars_fit_func > 1 , "fit function has too few arguments"
         if fit_range == None: fit_range = (min(data[variable]),max(data[variable]))
 
         ### Fitting 

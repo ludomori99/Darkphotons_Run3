@@ -10,7 +10,7 @@
 using namespace std;
 
 
-void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 10) {
+void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 10, bool use_particleID = true) {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree","tree");
@@ -366,7 +366,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
         
         if(mpt[idx2]<4 || abs(meta[idx2])>1.9) continue;
-        if (mm_gen_pdgId[mm_idx] != particle_ID) continue;        
+        if (use_particleID && mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
         Muon_softMva1 = muon_softMva[idx1];
         Muon_softMva2 = muon_softMva[idx2];

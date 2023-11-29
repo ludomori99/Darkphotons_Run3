@@ -27,6 +27,7 @@ locations:
   offline:  
     #have root://submit50.mit.edu// in front 
     dump: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
+    dump_post_BDT: mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
@@ -38,6 +39,8 @@ locations:
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/
     MINIAOD: /data/submit/wangzqe/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8+Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5+MINIAODSIM/
   MCRun3:
+    dump_large: mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump_large/
+    dump_large_post_BDT: mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump_large_post_BDT/
     dump:  mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/
