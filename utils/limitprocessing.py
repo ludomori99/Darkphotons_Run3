@@ -9,4 +9,4 @@ for d in range(0,470):
 	#	continue
 	
 	print('now at mass', m)
-	os.system("combine -M AsymptoticLimits /data/submit/mori25/dark_photons_ludo/DimuonTrees/cards/dpCard_2018CIterV0_"+str(d)+".txt -m "+str(m)+" -n asympMassIndex_"+str(d)+"")	
+	os.system("combine -M AsymptoticLimits /data/submit/mori25/dark_photons_ludo/DimuonTrees/cards/simple_model/dpCard_2018CIterV0_"+str(d)+".txt -m "+str(m)+" -n asympMassIndex_"+str(d)+" --run blind")

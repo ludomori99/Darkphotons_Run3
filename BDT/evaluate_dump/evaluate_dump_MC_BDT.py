@@ -37,7 +37,7 @@ bst = xgb.Booster()
 bst.load_model(os.path.join(DP_USER, f"BDT/trained_models/{model}_{meson}.json"))
 
 # extend tree using BDT prediction
-with up.create(os.path.join("/data/submit/",config["locations"]["MCRun3"]["dump_post_BDT"], f"DimuonTree{njob}_BDT.root")) as output_file:
+with up.create(os.path.join("/data/submit/",config["locations"]["MCRun3"]["dump_large_post_BDT"], f"DimuonTree{njob}_BDT.root")) as output_file:
     dic_mm = {branch: "float" for branch in MC_file.keys()}
     dic = {**dic_mm, model+"_mva" : "float"}
     output_file.mktree("tree", dic)

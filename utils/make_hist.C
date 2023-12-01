@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/*.root", const char* outfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram.root", bool isMC=false) {
+void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/*.root", const char* outfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram.root") {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree", "tree");

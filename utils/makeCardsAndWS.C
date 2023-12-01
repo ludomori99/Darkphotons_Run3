@@ -133,19 +133,19 @@ void makeCardsAndWS(){
 	
       		dpworkspace.import(bkg_mass_CatA);
 	
-      		dpworkspace.writeToFile(Form("/data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dpWorkspace"+year+suff+"_%d.root",i));
+      		dpworkspace.writeToFile(Form("/data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/simple_model/dpWorkspace"+year+suff+"_%d.root",i));
 
 		//write the datacard
 		char inputShape[200];
-        sprintf(inputShape,"/data/submit/mori25/dark_photons_ludo/DimuonTrees/cards/dpCard_"+year+suff+"_%d.txt",i);
+        sprintf(inputShape,"/data/submit/mori25/dark_photons_ludo/DimuonTrees/cards/simple_model/dpCard_"+year+suff+"_%d.txt",i);
         ofstream newcardShape;
         newcardShape.open(inputShape);
         newcardShape << Form("imax 1 number of channels\n");
         newcardShape << Form("jmax * number of background\n");
         newcardShape << Form("kmax * number of nuisance parameters\n");
-		newcardShape << Form("shapes data_obs	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dpWorkspace"+year+suff+"_%d.root dpworkspace:data_obs_CatA\n",i);
-		newcardShape << Form("shapes bkg_mass	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dpWorkspace"+year+suff+"_%d.root dpworkspace:bkg_mass_CatA\n",i);
-		newcardShape << Form("shapes signalModel	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dpWorkspace"+year+suff+"_%d.root dpworkspace:signalModel_CatA\n",i);
+		newcardShape << Form("shapes data_obs	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/simple_model/dpWorkspace"+year+suff+"_%d.root dpworkspace:data_obs_CatA\n",i);
+		newcardShape << Form("shapes bkg_mass	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/simple_model/dpWorkspace"+year+suff+"_%d.root dpworkspace:bkg_mass_CatA\n",i);
+		newcardShape << Form("shapes signalModel	CatA /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/simple_model/dpWorkspace"+year+suff+"_%d.root dpworkspace:signalModel_CatA\n",i);
         newcardShape << Form("bin		CatA \n");
         newcardShape << Form("observation 	-1.0\n");
         newcardShape << Form("bin     		CatA		CatA \n");
@@ -160,6 +160,6 @@ void makeCardsAndWS(){
 		newcardShape.close();
 		
 	}
-	histChi2_A->SaveAs("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/histAchi2_"+year+".root");
+	histChi2_A->SaveAs("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/simple_model/histAchi2_"+year+".root");
 
 }

@@ -38,7 +38,7 @@ dump_files = os.listdir(dump_dir)
 log_dir = os.path.join(config["locations"]["MCRun3"]["logs"],"eval_BDT")
 
 for i,file in enumerate(dump_files):
-    cmd1 = rf"python3 {DP_USER}BDT/evaluate_dump/evaluate_dump_BDT_MC.py {i}"
+    cmd1 = rf"python3 {DP_USER}BDT/evaluate_dump/evaluate_dump_MC_BDT.py {i}"
 
     slurm_script_content = slurm_script_template.format(
         log_dir=log_dir, cmd1=cmd1, njob=i
@@ -51,5 +51,3 @@ for i,file in enumerate(dump_files):
 
     # Submit the SLURM job
     subprocess.run(["sbatch", slurm_script_file])
-
-    break
