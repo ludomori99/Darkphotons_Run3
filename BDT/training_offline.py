@@ -97,6 +97,9 @@ class Trainer:
         sig = pd.DataFrame(self.full_mass_range[sig_cut])
         bkg = pd.DataFrame(self.full_mass_range[bkg_cut])
 
+        self.sig=sig #added these two lines in second moment just to look at masses, maybe will remove
+        self.bkg=bkg
+
         sig['Score'] = 1
         bkg['Score'] = 0
         self.sig_frac = -1 if (len(sig)+len(bkg)) == 0 else len(sig)/(len(sig)+len(bkg))
@@ -176,6 +179,20 @@ class Trainer:
                         plot_MC*[self.MC_full_mass_range["weights_prompt"]])
 
         self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="BDT score",**kwargs)
+
+    def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
+        if plot_MC and 'MC_full_mass_range' not in dir(self):
+            print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
+            return
+ 
+        data_to_plot = [self.bkg,self.sig]+plot_MC*[self.MC_mass]
+        labels = ["Bkg.","Sig."]+plot_MC*["MC sig."]
+        weights=None
+        if apply_weights:
+            weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
+                        plot_MC*[self.MC_full_mass_range["weights_prompt"]])
+
+        self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="masses",**kwargs)
        
 
     @staticmethod

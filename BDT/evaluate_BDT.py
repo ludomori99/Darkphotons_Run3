@@ -6,7 +6,7 @@ import subprocess
 import os
 from config_loader import load_analysis_config,load_test_config
 
-# Script to write the bash scripts with proper current configuration 
+#Script to evaluate the trained BDTs on known mesons in configured mass ranges
 
 HOME_USER = os.environ["HOMELUDO"]
 DP_USER = os.environ["DPUSER"]
