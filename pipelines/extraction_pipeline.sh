@@ -39,6 +39,7 @@ test_or_depl='depl'
 
 # condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3_Jpsi.sub
 # condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3_Y.sub
+
 # condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3.sub
 
 # bash $DPUSER/pull_data/MCRun3/merge_final.sh
@@ -80,19 +81,27 @@ test_or_depl='depl'
 
 
 ####Evaluate the BDT on the MC data dump
-python3 $DPUSER/BDT/evaluate_dump/slurm_evaluate_dump_MC.py
+# python3 $DPUSER/BDT/evaluate_dump/slurm_evaluate_dump_MC.py
 
 
-##### create mass histogramm
+# cd ${DPUSER}CMSSW_12_6_5/src
+# cmsenv
+# cd ${DPUSER}
+
+#Compute global efficiencies (for now, could also do in different phase space slices)
+root -l -b -q ${DPUSER}utils/compute_total_efficiencies.C
+
+# ##### create mass histogramm
 # root -l -b -q ${DPUSER}utils/make_hist.C
 
 
-##### make cards out of histogram (edit the systematics manually)
+# # ##### make cards out of histogram (edit the systematics manually)
 # root -l -b -q ${DPUSER}utils/makeCardsAndWS.C
 
 
-#### run combine (need to install it. see https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/)
+# #### run combine (need to install it. see https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/)
 # python3 ${DPUSER}utils/limitprocessing.py
+# mv higgsCombinea* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/30_11/
 
-
-
+# ### plot limits
+# python3 ${DPUSER}utils/plot_limits.py

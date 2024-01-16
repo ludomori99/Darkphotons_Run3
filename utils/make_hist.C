@@ -42,7 +42,7 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     TTreeReaderValue<double>          m2eta (reader, "Mm_mu2_eta"    );
 
     int j=0;
-    int count[4]={0};
+    int count[2]={0};
     int weight=1;
     while(reader.Next()) {
         count[0]++;
@@ -55,8 +55,7 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
 	if (*forest_prompt_mva <0.9445454545454546) continue;
 	if (*soft1 < 0.3836734693877551 || *soft2 < 0.3836734693877551  ) continue;	
 
-        count[2]++;
-        count[3]++;
+        count[1]++;
 
         massforLimitFull->Fill(*mass, weight);
 	if (*mass>=8.5 && *mass<=11.2) {
@@ -77,7 +76,7 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
 
     }
     
-    cout << "final showdown " << "count1=" << count[0] << " count2=" << count[1] << " count3=" << count[2] << " count4=" << count[3] << endl;
+    cout << "final showdown: \n " << "total count=" << count[0] << " selected count=" << count[1] << " efficiency= " << count[1]/count[0] << endl;
 
     outfile->cd();
     massforLimitFull->Write();

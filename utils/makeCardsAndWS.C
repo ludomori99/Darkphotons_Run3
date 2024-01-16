@@ -65,7 +65,7 @@ void makeCardsAndWS(){
   //PREPARE EXPECTED NUMBER OF SIGNAL EVENTS PER CATEGORY
 
 	//LUMINOSITY
-	double luminosity = 6700;//pb-1
+	double luminosity = 34291.449027853321075;//pb-1
 	//EFFICIENCY
 	
 	//scale
@@ -105,7 +105,6 @@ void makeCardsAndWS(){
         // Final model is sigModel
         RooAddPdf signalModel_CatA("signalModel_CatA", "mass model", RooArgList(Gaussian, CB), GaussFraction);
 
-
       	RooDataHist data_obs_CatA("data_obs_CatA", "", RooArgList(Mm_mass), catA);
 	
 		RooRealVar bkg_norm("bkg_norm", "",catA->Integral());
@@ -116,7 +115,7 @@ void makeCardsAndWS(){
 		catA->Fit(bkfit);
 		/*TCanvas * catAc = new TCanvas("catAc", "catAc", 500, 500);
 		catA->Draw();
-		catAc->SaveAs(Form("catA%d"+year+".png",i));*/
+		catAc->SaveAs(Form("catA%d"+year+".png",i));*/ 
 		if(i>24. && (i<200. || i>240.)) {histChi2_A->Fill(bkfit->GetChisquare()/bkfit->GetNDF());}
 		
         RooRealVar a0a("a0a","a0a",bkfit->GetParameter(0),(bkfit->GetParameter(0)-bkfit->GetParError(0)*5.),(bkfit->GetParameter(0)+bkfit->GetParError(0)*5.));
