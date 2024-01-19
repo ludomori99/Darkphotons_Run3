@@ -5,13 +5,17 @@ from config_loader import load_analysis_config,load_test_config
 
 HOME_USER = os.environ["HOMEUSER"]
 DP_USER = os.environ["DPUSER"]
-OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/") 
+OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/")
 MCR3_FOLDER = os.path.join(DP_USER,"pull_data/MCRun3/") 
 
 config = load_analysis_config()
 
 #Extract config parameters for submission
 offline_grouping_amount_data = config["condor_off"]["grouping_amount_data"]
+offline_inclusive_grouping_amount_data = config["offline_inclusive"]["grouping_amount_data"]
+offline_inclusive_event_fraction = config["offline_inclusive"]["event_fraction"]
+offline_inclusive_dump_dir = config["locations"]["offline_inclusive"]["dump"]
+
 off_event_fraction = config["condor_off"]["event_fraction"]
 off_njobs = config["condor_off"]["njobs"]
 off_dump_dir = config["locations"]["offline"]["dump"]
@@ -88,7 +92,26 @@ queue {off_njobs}"""
 with open(os.path.join(OFFLINE_FOLDER,"condor_off.sub"), "w") as file:
     file.write(template_offline_condor)
 
-### Scripts to import Run3MC from condor
+
+### Offline inclusive
+template_offline_inclusive_bash = rf"""
+cd $RELEASE/src
+eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
+cd ../..
+
+start=$(( $1*{offline_inclusive_grouping_amount_data}+1 ))
+end=$(( $start+{offline_inclusive_grouping_amount_data} ))
+
+for (( N=start; N<end; N++ )); do
+    file=$(cat ./list_inclusive.txt | sed -n ''$N'p')
+    echo running $file
+    root -l -b -q generateOffDimuonTree.C\(\"$file\"\,\"r3tree_$N.root\"\,{offline_inclusive_event_fraction}\)
+done
+hadd r3tree.root r3tree_*.root
+xrdcp -f r3tree.root root://submit50.mit.edu//{offline_inclusive_dump_dir}/DimuonTree$1.root
+"""
+
+### Scripts to import MCRun3 from condor
 template_MCRun3_Jpsi_bash = rf"""
 RELEASE=CMSSW_13_0_6
 
@@ -124,9 +147,7 @@ with open(os.path.join(MCR3_FOLDER,"run_merge_MCRun3_Jpsi.sh"), "w") as file:
 
 template_MCRun3_Y_bash = rf"""
 RELEASE=CMSSW_13_0_6
-
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-
 if [ -r $RELEASE/src ] ; then
  echo release CMSSW_13_0_6 already exists
 else
@@ -145,18 +166,22 @@ for (( N=start; N<end; N++ )); do
     file=$(cat ./list.txt | sed -n ''$N'p')
     echo running $file
     xrdcp -f root://eoscms.cern.ch/$file input.root
-    root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,553\,{MCRun3_event_fraction}\)
-
+    root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3treeY1_$N.root\"\,553\,{MCRun3_event_fraction}\)
+    root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3treeY2_$N.root\"\,100553\,{MCRun3_event_fraction}\)
+    root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3treeY3_$N.root\"\,200553\,{MCRun3_event_fraction}\)
 done
-hadd r3tree.root r3tree_*.root
-xrdcp -f r3tree.root root://submit50.mit.edu//{MCRun3_dump_dir}DimuonTreeY$1.root
+hadd r3treeY1.root r3treeY1_*.root
+hadd r3treeY2.root r3treeY2_*.root
+hadd r3treeY3.root r3treeY3_*.root
+xrdcp -f r3treeY1.root root://submit50.mit.edu//{MCRun3_dump_dir}DimuonTreeY1_$1.root
+xrdcp -f r3treeY2.root root://submit50.mit.edu//{MCRun3_dump_dir}DimuonTreeY2_$1.root
+xrdcp -f r3treeY3.root root://submit50.mit.edu//{MCRun3_dump_dir}DimuonTreeY3_$1.root
 """
 with open(os.path.join(MCR3_FOLDER,"run_merge_MCRun3_Y.sh"), "w") as file:
     file.write(template_MCRun3_Y_bash)
 
 
-
-template_MCRun3_condor_Jpsi = rf"""executable = {MCR3_FOLDER}run_merge_MCRun3_Jpsi.sh
+template_MCRun3_Jpsi_condor = rf"""executable = {MCR3_FOLDER}run_merge_MCRun3_Jpsi.sh
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_input_files = {MCR3_FOLDER}list.txt,{MCR3_FOLDER}generateMCDimuonTree.C
@@ -176,10 +201,10 @@ log = {MCRun3_logs_dir}jobJpsi.$(Process).log
 Universe = vanilla
 queue {MCRun3_njobs}"""
 with open(os.path.join(MCR3_FOLDER,"condor_MCRun3_Jpsi.sub"), "w") as file:
-    file.write(template_MCRun3_condor_Jpsi)
+    file.write(template_MCRun3_Jpsi_condor)
 
 
-template_MCRun3_condor_Y = rf"""executable = {MCR3_FOLDER}run_merge_MCRun3_Y.sh
+template_MCRun3_Y_condor = rf"""executable = {MCR3_FOLDER}run_merge_MCRun3_Y.sh
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 transfer_input_files = {MCR3_FOLDER}list.txt,{MCR3_FOLDER}generateMCDimuonTree.C
@@ -199,7 +224,7 @@ log = {MCRun3_logs_dir}jobY.$(Process).log
 Universe = vanilla
 queue {MCRun3_njobs}"""
 with open(os.path.join(MCR3_FOLDER,"condor_MCRun3_Y.sub"), "w") as file:
-    file.write(template_MCRun3_condor_Y)
+    file.write(template_MCRun3_Y_condor)
 
 template_MCRun3_condor = rf"""executable = {MCR3_FOLDER}run_merge_MCRun3.sh
 should_transfer_files = YES
@@ -231,7 +256,10 @@ cd {DP_USER}CMSSW_13_0_6/src
 eval `scramv1 runtime -sh`
 cd {MCR3_FOLDER}
 hadd -f {MCRun3_Jpsi_dir}merged_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeJpsi*.root
-hadd -f {MCRun3_Y_dir}merged_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeY*.root
+hadd -f {MCRun3_Y_dir}mergedY1_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeY1_*.root
+hadd -f {MCRun3_Y_dir}mergedY2_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeY2_*.root
+hadd -f {MCRun3_Y_dir}mergedY3_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeY3_*.root
+hadd -f {MCRun3_Y_dir}mergedY_A.root /data/submit/{MCRun3_dump_dir}DimuonTreeY*.root
 
 # rm {MC_Y_dir}MC*
 # rm {MC_Jpsi_dir}MC*

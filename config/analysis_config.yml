@@ -5,6 +5,10 @@ condor_off:
   #54732/50
   njobs: 1094
 
+offline_inclusive:
+  event_fraction: 10
+  grouping_amount_data: 40
+
 #Run3 MC is on lxplus hence use condor
 condor_MC:
   event_fraction: 1
@@ -31,6 +35,11 @@ locations:
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
+  offline_inclusive:
+    dump: mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/logs/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/Jpsi/
+    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/Y/
   MC:  
     #dump: have root://submit50.mit.edu// in front 
     dump: mori25/dark_photons_ludo/DimuonTrees/MC/dump/

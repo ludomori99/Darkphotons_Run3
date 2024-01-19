@@ -107,6 +107,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     // TTreeReaderArray<bool>          muon_tightId (reader, "Muon_tightId");
     // TTreeReaderArray<bool>          muon_triggerIdLoose (reader, "Muon_triggerIdLoose");
 
+    TTreeReaderValue<bool>          HLT_Dimuon0_LowMass (reader, "HLT_Dimuon0_LowMass");   
     TTreeReaderArray<float>          muon_softMva (reader, "Muon_softMva");
 
     unsigned run; 
@@ -183,6 +184,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     float Muon_Dz2;
     float Muon_charge1;
     float Muon_charge2;
+
+    bool Dimuon0_LowMass;
+    int Mm_gen_pdgId;
 
     // vector<bool> Muon_looseId;
     // vector<bool> Muon_mediumId;
@@ -270,6 +274,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Muon_Dz1",&Muon_Dz1,32000,0);
     outtree->Branch("Muon_Dz2",&Muon_Dz2,32000,0);
 
+    outtree->Branch("HLT_Dimuon0_LowMass",&Dimuon0_LowMass, 32000,0);
+    outtree->Branch("Mm_gen_pdgId",&Mm_gen_pdgId,32000,0);
 
 
     // outtree->Branch("Muon_looseId",&Muon_looseId,32000,0);
@@ -377,9 +383,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Muon_Dz1 = Dz[idx1];
         Muon_Dz2 = Dz[idx2];
 
-        for (int j=0; j<2; j++) {
-            int i = idx1;
-            if (j == 1){i = idx2;}
+        // for (int j=0; j<2; j++) {
+        //     int i = idx1;
+        //     if (j == 1){i = idx2;}
 
             // MuonId_chi2LocalPosition.push_back((muonId_chi2LocalPosition)[i]);
             // MuonId_glbNormChi2.push_back((muonId_glbNormChi2)[i]);
@@ -413,8 +419,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
             // Muon_softMvaId.push_back((muon_softMvaId)[i]);
             // Muon_triggerIdLoose.push_back((muon_triggerIdLoose)[i]);
             // Muon_tightId.push_back((muon_tightId)[i]);
-        }
+        // }
         
+        Mm_gen_pdgId = mm_gen_pdgId[mm_idx];
         Mm_docatrk = mm_docatrk[mm_idx];
         Mm_iso = mm_iso[mm_idx];
         Mm_kin_alpha = mm_kin_alpha[mm_idx];
@@ -454,6 +461,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         luminosityBlock = *LumSec;
         Event = *event;
         NMuonId = *nMuonId;
+        Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
 
 	outtree->Fill(); 
    }
