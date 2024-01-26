@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Set the folder to monitor
-log_folder="/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/"
+log_folder="/data/submit/mori25/dark_photons_ludo/DimuonTrees/$1"
 
 # Set the keywords to search for in log files
-keywords=("error" "warning" "critical")
+keywords=("error" "warning" "critical" "not found")
 
 # Function to check if a log file contains any of the specified keywords
 check_log_file() {
@@ -22,7 +22,7 @@ if [ -d "$log_folder" ]; then
     echo "Monitoring logs in $log_folder..."
 
     # Loop through each log file in the folder
-    for log_file in "$log_folder"/*.log; do
+    for log_file in "$log_folder"/*.; do
         if [ -f "$log_file" ]; then
             check_log_file "$log_file"
         fi

@@ -17,7 +17,7 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
 
     TFile *inputfile = TFile::Open(inputfilename);
     TTreeReader reader("Events", inputfile);
-    TTreeReaderValue<unsigned int>          nmm (reader, "nmm");
+    TTreeReaderValue<int>          nmm (reader, "nmm");
 
     TTreeReaderArray<float>          mpt  (reader, "Muon_pt"    );
     TTreeReaderArray<float>          meta  (reader, "Muon_eta"    );
@@ -25,7 +25,7 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     TTreeReaderArray<float>          Dxy (reader, "Muon_dxy" );
     TTreeReaderArray<float>          Dz (reader, "Muon_dz" );    
 
-    TTreeReaderValue<unsigned int>   nMuon  (reader, "nMuon" );
+    TTreeReaderValue<int>   nMuon  (reader, "nMuon" );
     TTreeReaderValue<unsigned int>   Run  (reader, "run" );
     TTreeReaderValue<unsigned int>   LumSec (reader, "luminosityBlock" );
     TTreeReaderValue<unsigned long long>   event (reader, "event");

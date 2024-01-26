@@ -17,28 +17,38 @@ elif test_or_depl == 'depl' :
 else:
     print("Error: no configuration available")
 
-#directory to extract ntuples. dump dir has slightly different definition
-off_dump_dir = "/data/submit/"+config["locations"]["offline"]["dump"]
+trigger = "dimuon" #or inclusive
 
-def write_tree_data(particle):
+
+#directory to extract ntuples. dump dir has slightly different definition
+off_data_dir = config["locations"]["offline"]
+off_inclusive_data_dir = config["locations"]["offline_inclusive"]
+
+
+def write_tree_data(particle, data_dir):
 
     #particle = "Y" or "Jpsi"
 
     #Extract config infos: mass range, branches to be used and included in the trees
     mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
-    off_dir = config["locations"]["offline"][particle]
+    out_dir = data_dir[particle]
     reduction_factor = config["BDT_training"][particle]["reduction_factor"]
     branches = config["ntuple_branches"]
     branch_dic = {branch: 'float' for branch in branches}
 
-    with up.recreate(os.path.join(off_dir, "merged_A.root")) as outfile:
-        print("Start processing ",os.path.join(off_dir, "merged_A.root"))
+    with up.recreate(os.path.join(out_dir, "merged_A.root")) as outfile:
+        print("Start processing ",os.path.join(out_dir, "merged_A.root"))
         outfile.mktree("tree",branch_dic)
         error_indices = []
-        for i in range(config["condor_off"]["njobs"]):
-            if i and i%10 == 0: print("done file #", i)
+        nfiles=10#config["condor_off"]["njobs"]
+        for i in range(nfiles):
+            if i and i%10 == 0: 
+                print(f"Processing {i}/{nfiles}", end="\r")
+                sys.stdout.flush()
             try: 
-                intree = up.open(off_dump_dir+"DimuonTree"+str(i)+".root:tree")
+                filename = data_dir["dump"]+"DimuonTree"+str(i)+".root:tree"
+                print(filename)
+                intree = up.open(filename)
 
                 #define mass cut 
                 mass = intree["Mm_mass"].array()
@@ -69,6 +79,7 @@ def write_tree_data(particle):
 
 
 if __name__ == "__main__":
-    # write_tree_data("Y")
-    write_tree_data("Jpsi")
+    write_tree_data("Y",off_data_dir)
+    write_tree_data("Jpsi",off_data_dir)
+    # write_tree_data("Y",off_inclusive_data_dir)
 

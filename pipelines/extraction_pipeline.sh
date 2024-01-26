@@ -15,40 +15,51 @@ test_or_depl='depl'
 
 
 ############### DATA EXTRACTION ############
-# ###generate the scripts to extract data and MC 
-# python3 $DPUSER/utils/generate_scripts_extraction.py $test_or_depl
+# # ###generate the scripts to extract data and MC 
+# python3 $DPUSER/utils/generate_scripts_extraction.py
 # echo Generated scripts
 
-###If needed., create a list with the offline files to extract
+# # ###If needed., create a list with the offline files to extract
 # bash $DPUSER/pull_data/offline/make_list.sh
-# echo Made list of files to extract 
+# echo Made list of files to extract \(offline\)
 
-###submit the condor batch job to extract the offline data
-# condor_submit $DPUSER/pull_data/offline/condor_off.sub
+# ## Extract Dilepton Inclusive MC
+# bash $DPUSER/pull_data/MC_InclusiveMinBias/make_list.sh
+# echo Made list of files to extract \(MC_InclusiveMinBias\)
 
-# TODO : implement check that extraction was successful
-
-
-## Extract MC 
-# python3 $DPUSER/pull_data/MC/slurm_submit.py
-# TODO : implement check that extraction was successful
-# bash $DPUSER/pull_data/MC/merge_final.sh
+# ## Extract low mass DY MC
+# bash $DPUSER/pull_data/MC_lmDY/make_list.sh
+# echo Made list of files to extract \(MC_lmDY\)
 
 
-## Extract new MC
+#### Condor section 
+# condor_submit $DPUSER/pull_data/offline/offline.sub
 
-# condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3_Jpsi.sub
-# condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3_Y.sub
+# ## submit the low mass DY MC data
+python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
 
-# condor_submit $DPUSER/pull_data/MCRun3/condor_MCRun3.sub
+# TODO : implement check that extraction is complete (probably monitor .out files)
 
-# bash $DPUSER/pull_data/MCRun3/merge_final.sh
+# bash $DPUSER/utils/scan_logs.sh "offline/logs"
+# bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
+
+
+### Extract with slurm the Inclusive Min Bias dilepton inclusive 
+# bash $DPUSER/pull_data/MC_InclusiveMinBias/run_try.sh # for testing the script
+
+# condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias_Jpsi.sub
+# condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias_Y.sub
+# condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias.sub #to pick all data, used to estimate global efficiency 
+
+
+## need to wait until extraction is completed
+# bash $DPUSER/pull_data/MC_InclusiveMinBias/merge_final.sh
 
 
 ########### END OF EXTRACTION ##################### 
 
 
-############# SKIM DATA FOR BDT #######################
+########## SKIM DATA FOR BDT #######################
 # python3 $DPUSER/utils/skim_mass.py $test_or_depl
 
 
@@ -71,6 +82,11 @@ test_or_depl='depl'
 # root -l -b -q ${DPUSER}utils/sPlot.C\(\"Jpsi\"\,1\)
 # root -l -b -q ${DPUSER}utils/sPlot.C\(\"Jpsi\"\,0\)
 
+######## LOOK AT SIGNAL MODEL #############
+
+
+# root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\)
+
 
 #####################################
 #####  Now look to select the actual data ########
@@ -89,7 +105,7 @@ test_or_depl='depl'
 # cd ${DPUSER}
 
 #Compute global efficiencies (for now, could also do in different phase space slices)
-root -l -b -q ${DPUSER}utils/compute_total_efficiencies.C
+# root -l -b -q ${DPUSER}utils/compute_total_efficiencies.C
 
 # ##### create mass histogramm
 # root -l -b -q ${DPUSER}utils/make_hist.C

@@ -8,7 +8,7 @@ from config_loader import load_analysis_config,load_test_config
 
 #Script to evaluate the trained BDTs on known mesons in configured mass ranges
 
-HOME_USER = os.environ["HOMELUDO"]
+HOME_USER = os.environ["HOMEUSER"]
 DP_USER = os.environ["DPUSER"]
 OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/") 
 
@@ -84,5 +84,5 @@ if __name__=="__main__":
     print("")
     # evaluate_BDT("Y", "forest_standard_Y")
     # evaluate_BDT("Jpsi", "forest_standard_Y")
-    # evaluate_BDT("Y", "forest_prompt_Jpsi")
-    # evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
+    evaluate_BDT("Y", "forest_prompt_Jpsi")
+    evaluate_BDT("Jpsi", "forest_prompt_Jpsi")

@@ -54,7 +54,7 @@ class Trainer:
         print("Start loading data")
         if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
         else :  self.off_dir = config["locations"]["offline"][self.particle]
-        self.filename=self.off_dir+"merged_A.root"
+        self.filename=self.off_dir+"merged_A_bkp.root"
         self.full_mass_range = up.open(self.filename + ":tree").arrays(library = 'pd')
         self.mass = self.full_mass_range["Mm_mass"]
         print(f"Successfully imported data file {self.filename} to memory")
@@ -466,6 +466,7 @@ def Jpsi_MC_weights():
 def add_branch_weights_prompt():
     """
     Add branch "weights_prompt" to Y data and MC. quick fix to be able to work with sPlot consistently
+    Effectively adding constant weights to Y events (since Y already prompt) to have the name in 
     """
     MC_file_name = os.path.join(config["locations"]["MCRun3"]["Y"], "merged_A.root")
     MC_file=up.open(MC_file_name)
@@ -484,9 +485,9 @@ def add_branch_weights_prompt():
 
 if __name__ == "__main__":
     print("Executing training block")
-    train_prompt_Jpsi()
-    # Jpsi_MC_weights()
-    # add_branch_weights_prompt()
+    # train_prompt_Jpsi()
+    Jpsi_MC_weights()
+    add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
     # Y_trainer.complete_train()

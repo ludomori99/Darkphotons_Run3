@@ -1,59 +1,47 @@
 #Section for event extraction
-condor_off:
-  event_fraction: 10
-  grouping_amount_data: 50
-  #54732/50
-  njobs: 1094
+extraction:
 
-offline_inclusive:
-  event_fraction: 10
-  grouping_amount_data: 40
+  offline: #uses condor
+    event_fraction: 100
+    grouping_amount_data: 132
+    #95172/132
+    njobs: 721
 
-#Run3 MC is on lxplus hence use condor
-condor_MC:
-  event_fraction: 1
-  grouping_amount_data: 53
-  #14840/53
-  njobs: 280
+  MC_lmDY: #uses slurm
+    event_fraction: 1
+    grouping_amount_data: 40
 
-#Run2 MC is on submit already hence use slurm 
-MC_slurm:
-  grouping_amount_data: 50
-  #3000/50
-  njobs: 60
-  particles:
-    Y1: 553
-    Jpsi: 443
+  MC_InclusiveMinBias: #uses condor
+    event_fraction: 1
+    grouping_amount_data: 53
+    #14840/53
+    njobs: 280
 
 #Folders for dumping large number of events
 locations:
   public_html: /home/submit/mori25/public_html/
   offline:  
     #have root://submit50.mit.edu// in front 
-    dump: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
+    dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump/
+    dump_short: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
     dump_post_BDT: mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
-  offline_inclusive:
-    dump: mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/dump/
-    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/logs/
-    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/Jpsi/
-    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline_inclusive/Y/
-  MC:  
-    #dump: have root://submit50.mit.edu// in front 
-    dump: mori25/dark_photons_ludo/DimuonTrees/MC/dump/
-    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/logs/
-    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Jpsi/
-    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC/Y/
-    MINIAOD: /data/submit/wangzqe/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8+Run3Summer22MiniAODv3-Pilot_124X_mcRun3_2022_realistic_v12-v5+MINIAODSIM/
-  MCRun3:
-    dump_large: mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump_large/
-    dump_large_post_BDT: mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump_large_post_BDT/
-    dump:  mori25/dark_photons_ludo/DimuonTrees/MCRun3/dump/
-    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/logs/
-    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/
-    Y:    /data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/
+  MC_lmDY:
+    dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/logs/
+    tmp: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/tmp/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/Jpsi/
+    Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/Y/
+  MC_InclusiveMinBias:
+    dump_large: mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump_large/
+    dump_large_post_BDT: mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump_large_post_BDT/
+    dump_short:  mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/
+    dump:  /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/
+    logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/logs/
+    Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/
+    Y:    /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Y/
   sPlot: /data/submit/mori25/dark_photons_ludo/DimuonTrees/sPlot/
 
 

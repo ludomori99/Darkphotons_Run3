@@ -10,7 +10,7 @@
 using namespace std;
 
 
-void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID) {
+void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 10, bool use_particleID = true) {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree","tree");
@@ -73,6 +73,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     TTreeReaderArray<float>          mm_m1iso (reader, "mm_m1iso");
     TTreeReaderArray<float>          mm_m2iso (reader, "mm_m2iso");
     TTreeReaderArray<float>          mm_mass (reader, "mm_mass");
+    TTreeReaderArray<float>          mm_gen_mass (reader, "mm_gen_mass");
+    TTreeReaderArray<int>          mm_gen_pdgId (reader, "mm_gen_pdgId");
     TTreeReaderArray<float>          mm_mva (reader, "mm_mva");
     TTreeReaderArray<float>          mm_otherVtxMaxProb (reader, "mm_otherVtxMaxProb");
     TTreeReaderArray<float>          mm_otherVtxMaxProb1 (reader, "mm_otherVtxMaxProb1");
@@ -83,7 +85,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     TTreeReaderArray<int>          mm_closetrks3 (reader, "mm_closetrks3");
     TTreeReaderArray<int>          mm_nDisTrks (reader, "mm_nDisTrks");
 
-    TTreeReaderArray<int>          mm_gen_pdgId (reader, "mm_gen_pdgId");
+
     TTreeReaderArray<float>          mm_mu1_pt (reader, "mm_mu1_pt");
     TTreeReaderArray<float>          mm_mu1_eta (reader, "mm_mu1_eta");
     TTreeReaderArray<float>          mm_mu2_pt (reader, "mm_mu2_pt");
@@ -105,6 +107,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     // TTreeReaderArray<bool>          muon_tightId (reader, "Muon_tightId");
     // TTreeReaderArray<bool>          muon_triggerIdLoose (reader, "Muon_triggerIdLoose");
 
+    TTreeReaderValue<bool>          HLT_Dimuon0_LowMass (reader, "HLT_Dimuon0_LowMass");   
     TTreeReaderArray<float>          muon_softMva (reader, "Muon_softMva");
 
     unsigned run; 
@@ -154,6 +157,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     float Mm_m1iso;
     float Mm_m2iso;
     float Mm_mass;
+    float Mm_gen_mass;
     float Mm_mva;
     float Mm_otherVtxMaxProb;
     float Mm_otherVtxMaxProb1;
@@ -180,6 +184,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     float Muon_Dz2;
     float Muon_charge1;
     float Muon_charge2;
+
+    bool Dimuon0_LowMass;
+    int Mm_gen_pdgId;
 
     // vector<bool> Muon_looseId;
     // vector<bool> Muon_mediumId;
@@ -237,6 +244,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Mm_m1iso",&Mm_m1iso,32000,0);
     outtree->Branch("Mm_m2iso",&Mm_m2iso,32000,0);
     outtree->Branch("Mm_mass",&Mm_mass,32000,0);
+    outtree->Branch("Mm_gen_mass",&Mm_gen_mass,32000,0);
     outtree->Branch("Mm_mva",&Mm_mva,32000,0);
     outtree->Branch("Mm_otherVtxMaxProb",&Mm_otherVtxMaxProb,32000,0);
     outtree->Branch("Mm_otherVtxMaxProb1",&Mm_otherVtxMaxProb1,32000,0);
@@ -266,6 +274,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Muon_Dz1",&Muon_Dz1,32000,0);
     outtree->Branch("Muon_Dz2",&Muon_Dz2,32000,0);
 
+    outtree->Branch("HLT_Dimuon0_LowMass",&Dimuon0_LowMass, 32000,0);
+    outtree->Branch("Mm_gen_pdgId",&Mm_gen_pdgId,32000,0);
 
 
     // outtree->Branch("Muon_looseId",&Muon_looseId,32000,0);
@@ -281,9 +291,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     int counter=0;
 
     while(reader.Next()) {
-        if (counter%10000==0) cout << counter << " events completed" << endl;
-	    counter+=1;
-        // if (counter%10!=0) continue;
+        counter+=1;
+        if (counter%10000==0) cout << counter << " events parsed" << endl;
+        if (counter%event_fraction!=0) continue;
 
         if (*nMuon<2) continue;
         // MuonId_chi2LocalPosition.clear();
@@ -361,7 +371,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
             }
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
         
-        if (mm_gen_pdgId[mm_idx] != particle_ID) continue;        
+        if(mpt[idx2]<4 || abs(meta[idx2])>1.9) continue;
+        if (use_particleID && mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
         Muon_softMva1 = muon_softMva[idx1];
         Muon_softMva2 = muon_softMva[idx2];
@@ -372,9 +383,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Muon_Dz1 = Dz[idx1];
         Muon_Dz2 = Dz[idx2];
 
-        for (int j=0; j<2; j++) {
-            int i = idx1;
-            if (j == 1){i = idx2;}
+        // for (int j=0; j<2; j++) {
+        //     int i = idx1;
+        //     if (j == 1){i = idx2;}
 
             // MuonId_chi2LocalPosition.push_back((muonId_chi2LocalPosition)[i]);
             // MuonId_glbNormChi2.push_back((muonId_glbNormChi2)[i]);
@@ -408,8 +419,9 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
             // Muon_softMvaId.push_back((muon_softMvaId)[i]);
             // Muon_triggerIdLoose.push_back((muon_triggerIdLoose)[i]);
             // Muon_tightId.push_back((muon_tightId)[i]);
-        }
+        // }
         
+        Mm_gen_pdgId = mm_gen_pdgId[mm_idx];
         Mm_docatrk = mm_docatrk[mm_idx];
         Mm_iso = mm_iso[mm_idx];
         Mm_kin_alpha = mm_kin_alpha[mm_idx];
@@ -427,6 +439,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Mm_m1iso = mm_m1iso[mm_idx];
         Mm_m2iso = mm_m2iso[mm_idx];
         Mm_mass = mm_mass[mm_idx];
+        Mm_gen_mass = mm_gen_mass[mm_idx];
         Mm_mva = mm_mva[mm_idx];
         Mm_otherVtxMaxProb = mm_otherVtxMaxProb[mm_idx];
         Mm_otherVtxMaxProb1 = mm_otherVtxMaxProb1[mm_idx];
@@ -448,6 +461,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         luminosityBlock = *LumSec;
         Event = *event;
         NMuonId = *nMuonId;
+        Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
 
 	outtree->Fill(); 
    }

@@ -21,10 +21,10 @@ echo done
 
 njobs=97
 
-for i in range(njobs):
+for i in range(1):
     work_dir = os.getcwd()
-    log_dir = config["locations"]["offline_inclusive"]["logs"]
-    cmd1 = rf"bash {DP_USER}pull_data/offline/run_merge_off_inclusive.sh " +str(i)
+    log_dir = config["locations"]["MC_lmDY"]["logs"]
+    cmd1 = rf"bash {DP_USER}pull_data/MC_lmDY/run_merge_MC_lmDY.sh " +str(i)
 
     slurm_script_content = slurm_script_template.format(
         log_dir=log_dir, work_dir=work_dir, cmd1=cmd1, njob=i

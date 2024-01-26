@@ -1,8 +1,6 @@
 
 RELEASE=CMSSW_13_0_6
-
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-
 if [ -r $RELEASE/src ] ; then
  echo release CMSSW_13_0_6 already exists
 else
@@ -13,15 +11,15 @@ cd $RELEASE/src
 eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
 cd ../..
 
-start=$(( $1*50+1 ))
-end=$(( $start+50 ))
+start=$(( $1*132+1 ))
+end=$(( $start+132 ))
 
 for (( N=start; N<end; N++ )); do
 
-    file=$(cat ./list.txt | sed -n ''$N'p')
+    file=$(cat ./list_offline.txt | sed -n ''$N'p')
     echo running $file
     xrdcp -f root://eoscms.cern.ch/$file input.root
-    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,10\)
+    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,100\)
 
 done
 hadd r3tree.root r3tree_*.root
