@@ -28,20 +28,19 @@ using namespace std;
  
 // see below for implementationbelow for implementatio
 void load_config(const char* ,bool, const char*&, const char*&, const char*&, const char*&, Double_t&, Double_t&, const char*);
-void AddModelJ_dCB_G(RooWorkspace &, bool,  Double_t, Double_t);
-void AddModelJ_dG(RooWorkspace &, bool,  Double_t, Double_t);
+void AddModelJ_dCB_G(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
+void AddModelJ_dG(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
 void AddModelY(RooWorkspace &, bool,  Double_t, Double_t);
 void AddModelYMC(RooWorkspace &, bool,  Double_t, Double_t);
 void AddData(RooWorkspace &, const char*, Double_t, Double_t, int);
 void DoFit(RooWorkspace &, const char*, const char*);
 void SaveData(RooWorkspace &, const char*);
-void MakePlots(RooWorkspace &, const char*);
+// void MakePlots(RooWorkspace &, const char*);
 
 
 
 void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "Y"
 {
-
    // Create a workspace to manage the project.
    RooWorkspace wspace{"myWS"};
    const char* file_name;
@@ -50,16 +49,15 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi"
    const char* inputfilename;
    Double_t lowRange;
    Double_t highRange;
-
+   cout<<"hello";
    load_config(meson, isMC, file_name, fig_name, model_name, inputfilename, lowRange, highRange, "1M");
-
-   AddModelJ_dCB_G(wspace,isMC, lowRange, highRange);
-   // AddModelJ_dG(wspace,isMC, lowRange, highRange);
+   AddModelJ_dCB_G(wspace,isMC, "dCB", lowRange, highRange);
+   // AddModelJ_dG(wspace,isMC, "dG", lowRange, highRange);
 
    AddData(wspace, inputfilename, lowRange, highRange, nEntries);
-   DoFit(wspace,model_name, file_name);
+   DoFit(wspace,"dCB", file_name);
    // SaveData(wspace, file_name);
-   MakePlots(wspace, fig_name);
+   // MakePlots(wspace, fig_name);
 }
 
 
@@ -99,12 +97,12 @@ void load_config(const char* meson, bool isMC,
       lowRange = 8.5;
       highRange = 11.2;
       if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root"; //Upsilon MC
-      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root"; //Upsilon data
+      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A_bkp.root"; //Upsilon data
    }
    else {cout<<"type of meson not recognized";}
 }
  
-void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange) //double CB + Gaussian
+void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* filename, Double_t lowRange, Double_t highRange) //double CB + Gaussian
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
 
@@ -158,12 +156,12 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t h
 
    // now make the combined models
    std::cout << "make full model" << std::endl;
-   RooAddPdf massModel("massModel", "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+   RooAddPdf massModel(filename, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
  
    std::cout << "import model" << std::endl;
    ws.import(massModel);
 }
-void AddModelJ_dG(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange) //Double Gaussian
+void AddModelJ_dG(RooWorkspace &ws, bool isMC, const char* filename, Double_t lowRange, Double_t highRange) //Double Gaussian
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
 
@@ -207,7 +205,7 @@ void AddModelJ_dG(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t high
 
    // now make the combined models
    std::cout << "make full model" << std::endl;
-   RooAddPdf massModel("massModel", "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+   RooAddPdf massModel(filename, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
  
    std::cout << "import model" << std::endl;
    ws.import(massModel);
@@ -345,34 +343,7 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    TTree *tree = inputfile->Get<TTree>("tree");
     
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange); 
-
-   RooRealVar Muon_softMva1("Muon_softMva1", "Muon_softMva1", -1, 1);
-   RooRealVar Muon_softMva2("Muon_softMva2", "Muon_softMva2", -1, 1);
-   RooRealVar Mm_kin_lxy("Mm_kin_lxy", "Mm_kin_lxy", 0, 100);
-   RooRealVar Mm_kin_eta("Mm_kin_eta", "Mm_kin_eta", -10, 10);
-
-   //training vars
-   RooRealVar Mm_kin_l3d("Mm_kin_l3d", "Mm_kin_l3d", -1000000, 1000000);
-   RooRealVar Mm_kin_sl3d("Mm_kin_sl3d", "Mm_kin_sl3d", -1000000, 1000000);
-   RooRealVar Mm_kin_vtx_chi2dof("Mm_kin_vtx_chi2dof", "Mm_kin_vtx_chi2dof", -1000000, 1000000);
-   RooRealVar Mm_kin_vtx_prob("Mm_kin_vtx_prob", "Mm_kin_vtx_prob", -1000000, 1000000);
-   RooRealVar Mm_kin_alpha("Mm_kin_alpha", "Mm_kin_alpha", -1000000, 1000000);
-   RooRealVar Mm_kin_alphaBS("Mm_kin_alphaBS", "Mm_kin_alphaBS", -1000000, 1000000);
-   RooRealVar Mm_closetrk("Mm_closetrk", "Mm_closetrk", -1000000, 1000000);
-   RooRealVar Mm_closetrks1("Mm_closetrks1", "Mm_closetrks1", -1000000, 1000000);
-   RooRealVar Mm_closetrks2("Mm_closetrks2", "Mm_closetrks2", -1000000, 1000000);
-   RooRealVar Mm_kin_pvip("Mm_kin_pvip", "Mm_kin_pvip", -1000000, 1000000);
-   RooRealVar Mm_kin_spvip("Mm_kin_spvip", "Mm_kin_spvip", -1000000, 1000000);
-   RooRealVar Mm_kin_pvlip("Mm_kin_pvlip", "Mm_kin_pvlip", -1000000, 1000000);
-   RooRealVar Mm_kin_slxy("Mm_kin_slxy", "Mm_kin_slxy", -1000000, 1000000);
-   RooRealVar Mm_iso("Mm_iso", "Mm_iso", -1000000, 1000000);
-   RooRealVar Mm_otherVtxMaxProb("Mm_otherVtxMaxProb", "Mm_otherVtxMaxProb", -1000000, 1000000);
-   RooRealVar Mm_otherVtxMaxProb1("Mm_otherVtxMaxProb1", "Mm_otherVtxMaxProb1", -1000000, 1000000);
-   RooRealVar Mm_otherVtxMaxProb2("Mm_otherVtxMaxProb2", "Mm_otherVtxMaxProb2", -1000000, 1000000);
-
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
-      Mm_kin_vtx_prob,Mm_kin_alpha,Mm_kin_alphaBS,Mm_closetrk,Mm_closetrks1,Mm_closetrks2,Mm_kin_pvip,Mm_kin_spvip,Mm_kin_pvlip,Mm_kin_slxy,Mm_iso,Mm_otherVtxMaxProb,
-      Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree));
+   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass), Import(*tree));
 
    Int_t numEntries = data_full.numEntries();
    TBits outputBits = TBits(numEntries);
@@ -396,7 +367,7 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
 //____________________________________
 void DoFit(RooWorkspace &ws, const char* modelname, const char* file_name)
 {
-   RooAbsPdf *massModel = ws.pdf("massModel");
+   RooAbsPdf *massModel = ws.pdf(modelname);
    RooRealVar *sigYield = ws.var("sigYield");
    RooRealVar *bkgYield = ws.var("bkgYield");
    RooRealVar *Mm_mass = ws.var("Mm_mass");
@@ -411,7 +382,7 @@ void DoFit(RooWorkspace &ws, const char* modelname, const char* file_name)
    sigYield->setConstant(false);
    bkgYield->setConstant(false);
    massModel->fitTo(data_mass);
-   massModel->graphVizTree(modelname);
+   // massModel->graphVizTree(modelname);
 
    // std::cout<<massModel->getParameters();
    // massModel->printMultiline(std::cout,10);
@@ -435,111 +406,4 @@ void SaveData(RooWorkspace &ws, const char* file_name)
 
    cout<<"\n\n saving file as "<<file_name<<"\n\n";
 
-}
-
-void MakePlots(RooWorkspace &ws, const char* fig_name)
-{
-   std::cout << "make plots" << std::endl;
-   // setTDRStyle();
-
-   TCanvas *cdata = new TCanvas("fit", "fit demo", 2000, 1500);
-   RooAbsPdf *sigModel = ws.pdf("sigModel");
-   RooAbsPdf *bkgModel = ws.pdf("bkgModel");
-   RooAbsPdf *massModel = ws.pdf("massModel");
-
-   RooRealVar *Mm_mass = ws.var("Mm_mass");
- 
-   RooRealVar *sigYield = ws.var("sigYield");
-   RooRealVar *bkgYield = ws.var("bkgYield");
-   auto& data = static_cast<RooDataSet&>(*ws.data("data"));
-   RooDataSet data_mass{data.GetName(), data.GetTitle(), &data, RooArgSet(*Mm_mass), nullptr};
-
-   cdata->Divide(1, 2);
-
-   cdata->cd(1);
-   RooPlot *frame = Mm_mass->frame(Title("Fit of model to discriminating variable"));
-   data_mass.plotOn(frame,XErrorSize(1), Name("Data"), MarkerSize(0.6), DrawOption("PZ"));
-   massModel->plotOn(frame, Name("FullModel"));
-   massModel->plotOn(frame, Components(*sigModel), Name("SigModel"),DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
-   massModel->plotOn(frame, Components(*bkgModel), LineStyle(7), LineColor(7), Name("BkgModel"));
-   
-   //compute chisquare
-   RooAbsCollection *flparams = massModel->getParameters(data_mass)->selectByAttrib("Constant", kFALSE);
-   Int_t nflparams = flparams->getSize();
-   cout << nflparams << "\n";
-   Double_t chisquare = -1;
-   chisquare = 1; //frame->chiSquare("massModel", "data", nflparams);
- 
-   TLegend leg(0.8, 0.6, 0.9,0.85);
-   leg.AddEntry(frame->findObject("FullModel"), "Full model", "l");
-   leg.AddEntry(frame->findObject("SigModel"), "Signal model", "l");
-   leg.AddEntry(frame->findObject("BkgModel"), "Bkg model", "l");
-   leg.SetBorderSize(0);
-   leg.SetFillStyle(0);
-   leg.SetTextSize(0.04);
-   leg.SetTextFont(42);
-   leg.Draw();
-
-   TPaveText *label_2 = new TPaveText(0.55, 0.23, 0.8, 0.50, "NDC");
-   label_2->SetBorderSize(0);
-   label_2->SetFillColor(0);
-   label_2->SetTextSize(0.041);
-   label_2->SetTextFont(42);
-   gStyle->SetStripDecimals(kTRUE);
-   label_2->SetTextAlign(11);
-   TString sYield = to_string(int(round(sigYield->getValV())));
-   TString bYield = to_string(int(round(bkgYield->getValV())));
-   label_2->AddText("N_{sig} = " + sYield);
-   label_2->AddText("N_{bkg} = " + bYield);
-   label_2->Draw();
-
-   TPaveText *cms = new TPaveText(0.14, 0.922, 0.3, 0.93, "NDC");
-   cms->AddText("CMS preliminary");
-   cms->SetBorderSize(0);
-   cms->SetFillColor(0);
-   cms->SetTextSize(0.04);
-   cms->SetTextFont(42);
-   cms->Draw();
-   
-   gPad->SetLeftMargin(0.15) ;
-   gPad->SetBottomMargin(0.03);
-   gPad->SetPad(0.01,0.2,0.99,0.99);
-   frame->GetYaxis()->SetTitleSize(0.04);
-   frame->GetYaxis()->SetTitleOffset(1.2);
-   frame->GetXaxis()->SetLabelSize(0.);
-   frame->GetXaxis()->SetTitleSize(0.);
-   frame->Draw();
-
-   //plot pulls
-   cdata->cd(2);
-   // RooHist *hpull = frame->pullHist("data", "massModel");
-   RooPlot *frame2 = Mm_mass->frame(Title("Pull"));
-   // frame2->addPlotable(hpull, "P"); //,"E3");
-   frame2->SetMarkerStyle(2);
-   frame2->SetMarkerSize(0.01);
-
-   gPad->SetLeftMargin(0.15);
-   gPad->SetPad(0.01, 0.01, 0.99, 0.2);
-   gPad->SetTopMargin(0.1);
-   gPad->SetBottomMargin(0.5);
-   frame2->GetYaxis()->SetNdivisions(202);
-   frame2->GetYaxis()->SetRangeUser(-4, 4);
-   frame2->GetXaxis()->SetTitle("m_{#mu#mu} [GeV]");
-   frame2->GetYaxis()->SetTitle("Pulls");
-   frame2->GetXaxis()->SetTitleSize(0.2);
-   frame2->GetYaxis()->SetTitleSize(0.2);
-   frame2->GetXaxis()->SetLabelSize(0.15);
-   frame2->GetYaxis()->SetLabelSize(0.15);
-   frame2->GetXaxis()->SetLabelOffset(0.01);
-   frame2->GetYaxis()->SetLabelOffset(0.01);
-   frame2->GetYaxis()->SetTitleOffset(0.2);
-   frame2->GetXaxis()->SetTickLength(0.1);
-   gPad->SetFrameFillColor(0);
-   gPad->SetFrameBorderMode(0);
-   gPad->SetFrameFillColor(0);
-   gPad->SetFrameBorderMode(0);
-   frame2->Draw();
-
-   cdata->SaveAs(fig_name);
-   cout << "\n\n saving file as " << fig_name << "\n\n";
 }

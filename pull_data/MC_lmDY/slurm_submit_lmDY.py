@@ -21,8 +21,8 @@ echo done
 
 njobs=97
 
-for i in range(1):
-    work_dir = os.getcwd()
+for i in range(njobs):
+    work_dir = DP_USER
     log_dir = config["locations"]["MC_lmDY"]["logs"]
     cmd1 = rf"bash {DP_USER}pull_data/MC_lmDY/run_merge_MC_lmDY.sh " +str(i)
 

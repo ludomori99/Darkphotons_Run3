@@ -61,8 +61,8 @@ class Trainer:
 
         if include_MC: 
             print("Start loading MC data")
-            if data_particle: self.MC_dir = config["locations"]["MCRun3"][data_particle]
-            else :  self.MC_dir = config["locations"]["MCRun3"][self.particle]
+            if data_particle: self.MC_dir = config["locations"]["MC_InclusiveMinBias"][data_particle]
+            else :  self.MC_dir = config["locations"]["MC_InclusiveMinBias"][self.particle]
             self.MC_filename=self.MC_dir+"merged_A.root"
             self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd')
             self.MC_mass = self.MC_full_mass_range["Mm_mass"]
@@ -442,7 +442,7 @@ def train_prompt_Jpsi():
     return 
 
 def Jpsi_MC_weights():
-    MC_file_name = os.path.join(config["locations"]["MCRun3"]["Jpsi"], "merged_A.root")
+    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Jpsi"], "merged_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
 
@@ -468,7 +468,7 @@ def add_branch_weights_prompt():
     Add branch "weights_prompt" to Y data and MC. quick fix to be able to work with sPlot consistently
     Effectively adding constant weights to Y events (since Y already prompt) to have the name in 
     """
-    MC_file_name = os.path.join(config["locations"]["MCRun3"]["Y"], "merged_A.root")
+    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Y"], "merged_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
     weights_extended = np.ones_like(MC_data["Mm_mass"])

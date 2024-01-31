@@ -22,8 +22,6 @@ trigger = "dimuon" #or inclusive
 
 #directory to extract ntuples. dump dir has slightly different definition
 off_data_dir = config["locations"]["offline"]
-off_inclusive_data_dir = config["locations"]["offline_inclusive"]
-
 
 def write_tree_data(particle, data_dir):
 
@@ -81,5 +79,3 @@ def write_tree_data(particle, data_dir):
 if __name__ == "__main__":
     write_tree_data("Y",off_data_dir)
     write_tree_data("Jpsi",off_data_dir)
-    # write_tree_data("Y",off_inclusive_data_dir)
-

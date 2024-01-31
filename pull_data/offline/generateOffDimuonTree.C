@@ -29,7 +29,7 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     TTreeReaderValue<unsigned int>   Run  (reader, "run" );
     TTreeReaderValue<unsigned int>   LumSec (reader, "luminosityBlock" );
     TTreeReaderValue<unsigned long long>   event (reader, "event");
-    TTreeReaderValue<unsigned int>            nMuonId (reader, "nMuonId");
+    TTreeReaderValue<int>            nMuonId (reader, "nMuonId");
 
     // TTreeReaderArray<float>          muonId_chi2LocalPosition (reader, "MuonId_chi2LocalPosition");
     // TTreeReaderArray<float>          muonId_glbNormChi2 (reader, "MuonId_glbNormChi2");

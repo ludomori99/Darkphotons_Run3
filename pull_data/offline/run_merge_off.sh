@@ -11,8 +11,8 @@ cd $RELEASE/src
 eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
 cd ../..
 
-start=$(( $1*132+1 ))
-end=$(( $start+132 ))
+start=$(( $1*66+1 ))
+end=$(( $start+66 ))
 
 for (( N=start; N<end; N++ )); do
 

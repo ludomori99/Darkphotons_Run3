@@ -10,13 +10,14 @@
 using namespace std;
 
 
-void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 10, bool use_particleID = true) {
+void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 1, bool use_particleID = true) {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree","tree");
+    TFile *inputfile = TFile::Open(inputfilename);    
 
-    TFile *inputfile = TFile::Open(inputfilename);
-    TTreeReader reader("Events", inputfile);
+    TTreeReader reader("Events", inputfile);   
+    
     TTreeReaderValue<unsigned int>          nmm (reader, "nmm");
 
     TTreeReaderArray<float>          mpt  (reader, "Muon_pt"    );
@@ -30,6 +31,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     TTreeReaderValue<unsigned int>   LumSec (reader, "luminosityBlock" );
     TTreeReaderValue<unsigned long long>   event (reader, "event");
     TTreeReaderValue<unsigned int>            nMuonId (reader, "nMuonId");
+
+
 
     // TTreeReaderArray<float>          muonId_chi2LocalPosition (reader, "MuonId_chi2LocalPosition");
     // TTreeReaderArray<float>          muonId_glbNormChi2 (reader, "MuonId_glbNormChi2");
@@ -294,7 +297,6 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         counter+=1;
         if (counter%10000==0) cout << counter << " events parsed" << endl;
         if (counter%event_fraction!=0) continue;
-
         if (*nMuon<2) continue;
         // MuonId_chi2LocalPosition.clear();
         // MuonId_glbNormChi2.clear();
@@ -372,6 +374,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         }// now idx2 is the highest pt muon among those paired with idx1 in a dimuon
         
         if(mpt[idx2]<4 || abs(meta[idx2])>1.9) continue;
+
         if (use_particleID && mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
         Muon_softMva1 = muon_softMva[idx1];
@@ -462,7 +465,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Event = *event;
         NMuonId = *nMuonId;
         Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
-
+    
 	outtree->Fill(); 
    }
      

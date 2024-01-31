@@ -22,7 +22,7 @@ if [ -d "$log_folder" ]; then
     echo "Monitoring logs in $log_folder..."
 
     # Loop through each log file in the folder
-    for log_file in "$log_folder"/*.; do
+    for log_file in "$log_folder"/*.*; do
         if [ -f "$log_file" ]; then
             check_log_file "$log_file"
         fi
