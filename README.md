@@ -22,7 +22,9 @@ Y_trainer = Trainer("Y", 'forest_ID')
 Y_trainer.complete_train()
 Y_trainer.plot_model() #if desired, can provide kwarg saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
 ```
-For the Jpsi prompt analysis we need to apply reweighing to the Jpsi data. For this purpose we define the `train_prompt_Jpsi()` function separately. We also added some small scripts to add a `prompt_weight` branch to each ntuple we are using, for the case we are not training on that data. This is just to keep the ntuples consistent when we are to work with them to extract the systematics. 
+For the Jpsi prompt analysis we need to apply reweighing to the Jpsi data. For this purpose we define the `train_prompt_Jpsi()` function separately. We first compute the reweighing on the prompt center of the Jpsi peak, and define the weight of the sideband background events to be `=1`. At training stage, the background weights are tuned by a multiplicative factor `w_frac_bkg` in the function `prepare_training_set`. We also added some small scripts to add a `prompt_weight` branch to each ntuple we are using, for the case we are not training on that data. This is just to keep the ntuples consistent when we are to work with them to extract the systematics. 
+
+Note: for training with current configuration (in particular with `tree_method: "gpu_hist"`) need to have a working GPU on the used machine.
 
 
 **Hardcoded parts**

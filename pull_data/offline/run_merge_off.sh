@@ -19,7 +19,7 @@ for (( N=start; N<end; N++ )); do
     file=$(cat ./list_offline.txt | sed -n ''$N'p')
     echo running $file
     xrdcp -f root://eoscms.cern.ch/$file input.root
-    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,100\)
+    root -l -b -q generateOffDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,20\)
 
 done
 hadd r3tree.root r3tree_*.root

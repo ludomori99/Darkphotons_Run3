@@ -2,9 +2,9 @@
 extraction:
 
   offline: #uses condor
-    event_fraction: 100
+    event_fraction: 20
     grouping_amount_data: 66
-    #95172/132
+    #95172/66
     njobs: 1442
 
   MC_lmDY: #uses slurm
@@ -82,7 +82,25 @@ ntuple_branches:
   - Muon_Dxy2
   - Muon_Dz1
   - Muon_Dz2
-
+  - Muon_looseId
+  - Muon_mediumId1
+  - Muon_mediumId2 
+  - Muon_mediumPromptId1
+  - Muon_mediumPromptId2 
+  - Muon_isGlobal1
+  - Muon_isGlobal2 
+  - Muon_softMvaId1
+  - Muon_softMvaId2 
+  - Muon_softId1
+  - Muon_softId2 
+  - Muon_isStandalone1
+  - Muon_isStandalone2 
+  - Muon_tightId1
+  - Muon_tightId2 
+  - Muon_triggerIdLoose1
+  - Muon_triggerIdLoose2 
+  - Muon_isTracker1
+  - Muon_isTracker2 
 
 #Section for training 
 BDT_training:
@@ -90,8 +108,9 @@ BDT_training:
     limits:
       inclusive: [8.5,11.2]
       signal: 
-        - [9.405, 9.505]
-        - [10.305, 10.405]
+        - [9.41, 9.51]
+        - [9.97, 10.07]
+        - [10.295, 10.405]
       background:
         - [8.4,8.9]
         - [10.8,11.3]
@@ -111,8 +130,9 @@ BDT_training:
           min_child_weight: 0
           colsample_bytree: 1.0
           num_parallel_tree: 500
-          eval_metric: "logloss"
-          tree_method: "gpu_hist"
+          eval_metric: "auc"
+          tree_method: "hist"
+          device: "cuda"
         reweighing:
           do: True
           lxy_cutoff: 0.5
@@ -152,7 +172,8 @@ BDT_training:
           colsample_bytree: 1.0
           num_parallel_tree: 500
           eval_metric: "logloss"
-          tree_method: "gpu_hist"
+          tree_method: "hist"
+          device: "cuda"
         num_rounds: 30
         random_seed: 10
         train_vars:
@@ -181,7 +202,7 @@ BDT_training:
       tree_standard:
         hyperpars:
           objective: 'binary:logistic'
-          max_depth: 6
+          max_depth: 8
           nthread: 15
           eval_metric: "auc"
           subsample: 1.0
@@ -190,6 +211,8 @@ BDT_training:
           lambda: 0.8
           min_child_weight: 0.0001
           colsample_bytree: 1.0
+          tree_method: "hist"
+          device: "cuda"
         num_rounds: 50
         random_seed: 10
         train_vars:
@@ -255,7 +278,8 @@ BDT_training:
           colsample_bytree: 1.0
           num_parallel_tree: 500
           eval_metric: "logloss"
-          tree_method: "gpu_hist"
+          tree_method: "hist"
+          device: "cuda"
         reweighing:
           do: False
         num_rounds: 30
@@ -291,14 +315,15 @@ BDT_training:
           min_child_weight: 0.1
           colsample_bytree: 0.4
           num_parallel_tree: 500
-          eval_metric: "logloss"
-          tree_method: "gpu_hist"
+          eval_metric: "auc"
+          tree_method: "hist"
+          device: "cuda"
         reweighing:
           do: True
           lxy_cutoff: 0.5
           nbins_fit: 100
           nbins_corrections: 100 
-        num_rounds: 30
+        num_rounds: 20
         random_seed: 10
         train_vars:
           - Mm_kin_lxy

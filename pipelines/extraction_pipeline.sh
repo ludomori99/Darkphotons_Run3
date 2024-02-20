@@ -35,13 +35,11 @@ test_or_depl='depl'
 #### Condor section 
 # condor_submit $DPUSER/pull_data/offline/offline.sub
 
+# bash $DPUSER/pull_data/offline_normal/run_merge_off_normal.sh
+
 # ## submit the low mass DY MC data
-python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
+# python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
 
-# TODO : implement check that extraction is complete (probably monitor .out files)
-
-# bash $DPUSER/utils/scan_logs.sh "offline/logs"
-# bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
 
 
 ### Extract with slurm the Inclusive Min Bias dilepton inclusive 
@@ -49,12 +47,20 @@ python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
 
 # condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias_Jpsi.sub
 # condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias_Y.sub
-# condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias.sub #to pick all data, used to estimate global efficiency 
+# condor_submit $DPUSER/pull_data/MC_InclusiveMinBias/MC_InclusiveMinBias.sub 
+
+
+# TODO : implement check that extraction is complete (probably monitor .out files)
+
+# bash $DPUSER/utils/scan_logs.sh "offline/logs"
+# bash $DPUSER/utils/scan_logs.sh "MC_InclusiveMinBias/logs"
+# bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
 
 
 ## need to wait until extraction is completed
 # bash $DPUSER/pull_data/MC_InclusiveMinBias/merge_final.sh
 
+# hadd -f /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/inclusive/merged_A.root /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump/*.root
 
 ########### END OF EXTRACTION ##################### 
 
@@ -86,6 +92,14 @@ python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
 
 
 # root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\)
+# root -l -b -q ${DPUSER}fits/plot_fit.C\(\)
+
+# root -l -b -q ${DPUSER}fits/sandbox.C\(\)
+
+
+########## Tag and probe #################
+
+root -l -b -q ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C
 
 
 #####################################

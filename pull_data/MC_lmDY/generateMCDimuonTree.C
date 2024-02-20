@@ -111,6 +111,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     // TTreeReaderArray<bool>          muon_triggerIdLoose (reader, "Muon_triggerIdLoose");
 
     TTreeReaderValue<bool>          HLT_Dimuon0_LowMass (reader, "HLT_Dimuon0_LowMass");   
+    TTreeReaderValue<bool>          HLT_DoubleMu4_3_LowMass (reader, "HLT_DoubleMu4_3_LowMass");   
     TTreeReaderArray<float>          muon_softMva (reader, "Muon_softMva");
 
     unsigned run; 
@@ -189,6 +190,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     float Muon_charge2;
 
     bool Dimuon0_LowMass;
+    bool DoubleMu4_3_LowMass;
     int Mm_gen_pdgId;
 
     // vector<bool> Muon_looseId;
@@ -278,6 +280,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Muon_Dz2",&Muon_Dz2,32000,0);
 
     outtree->Branch("HLT_Dimuon0_LowMass",&Dimuon0_LowMass, 32000,0);
+    outtree->Branch("HLT_DoubleMu4_3_LowMass",&DoubleMu4_3_LowMass, 32000,0);
     outtree->Branch("Mm_gen_pdgId",&Mm_gen_pdgId,32000,0);
 
 
@@ -465,6 +468,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Event = *event;
         NMuonId = *nMuonId;
         Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
+        DoubleMu4_3_LowMass = *HLT_DoubleMu4_3_LowMass;
     
 	outtree->Fill(); 
    }

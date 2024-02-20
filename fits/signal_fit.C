@@ -27,44 +27,59 @@ using namespace RooStats;
 using namespace std;
  
 // see below for implementationbelow for implementatio
-void load_config(const char* ,bool, const char*&, const char*&, const char*&, const char*&, Double_t&, Double_t&, const char*);
+void load_config(const char* ,bool, const char*&, const char*&, const char*&, Double_t&, Double_t&, const char*);
 void AddModelJ_dCB_G(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
 void AddModelJ_dG(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
+void AddModelJ_VG(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
+void AddModelJ_dCB_V(RooWorkspace &, bool, const char*, Double_t , Double_t);
 void AddModelY(RooWorkspace &, bool,  Double_t, Double_t);
 void AddModelYMC(RooWorkspace &, bool,  Double_t, Double_t);
 void AddData(RooWorkspace &, const char*, Double_t, Double_t, int);
 void DoFit(RooWorkspace &, const char*, const char*);
-void SaveData(RooWorkspace &, const char*);
-// void MakePlots(RooWorkspace &, const char*);
-
 
 
 void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "Y"
 {
    // Create a workspace to manage the project.
-   RooWorkspace wspace{"myWS"};
    const char* file_name;
-   const char* fig_name;
    const char* model_name; 
    const char* inputfilename;
    Double_t lowRange;
    Double_t highRange;
-   cout<<"hello";
-   load_config(meson, isMC, file_name, fig_name, model_name, inputfilename, lowRange, highRange, "1M");
-   AddModelJ_dCB_G(wspace,isMC, "dCB", lowRange, highRange);
-   // AddModelJ_dG(wspace,isMC, "dG", lowRange, highRange);
 
-   AddData(wspace, inputfilename, lowRange, highRange, nEntries);
-   DoFit(wspace,"dCB", file_name);
-   // SaveData(wspace, file_name);
-   // MakePlots(wspace, fig_name);
+   RooWorkspace ws_dCB{"ws_dCB"};
+   model_name = "dCB";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dCB,model_name, file_name);
+
+   RooWorkspace ws_dG{"ws_dG"};
+   model_name = "dG";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dG,model_name, file_name);
+
+   RooWorkspace ws_VG{"ws_VG"};
+   model_name = "VG";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
+   DoFit(ws_VG,model_name, file_name);
+
+   RooWorkspace ws_dCB_V{"ws_dCB_V"};
+   model_name = "dCB_V";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dCB_V,model_name, file_name);
+
 }
-
 
 
 void load_config(const char* meson, bool isMC,
                const char*& file_name,
-               const char*& fig_name,
                const char*& model_name, 
                const char*& inputfilename, 
                Double_t& lowRange,
@@ -72,37 +87,34 @@ void load_config(const char* meson, bool isMC,
                const char* extra = "")
 {
    const char** data_or_MC = new const char*;
-   if (isMC) *data_or_MC = "_MC";
-   else *data_or_MC = "_data";
+   if (isMC) *data_or_MC = "_MC_";
+   else *data_or_MC = "_data_";
 
-   string s = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/") + string(meson) + string(*data_or_MC) + string(extra) + string(".root");
+   string s = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/") + string(meson) + string(*data_or_MC) + string(model_name) + string(".root");
    string* file_name_str = new string(s);
    file_name = file_name_str->c_str();
-
-   s = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/") + string(meson) + string(*data_or_MC) + string(extra) + string(".gif");
-   string* fig_name_str = new string(s);
-   fig_name = fig_name_str->c_str();
    
-   s = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/") + string(meson) + string("_fit") + string(*data_or_MC) + string(extra) + string(".dot");
-   string* model_name_str = new string(s); 
-   model_name = model_name_str->c_str();
+   // s = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/") + string(meson) + string("_fit") + string(*data_or_MC) + string(extra) + string(".dot");
+   // string* model_name_str = new string(s); 
+   // model_name = model_name_str->c_str();
 
    if (string(meson) == string("Jpsi")) {
       lowRange = 2.6;
       highRange = 3.56;
       if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/merged_A.root"; //JPsi MC
-      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/merged_A_bkp.root"; //Jpsi data
+      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/merged_A.root"; //Jpsi data
    }
    else if(string(meson) == string("Y")){
       lowRange = 8.5;
       highRange = 11.2;
       if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root"; //Upsilon MC
-      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A_bkp.root"; //Upsilon data
+      else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root"; //Upsilon data
    }
    else {cout<<"type of meson not recognized";}
 }
  
-void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* filename, Double_t lowRange, Double_t highRange) //double CB + Gaussian
+
+void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* modelName, Double_t lowRange, Double_t highRange)
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
 
@@ -156,12 +168,12 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* filename, Double_t
 
    // now make the combined models
    std::cout << "make full model" << std::endl;
-   RooAddPdf massModel(filename, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+   RooAddPdf massModel(modelName, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
  
    std::cout << "import model" << std::endl;
    ws.import(massModel);
 }
-void AddModelJ_dG(RooWorkspace &ws, bool isMC, const char* filename, Double_t lowRange, Double_t highRange) //Double Gaussian
+void AddModelJ_dG(RooWorkspace &ws, bool isMC, const char* modelName, Double_t lowRange, Double_t highRange) //Double Gaussian
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
 
@@ -170,9 +182,9 @@ void AddModelJ_dG(RooWorkspace &ws, bool isMC, const char* filename, Double_t lo
    RooRealVar sigma1("sigma1", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
    RooGaussian Gaussian1("Gaussian1", "Gaussian1", Mm_mass, mu1, sigma1);
 
-   RooRealVar mu2("mu2", "J/Psi Mass", 3.09809, lowRange, highRange);
+   // RooRealVar mu2("mu2", "J/Psi Mass", 3.09809, lowRange, highRange);
    RooRealVar sigma2("sigma2", "Width of Gaussian", 1, 0.001, 10, "GeV");
-   RooGaussian Gaussian2("Gaussian2", "Gaussian2", Mm_mass, mu2, sigma2);
+   RooGaussian Gaussian2("Gaussian2", "Gaussian2", Mm_mass, mu1, sigma2);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of first Gaussian", 0.5, 0, 1, "");
 
@@ -205,11 +217,120 @@ void AddModelJ_dG(RooWorkspace &ws, bool isMC, const char* filename, Double_t lo
 
    // now make the combined models
    std::cout << "make full model" << std::endl;
-   RooAddPdf massModel(filename, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+   RooAddPdf massModel(modelName, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
  
    std::cout << "import model" << std::endl;
    ws.import(massModel);
 }
+void AddModelJ_VG(RooWorkspace &ws, bool isMC, const char* modelName, Double_t lowRange, Double_t highRange) //Gaussian + Voigtian
+{
+   RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
+   RooRealVar mu1("mu1", "J/Psi Mass", 3.09809, lowRange, highRange);
+   RooRealVar sigma1("sigma1", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
+   RooGaussian Gaussian("Gaussian1", "Gaussian1", Mm_mass, mu1, sigma1);
+
+   RooRealVar sigma2("sigma2", "Width of Gaussian", 1, 0.001, 10, "GeV");
+   RooRealVar l("l", "Width of BW", 1, 0.001, 10, "GeV");
+   RooVoigtian Voigtian("Gaussian2", "Gaussian2", Mm_mass, mu1, sigma2,l);
+
+   RooRealVar GaussFraction("GaussFraction", "Fraction of first Gaussian", 0.5, 0, 1, "");
+
+   // Final model is sigModel
+   RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Gaussian, Voigtian), GaussFraction);
+   // --------------------------------------
+   // make bkg model
+   std::cout << "make bkg model" << std::endl;
+   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
+   RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);
+ 
+   // --------------------------------------
+   //Signal and bkg yields
+   RooRealVar sigYield("sigYield", "fitted yield for Signal",0);
+   RooRealVar bkgYield("bkgYield", "fitted yield for Background",0);
+
+   if (isMC){
+      sigYield.setVal(1000);
+      sigYield.setRange(0., 100000000);
+      bkgYield.setVal(50 );
+      bkgYield.setRange(0,1000000);
+   }
+
+   else{
+      sigYield.setVal(90000);
+      sigYield.setRange(0,1000000);
+      bkgYield.setVal(10000);
+      bkgYield.setRange(0,1000000);
+   }
+
+   // now make the combined models
+   std::cout << "make full model" << std::endl;
+   RooAddPdf massModel(modelName, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+ 
+   std::cout << "import model" << std::endl;
+   ws.import(massModel);
+}
+void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_t lowRange, Double_t highRange)
+{
+   RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
+
+   // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
+   RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
+   RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
+   RooRealVar l("l", "Width of BW", 0.0378, 0.001, 10, "GeV");
+   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+
+   RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
+   RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
+   RooRealVar nL("nL", "nL CB", 0.8, 0.1,15, "");
+   RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.001, 5, "");
+   RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
+   RooRealVar alphaR("alphaL", "Alpha left CB", 1.7, 0.001, 5, "");
+   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+   RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");
+
+   // Final model is sigModel
+   RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Voigtian, CB), GaussFraction);
+   // --------------------------------------
+   // make bkg model
+   std::cout << "make bkg model" << std::endl;
+   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
+   RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);   
+
+   // RooRealVar c0("c0","c0",1,-100,100,"");
+   // RooRealVar c1("c1","c1",1,-100,100,"");
+   // RooRealVar c2("c2","c2",1,-100,100,"");
+   // RooRealVar c3("c3","c3",1,-100,100,"");
+   // RooBernstein bkgModel("bkgModel", "bkg Mass Model", Mm_mass,RooArgList(c0,c1,c2,c3));
+ 
+   // --------------------------------------
+   //Signal and bkg yields
+   RooRealVar sigYield("sigYield", "fitted yield for Signal",0);
+   RooRealVar bkgYield("bkgYield", "fitted yield for Background",0);
+
+   if (isMC){
+      sigYield.setVal(1000);
+      sigYield.setRange(0., 100000000);
+      bkgYield.setVal(50 );
+      bkgYield.setRange(0,1000000);
+   }
+
+   else{
+      sigYield.setVal(90000);
+      sigYield.setRange(0,1000000);
+      bkgYield.setVal(10000);
+      bkgYield.setRange(0,1000000);
+   }
+
+   // now make the combined models
+   std::cout << "make full model" << std::endl;
+   RooAddPdf massModel(modelName, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+ 
+   std::cout << "import model" << std::endl;
+   ws.import(massModel);
+}
+
+
 void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange)
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
@@ -359,7 +480,7 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    }
 
    // RooAbsData* data = data_full.reduce( EventRange(0,100000)); //Cut("Mm_mass<9.8||Mm_mass>10.7"),
-   // import data into workspace
+   // import data into workspacemassModel
    ws.import(*data);
 
 }
@@ -389,21 +510,4 @@ void DoFit(RooWorkspace &ws, const char* modelname, const char* file_name)
 
    std::cout<<sigYield->getVal()<<"  ;   "<<bkgYield->getVal() << "\n \n \n";
    ws.writeToFile(file_name);
-}
-
-void SaveData(RooWorkspace &ws, const char* file_name)
-{  
-   RooDataSet& data = static_cast<RooDataSet&>(*ws.data("data"));
-   TFile* out = new TFile(file_name, "RECREATE");
-   out->cd();
-   RooDataSet::setDefaultStorageType(RooAbsData::Tree);
-
-   RooDataSet mydataw (data.GetName(),data.GetTitle(), &data,*data.get());
-   const TTree* tree8 = mydataw.GetClonedTree();
-   cout << "tree entries: " << tree8->GetEntries() << endl;
-   tree8->Write();
-   out->Close();
-
-   cout<<"\n\n saving file as "<<file_name<<"\n\n";
-
 }

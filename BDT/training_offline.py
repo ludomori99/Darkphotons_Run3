@@ -36,11 +36,6 @@ def load_analysis_config():
 config = load_analysis_config()
 
 
-"""
-Load data : 0.5 test, 0.25 val, 0.25 train
-"""
-
-
 class Trainer:
 
     def __init__(self, particle, modelname = None) -> None:
@@ -50,7 +45,7 @@ class Trainer:
         else: self.modelname = self.particle_config["BDT_training"]["modelname"]
         return
     
-    def load_data(self, data_particle = None,include_MC=False):
+    def load_data(self, data_particle = None,include_MC=False,signal_indices=None,**kwargs):
         print("Start loading data")
         if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
         else :  self.off_dir = config["locations"]["offline"][self.particle]
@@ -63,22 +58,33 @@ class Trainer:
             print("Start loading MC data")
             if data_particle: self.MC_dir = config["locations"]["MC_InclusiveMinBias"][data_particle]
             else :  self.MC_dir = config["locations"]["MC_InclusiveMinBias"][self.particle]
-            self.MC_filename=self.MC_dir+"merged_A.root"
+            peak_index = ""
+            if signal_indices is not None: 
+                peak_index="Y"
+                for i in signal_indices:
+                    peak_index += str(i+1)
+            self.MC_filename=self.MC_dir+"merged"+peak_index+"_A.root"
             self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd')
             self.MC_mass = self.MC_full_mass_range["Mm_mass"]
             print(f"Successfully imported data file {self.MC_filename} to memory")
         return
     
-    def prepare_training_set(self,data_particle = None, data_override=None, weights = None,w_frac_bkg=0.1):
+    def prepare_training_set(self,data_particle = None, data_override=None, weights = None,w_frac_bkg=0.1, signal_indices=None, **kwargs):
         """
         data_particle: if want to evaluate on particle different from particle from training given in __init__
+        signal_indices: array like [1,2] to say to get just Y1 and Y2 
         """
         if data_override is not None: 
             self.full_mass_range = data_override
             self.mass = self.full_mass_range["Mm_mass"]
         #Define signal and background
-        sig_lims = self.particle_config["limits"]["signal"] if not data_particle else config["BDT_training"][data_particle]["limits"]["signal"] 
+        if signal_indices is not None: 
+            sig_lims = np.array(self.particle_config["limits"]["signal"])[signal_indices] if not data_particle else np.array(config["BDT_training"][data_particle]["limits"]["signal"])[signal_indices]
+        else:
+            sig_lims = self.particle_config["limits"]["signal"] if not data_particle else config["BDT_training"][data_particle]["limits"]["signal"]
         bkg_lims = self.particle_config["limits"]["background"] if not data_particle else config["BDT_training"][data_particle]["limits"]["background"] 
+
+        print("sig_lims:", sig_lims)
 
         if self.modelname == None: self.modelname = self.particle_config["modelname"]
         self.hyperpars = self.particle_config["models"][self.modelname]["hyperpars"]
@@ -104,6 +110,18 @@ class Trainer:
         bkg['Score'] = 0
         self.sig_frac = -1 if (len(sig)+len(bkg)) == 0 else len(sig)/(len(sig)+len(bkg))
 
+        def slice_df(df,N,seed=42):
+            if len(df)<N:
+                return df
+            return df.sample(n=N, random_state=seed)
+
+        #discard random events to equalize sig and bkg 
+        if len(sig)>len(bkg):
+            sig = slice_df(sig,len(bkg))
+        else:
+            bkg = slice_df(bkg,len(sig))
+
+
         self.trainData = pd.concat([sig,bkg]).reset_index(drop=True)
         self.trainData_skinny = self.trainData[self.train_vars]
         self.full_mass_range_skinny = self.full_mass_range[self.train_vars]
@@ -113,47 +131,58 @@ class Trainer:
             bkg_weights = w_frac_bkg*np.ones((len(bkg),))
             weights = np.concatenate([sig_weights,bkg_weights])     
             self.weights=weights
-            print(f"Total signal events: {np.sum(sig_cut)}\n Total signal weight: {np.sum(sig_weights)}, {np.round(np.sum(sig_weights)/(np.sum(sig_weights)+np.sum(bkg_weights)),2)} of total weight")
+            self.sig_weight_frac=np.round(np.sum(sig_weights)/(np.sum(sig_weights)+np.sum(bkg_weights)),2)
+            print(f"Total signal events: {np.sum(sig_cut)}\n Total signal weight: {np.sum(sig_weights)}, {self.sig_weight_frac} of total weight")
+
         
         #NB: train_test_split conserves row indexing throughout splitting. Indexing range remains that of trainData (meaning X_train and X_val will be smaller than trainData but retain the corresponding indices)
 
-        X_temp, self.X_test, y_temp, self.y_test = train_test_split(self.trainData_skinny, self.trainData["Score"], test_size=0.1, shuffle=True, random_state=random_seed)
-        self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(X_temp, y_temp, test_size=0.5, shuffle=True, random_state=random_seed)
+        X_temp, self.X_test, y_temp, self.y_test = train_test_split(self.trainData_skinny, self.trainData["Score"], test_size=0.05, shuffle=True, random_state=random_seed)
+        self.X_train, self.X_val, self.y_train, self.y_val = train_test_split(X_temp, y_temp, test_size=0.3, shuffle=True, random_state=random_seed)
         self.dtrain = xgb.DMatrix(self.X_train, label=self.y_train, weight = weights[self.X_train.index] if weights is not None else None) 
         self.dval = xgb.DMatrix(self.X_val, label=self.y_val, weight = weights[self.X_val.index] if weights is not None else None)
         print(f"Defined training and evaluation datasets\n")
 
-    def train_model(self):
-        print(f"Train on {len(self.X_train)} events, of which an approximate fraction {self.sig_frac} is signal, and {len(self.train_vars)} variables")
+    def train_model(self,name_extra="",**kwargs):
+        s=np.sum(self.y_train==1)
+        b=np.sum(self.y_train==0)
+        print(f"Train on {len(self.X_train)} events, of which an approximate fraction {s/(s+b)} is signal, and {len(self.train_vars)} variables")
         num_round = self.particle_config["models"][self.modelname]["num_rounds"]
         evallist = [(self.dtrain, 'train'), (self.dval, 'eval')]
         self.bst = xgb.train(self.hyperpars, self.dtrain, num_round, evals=evallist)
-        self.bst.save_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
-        print("Training successful, model saved to file " + os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
+        self.bst.save_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+name_extra+".json"))
+        print("Training successful, model saved to file " + os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+name_extra+".json"))
         return
 
-    def load_model(self):
+    def training_metadata(self):
+        #not used 
+        self.test_bkg=self.bst.predict(xgb.DMatrix(self.X_test[self.y_test==0]))
+        self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
+        d = {}
+        return 
+
+    def load_model(self,name_extra=""):
         self.bst = xgb.Booster()
-        print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
+        print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+name_extra+".json"))
         try:
-            self.bst.load_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+".json"))
+            self.bst.load_model(os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+name_extra+".json"))
             print("loading successful")
         except Exception as e:
             print(e)
         return 
     
-    def complete_train(self):
+    def complete_train(self,**kwargs):
         #out-of-the-box for training
-        self.load_data()
-        self.prepare_training_set()
-        self.train_model()
+        self.load_data(**kwargs)
+        self.prepare_training_set(**kwargs)
+        self.train_model(**kwargs)
 
-    def complete_load(self, data_particle = None, include_MC=False, weights=None):
-        self.load_data(data_particle,include_MC=include_MC)
-        self.prepare_training_set(data_particle,weights=weights)
-        self.load_model()
+    def complete_load(self, data_particle = None, include_MC=False, weights=None,**kwargs):
+        self.load_data(data_particle,include_MC=include_MC,**kwargs)
+        self.prepare_training_set(data_particle,weights=weights,**kwargs)
+        self.load_model(**kwargs)
 
-    def plot_model(self,plot_training=False,plot_MC=False, apply_weights=False,density=True,**kwargs):
+    def plot_model(self,plot_training=False,plot_MC=False, apply_weights=False,density=True,compute_optimal_cut=True,**kwargs):
 
         if plot_MC and 'MC_full_mass_range' not in dir(self):
             print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
@@ -173,12 +202,30 @@ class Trainer:
         data_to_plot = [self.val_bkg,self.val_sig]+plot_training*[self.train_bkg,self.train_sig]+plot_MC*[self.val_MC]
         labels = ["Bkg.","Sig."]+plot_training*["Training bkg.","Train sig."]+plot_MC*["MC sig."]
         weights=None
+        text= None
         if apply_weights:
             weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
                         plot_training*[self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]] + 
                         plot_MC*[self.MC_full_mass_range["weights_prompt"]])
 
-        self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="BDT score",**kwargs)
+        if compute_optimal_cut:
+            def significance(dis_lim):
+                sig = (self.val_sig > dis_lim)
+                s = np.sum(sig)
+                bkg = (self.val_bkg > dis_lim)
+                b = np.sum(bkg)
+                return s/np.sqrt(b) if b!= 0 else 0
+             
+            vtx_vals= np.linspace(0.3,0.9,50)
+            significance_vals = np.vectorize(significance)(vtx_vals)
+            max_idx = np.argmax(significance_vals)
+            max_cut = vtx_vals[max_idx]
+            # max_significance = significance_vals[max_idx]
+            sig_eff = np.sum(self.val_sig > max_cut)/len(self.val_sig)
+            bkg_eff = np.sum(self.val_bkg > max_cut)/len(self.val_bkg)
+            text = f"max cut={round(max_cut,2)}\nsig eff.={round(sig_eff,2)}\nbkg eff.={round(bkg_eff,2)}"
+
+        self.plot_hist(data_to_plot,labels,weights = weights,density=density, text=text, xlabel="BDT score",**kwargs)
 
     def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
         if plot_MC and 'MC_full_mass_range' not in dir(self):
@@ -434,12 +481,14 @@ def train_prompt_Jpsi():
     weights_extended[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff] = weights
     Jpsi_trainer.save_weight_to_tree(Jpsi_trainer.filename, weights_extended,"weights_prompt")
 
-    #Perform training and plot
-    # Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights)
-    # Jpsi_trainer.train_model()
-    # Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+".png")
+    #Perform training and plot with different w parameters
+    for w in [0.1825]:#np.linspace(0.1,0.25,21):    
+        Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights, w_frac_bkg=w)
+        Jpsi_trainer.train_model(name_extra=f"_w={w}_auc")
+        Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+f"_w={w}_auc"+".png")
 
     return 
+
 
 def Jpsi_MC_weights():
     MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Jpsi"], "merged_A.root")
@@ -486,8 +535,8 @@ def add_branch_weights_prompt():
 if __name__ == "__main__":
     print("Executing training block")
     # train_prompt_Jpsi()
-    Jpsi_MC_weights()
-    add_branch_weights_prompt()
+    # Jpsi_MC_weights()
+    # add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
     # Y_trainer.complete_train()
@@ -495,7 +544,27 @@ if __name__ == "__main__":
 
     # Y_trainer = Trainer("Y", 'tree_standard')
     # Y_trainer.complete_train()
-    # Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_tree_standard.png")
+
+    Y_trainer = Trainer("Y", 'forest_standard')
+    Y_trainer.complete_train(name_extra='1',signal_indices=[0],include_MC=True)
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y1_forest_standard.png")
+
+    Y_trainer = Trainer("Y", 'forest_standard')
+    Y_trainer.complete_train(name_extra='2',signal_indices=[1],include_MC=True)
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y2_forest_standard.png")
+
+    Y_trainer = Trainer("Y", 'forest_standard')
+    Y_trainer.complete_train(name_extra='12',signal_indices=[0,1],include_MC=True)
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y12_forest_standard.png")
+
+    Y_trainer = Trainer("Y", 'forest_standard')
+    Y_trainer.complete_train(name_extra='13',signal_indices=[0,2],include_MC=True)
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y13_forest_standard.png")
+
+    Y_trainer = Trainer("Y", 'forest_standard')
+    Y_trainer.complete_train(name_extra='123',signal_indices=[0,1,2],include_MC=True)
+    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y123_forest_standard.png")
 
     # Jpsi_trainer = Trainer("Jpsi")
     # Jpsi_trainer.complete_train()
