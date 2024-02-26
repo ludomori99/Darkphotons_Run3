@@ -13,6 +13,7 @@ import yaml
 from numba_stats import expon # crystalball,crystalball_ex, norm, expon, voigt, truncexpon
 from iminuit.cost import LeastSquares #,  ExtendedBinnedNLL,ExtendedUnbinnedNLL,
 from iminuit import Minuit
+from sklearn.metrics import roc_auc_score
 from numba import jit,njit,vectorize
 
 """
@@ -49,7 +50,7 @@ class Trainer:
         print("Start loading data")
         if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
         else :  self.off_dir = config["locations"]["offline"][self.particle]
-        self.filename=self.off_dir+"merged_A_bkp.root"
+        self.filename=self.off_dir+"merged_A.root"
         self.full_mass_range = up.open(self.filename + ":tree").arrays(library = 'pd')
         self.mass = self.full_mass_range["Mm_mass"]
         print(f"Successfully imported data file {self.filename} to memory")
@@ -62,7 +63,7 @@ class Trainer:
             if signal_indices is not None: 
                 peak_index="Y"
                 for i in signal_indices:
-                    peak_index += str(i+1)
+                    peak_index += str(i)
             self.MC_filename=self.MC_dir+"merged"+peak_index+"_A.root"
             self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd')
             self.MC_mass = self.MC_full_mass_range["Mm_mass"]
@@ -86,7 +87,7 @@ class Trainer:
 
         print("sig_lims:", sig_lims)
 
-        if self.modelname == None: self.modelname = self.particle_config["modelname"]
+        if self.modelname is None: self.modelname = self.particle_config["modelname"]
         self.hyperpars = self.particle_config["models"][self.modelname]["hyperpars"]
         self.train_vars = self.particle_config["models"][self.modelname]["train_vars"] 
         random_seed = self.particle_config["models"][self.modelname]["random_seed"]
@@ -103,8 +104,6 @@ class Trainer:
         sig = pd.DataFrame(self.full_mass_range[sig_cut])
         bkg = pd.DataFrame(self.full_mass_range[bkg_cut])
 
-        self.sig=sig #added these two lines in second moment just to look at masses, maybe will remove
-        self.bkg=bkg
 
         sig['Score'] = 1
         bkg['Score'] = 0
@@ -117,22 +116,29 @@ class Trainer:
 
         #discard random events to equalize sig and bkg 
         if len(sig)>len(bkg):
-            sig = slice_df(sig,len(bkg))
+            print(f"Threw {(len(sig)-len(bkg))/len(sig)} of signal events")
+            sig = slice_df(sig,len(bkg)).reset_index(drop=True)
         else:
+            print(f"Threw {-(len(sig)-len(bkg))/len(bkg)} of bkg events")
             bkg = slice_df(bkg,len(sig))
 
+        sampled_indices = sig.index
+
+        self.sig=sig #added these two lines in second moment just to look at masses, maybe will remove
+        self.bkg=bkg
 
         self.trainData = pd.concat([sig,bkg]).reset_index(drop=True)
         self.trainData_skinny = self.trainData[self.train_vars]
         self.full_mass_range_skinny = self.full_mass_range[self.train_vars]
 
         if weights is not None:
-            sig_weights = weights[sig_cut]
+            sig_weights = weights[sig_cut][sampled_indices]
             bkg_weights = w_frac_bkg*np.ones((len(bkg),))
             weights = np.concatenate([sig_weights,bkg_weights])     
+            assert len(weights) == len(self.trainData)
             self.weights=weights
             self.sig_weight_frac=np.round(np.sum(sig_weights)/(np.sum(sig_weights)+np.sum(bkg_weights)),2)
-            print(f"Total signal events: {np.sum(sig_cut)}\n Total signal weight: {np.sum(sig_weights)}, {self.sig_weight_frac} of total weight")
+            print(f"Total signal events: {np.sum(sig_cut)}\nTotal signal weight: {np.sum(sig_weights)}, {self.sig_weight_frac} of total weight")
 
         
         #NB: train_test_split conserves row indexing throughout splitting. Indexing range remains that of trainData (meaning X_train and X_val will be smaller than trainData but retain the corresponding indices)
@@ -161,7 +167,7 @@ class Trainer:
         d = {}
         return 
 
-    def load_model(self,name_extra=""):
+    def load_model(self,name_extra="",**kwargs):
         self.bst = xgb.Booster()
         print("loading model ",os.path.join(DP_USER,"BDT/trained_models/", self.modelname+"_"+self.particle+name_extra+".json"))
         try:
@@ -184,9 +190,7 @@ class Trainer:
 
     def plot_model(self,plot_training=False,plot_MC=False, apply_weights=False,density=True,compute_optimal_cut=True,**kwargs):
 
-        if plot_MC and 'MC_full_mass_range' not in dir(self):
-            print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
-            return
+        if 'MC_full_mass_range' not in dir(self): self.MC_full_mass_range = {"weights_prompt":[]}
 
         self.val_bkg=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==0]))
         self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
@@ -209,23 +213,40 @@ class Trainer:
                         plot_MC*[self.MC_full_mass_range["weights_prompt"]])
 
         if compute_optimal_cut:
-            def significance(dis_lim):
-                sig = (self.val_sig > dis_lim)
-                s = np.sum(sig)
-                bkg = (self.val_bkg > dis_lim)
-                b = np.sum(bkg)
-                return s/np.sqrt(b) if b!= 0 else 0
-             
+            if apply_weights:
+                    def significance(dis_lim):
+                        sig = self.weights[self.X_val.index[self.y_val==1]][self.val_sig > dis_lim]
+                        s = np.sum(sig)
+                        bkg = self.weights[self.X_val.index[self.y_val==0]][self.val_bkg > dis_lim]
+                        b = np.sum(bkg)
+                        return s/np.sqrt(b) if b!= 0 else 0
+            else: 
+                def significance(dis_lim):
+                        sig = self.val_sig > dis_lim
+                        s = np.sum(sig)
+                        bkg = self.val_bkg > dis_lim
+                        b = np.sum(bkg)
+                        return s/np.sqrt(b) if b!= 0 else 0
             vtx_vals= np.linspace(0.3,0.9,50)
             significance_vals = np.vectorize(significance)(vtx_vals)
             max_idx = np.argmax(significance_vals)
             max_cut = vtx_vals[max_idx]
             # max_significance = significance_vals[max_idx]
-            sig_eff = np.sum(self.val_sig > max_cut)/len(self.val_sig)
-            bkg_eff = np.sum(self.val_bkg > max_cut)/len(self.val_bkg)
-            text = f"max cut={round(max_cut,2)}\nsig eff.={round(sig_eff,2)}\nbkg eff.={round(bkg_eff,2)}"
+            if apply_weights:
+                sig_eff = np.sum(self.weights[self.X_val.index[self.y_val==1]][self.val_sig > max_cut])/np.sum(self.weights[self.X_val.index[self.y_val==1]])
+                bkg_eff = 1-np.sum(self.weights[self.X_val.index[self.y_val==0]][self.val_bkg > max_cut])/np.sum(self.weights[self.X_val.index[self.y_val==0]])
+                ROC_score = roc_auc_score(np.concatenate([self.y_val[self.y_val==0],self.y_val[self.y_val==1]]),
+                                          np.concatenate([self.val_bkg,self.val_sig]),
+                                          sample_weight=np.concatenate([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]]))
+            else:
+                sig_eff = np.sum(self.val_sig > max_cut)/len(self.val_sig)
+                bkg_eff = 1-np.sum(self.val_bkg > max_cut)/len(self.val_bkg)
+                ROC_score = roc_auc_score(np.concatenate([self.y_val[self.y_val==0],self.y_val[self.y_val==1]]),np.concatenate([self.val_bkg,self.val_sig]))
+            text = f"max cut={round(max_cut,3)}\nsig eff.={round(sig_eff,3)}\nbkg eff.={round(bkg_eff,3)}\nROC area={round(ROC_score,3)}"
 
         self.plot_hist(data_to_plot,labels,weights = weights,density=density, text=text, xlabel="BDT score",**kwargs)
+        
+        if compute_optimal_cut and apply_weights: return ROC_score, sig_eff, bkg_eff
 
     def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
         if plot_MC and 'MC_full_mass_range' not in dir(self):
@@ -243,7 +264,7 @@ class Trainer:
        
 
     @staticmethod
-    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False, nonnegative=False, xrange=None, plot_logscale=False):
+    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False,saveas=None, nonnegative=False, xrange=None, plot_logscale=False):
         """
         data: ak array, dic-like, containing all events
         variable: string, name of var to compute the reweighing. e.g.: Mm_kin_lxy
@@ -290,7 +311,7 @@ class Trainer:
 
         if plot:
             hep.style.use("CMS")
-            fig, ax = plt.subplots(figsize=(10,6))
+            fig, ax = plt.subplots(figsize=(10,8))
             x = np.linspace(0,xe_corr[-1], 1000)
             ax.plot(x,fitting_func(x,*mData.values), label = "Nonprompt tail fit")
             # ax.errorbar(0.5*(xe_corr[:-1] + xe_corr[1:]),histSlxy-fitting_func(0.5*(xe_corr[:-1] + xe_corr[1:]),*mData.values)/dx_fit*dx_corr,xerr = dx_corr/2, label="$J/\psi$ prompt data", color = "green", zorder=0,marker = '.')
@@ -301,12 +322,15 @@ class Trainer:
             ax.grid()
             ax.legend()    
             if xrange is not None: ax.set_xlim(xrange)
-            ax.set_ylim(1e-2,1e6)
+            # ax.set_ylim(1e-2,1e6)
             ax.set_xlabel("$l_{xy}$")
             # ax.set_ylim(0,20000)
             if plot_logscale: ax.set_yscale('log')
             ax.set_ylabel("Frequency")    
             plt.show()
+            if saveas is not None: 
+                plt.savefig(saveas)
+                print(f"saved {saveas}")
         
         if nonnegative: weights = np.where(weights<0, 0, weights)
         return weights
@@ -341,9 +365,30 @@ class Trainer:
                 ax.hist(d, bins = nbins, range = xlim, label=name, color=c, density = density, log=log, histtype='step', linewidth=2)
                 # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
         if (xlabel): ax.set_xlabel(xlabel)
-        if text!=None: ax.text(0.02, .8, text, fontsize=11, bbox=dict(facecolor='white', edgecolor='black'), transform=ax.transAxes) 
+        if text!=None: ax.text(0.02, .6, text, fontsize=11, bbox=dict(facecolor='white', edgecolor='black'), transform=ax.transAxes) 
         if int_xticks: ax.xaxis.get_major_locator().set_params(integer=True)
         ax.set_ylabel('Normalized frequency')
+        ax.set_xlim(xlim)
+        ax.legend()
+        ax.grid(True)
+        if saveas: 
+            plt.savefig(saveas)
+            print(f"saved figure as {saveas}")
+        return
+    
+    @staticmethod
+    def plot_scatter(xs,ys,names, xlabel = None, ylabel=None, saveas=None, text = None, xlim=None, log = False, int_xticks = False):
+        hep.style.use("CMS")
+        colors = plt.cm.tab10.colors
+        fig, ax = plt.subplots(figsize=(12,9))
+        hep.cms.text("Preliminary")
+        for x,y,name,c in zip(xs,ys,names,colors[:len(xs)]):
+                ax.scatter(x,y, label=name, color=c)
+                ax.plot(x,y, color=c,alpha=0.5)
+        if (xlabel): ax.set_xlabel(xlabel)
+        if (ylabel): ax.set_ylabel(ylabel)
+        if text!=None: ax.text(0.02, .8, text, fontsize=11, bbox=dict(facecolor='white', edgecolor='black'), transform=ax.transAxes) 
+        if int_xticks: ax.xaxis.get_major_locator().set_params(integer=True)
         ax.set_xlim(xlim)
         ax.legend()
         ax.grid(True)
@@ -461,8 +506,9 @@ def train_prompt_Jpsi():
     (and storing weights into tree file)
     """
     modelname = "forest_prompt"
+    particle = "Jpsi"
 
-    Jpsi_trainer = Trainer("Jpsi", modelname)
+    Jpsi_trainer = Trainer(particle, modelname)
     Jpsi_trainer.load_data()
 
     #import reweighing parameters
@@ -476,17 +522,24 @@ def train_prompt_Jpsi():
                                             'Mm_kin_lxy', 
                                             nonPrompt_tail,
                                             nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,
-                                            fit_range=(0.1,0.5),fitting_limits=[(0,1)],nonnegative=True,plot=False)
+                                            fit_range=(0.1,0.5),fitting_limits=[(0,1)],nonnegative=True,plot=True,saveas=config["locations"]["public_html"]+f"BDTs/lxy_reweight.png")
     weights_extended = np.zeros_like(Jpsi_trainer.full_mass_range["Mm_mass"])
     weights_extended[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff] = weights
     Jpsi_trainer.save_weight_to_tree(Jpsi_trainer.filename, weights_extended,"weights_prompt")
 
     #Perform training and plot with different w parameters
-    for w in [0.1825]:#np.linspace(0.1,0.25,21):    
+    w_bkg = np.linspace(0.1,1,21)
+    roc_scores = []
+    sig_eff_at_wp = []
+    bkg_rej_at_wp = []
+    for w in w_bkg:   
         Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights, w_frac_bkg=w)
-        Jpsi_trainer.train_model(name_extra=f"_w={w}_auc")
-        Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi_"+modelname+f"_w={w}_auc"+".png")
-
+        Jpsi_trainer.train_model(name_extra=f"_w={w}")
+        roc_score, sig_eff, bkg_rej = Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+f"BDTs/{particle}/{particle}_{modelname}_w={w}.png",apply_weights=True,compute_optimal_cut=True)
+        roc_scores.append(roc_score)
+        sig_eff_at_wp.append(sig_eff)
+        bkg_rej_at_wp.append(bkg_rej)
+    Jpsi_trainer.plot_scatter([w_bkg,w_bkg,w_bkg],[roc_scores,sig_eff_at_wp,bkg_rej_at_wp], ["ROC AUC", "Sig. eff. at WP", "Bkg. rej. at WP"],xlabel="Bkg. weight at training",saveas=config["locations"]["public_html"]+"BDTs/w_ROC_Jpsi_"+modelname+".png")
     return 
 
 
@@ -535,37 +588,38 @@ def add_branch_weights_prompt():
 if __name__ == "__main__":
     print("Executing training block")
     # train_prompt_Jpsi()
-    # Jpsi_MC_weights()
+    Jpsi_MC_weights()
     # add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
-    # Y_trainer.complete_train()
-    # Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y_forest_standard.png"
+    # Y_trainer.complete_load()
+    # Y_trainer.plot_model() #saveas=config["locations"]["public_html"]+"BDTs/Y/Y_forest_standard_ID.png"
 
     # Y_trainer = Trainer("Y", 'tree_standard')
-    # Y_trainer.complete_train()
-    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y_tree_standard.png")
+    # Y_trainer.complete_load()
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y_tree_standard.png")
 
-    Y_trainer = Trainer("Y", 'forest_standard')
-    Y_trainer.complete_train(name_extra='1',signal_indices=[0],include_MC=True)
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y1_forest_standard.png")
+    # Y_trainer = Trainer("Y", 'forest_standard')
+    # Y_trainer.complete_load(name_extra='1',signal_indices=[0],include_MC=True)
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y1_forest_standard.png")
 
-    Y_trainer = Trainer("Y", 'forest_standard')
-    Y_trainer.complete_train(name_extra='2',signal_indices=[1],include_MC=True)
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y2_forest_standard.png")
+    # Y_trainer = Trainer("Y", 'forest_standard')
+    # Y_trainer.complete_load(name_extra='2',signal_indices=[1],include_MC=True)
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y2_forest_standard.png")
 
-    Y_trainer = Trainer("Y", 'forest_standard')
-    Y_trainer.complete_train(name_extra='12',signal_indices=[0,1],include_MC=True)
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y12_forest_standard.png")
+    # Y_trainer = Trainer("Y", 'forest_standard')
+    # Y_trainer.complete_load(name_extra='12',signal_indices=[0,1],include_MC=True)
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y12_forest_standard.png")
 
-    Y_trainer = Trainer("Y", 'forest_standard')
-    Y_trainer.complete_train(name_extra='13',signal_indices=[0,2],include_MC=True)
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y13_forest_standard.png")
+    # Y_trainer = Trainer("Y", 'forest_standard')
+    # Y_trainer.complete_load(name_extra='13',signal_indices=[0,2],include_MC=True)
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y13_forest_standard.png")
 
-    Y_trainer = Trainer("Y", 'forest_standard')
-    Y_trainer.complete_train(name_extra='123',signal_indices=[0,1,2],include_MC=True)
-    Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y123_forest_standard.png")
+    # Y_trainer = Trainer("Y", 'forest_standard')
+    # Y_trainer.complete_load(name_extra='123',signal_indices=[0,1,2],include_MC=True)
+    # Y_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Y/Y123_forest_standard.png")
 
-    # Jpsi_trainer = Trainer("Jpsi")
-    # Jpsi_trainer.complete_train()
+    # Jpsi_trainer = Trainer("Jpsi",'forest_standard')
+    # Jpsi_trainer.complete_load()
+    # Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+"BDTs/Jpsi/Jpsi_forest_standard.png")
     

@@ -31,6 +31,14 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     TTreeReaderValue<unsigned long long>   event (reader, "event");
     TTreeReaderValue<int>            nMuonId (reader, "nMuonId");
 
+    //triggers
+    TTreeReaderValue<bool>            hlt_DoubleMu4_3_LowMass (reader, "HLT_DoubleMu4_3_LowMass");
+    TTreeReaderValue<bool>            hlt_DoubleMu4_3_Jpsi (reader, "HLT_DoubleMu4_3_Jpsi");
+    TTreeReaderValue<bool>            hlt_Dimuon10_Upsilon_y1p4 (reader, "HLT_Dimuon10_Upsilon_y1p4");
+    TTreeReaderValue<bool>            hlt_Dimuon12_Upsilon_y1p4 (reader, "HLT_Dimuon12_Upsilon_y1p4");
+    TTreeReaderArray<int>            MuonId_hlt_DoubleMu4_3_LowMass (reader, "MuonId_HLT_DoubleMu4_3_LowMass");
+    TTreeReaderValue<double>            prescale_HLT_DoubleMu4_3_LowMass (reader, "prescale_HLT_DoubleMu4_3_LowMass");
+
     // TTreeReaderArray<float>          muonId_chi2LocalPosition (reader, "MuonId_chi2LocalPosition");
     // TTreeReaderArray<float>          muonId_glbNormChi2 (reader, "MuonId_glbNormChi2");
     // TTreeReaderArray<float>          muonId_glbTrackProbability (reader, "MuonId_glbTrackProbability");
@@ -112,6 +120,14 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     unsigned luminosityBlock;
     unsigned long long Event;
     unsigned int NMuonId;
+
+    bool HLT_DoubleMu4_3_LowMass;
+    bool HLT_DoubleMu4_3_Jpsi;
+    bool HLT_Dimuon10_Upsilon_y1p4;
+    bool HLT_Dimuon12_Upsilon_y1p4;
+    int MuonId_HLT_DoubleMu4_3_LowMass1;
+    int MuonId_HLT_DoubleMu4_3_LowMass2;
+    double Prescale_HLT_DoubleMu4_3_LowMass;
 
     // vector<float> MuonId_chi2LocalPosition;
     // vector<float> MuonId_glbNormChi2;
@@ -208,7 +224,16 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     outtree->Branch("lumSec", &luminosityBlock);
     outtree->Branch("Event", &Event);
     outtree->Branch("nMuonId", &NMuonId);
-            
+
+    outtree->Branch("HLT_DoubleMu4_3_LowMass", &HLT_DoubleMu4_3_LowMass);
+    outtree->Branch("HLT_DoubleMu4_3_Jpsi", &HLT_DoubleMu4_3_Jpsi);
+    outtree->Branch("HLT_Dimuon10_Upsilon_y1p4", &HLT_Dimuon10_Upsilon_y1p4);
+    outtree->Branch("HLT_Dimuon12_Upsilon_y1p4", &HLT_Dimuon12_Upsilon_y1p4);
+    outtree->Branch("MuonId_HLT_DoubleMu4_3_LowMass1", &MuonId_HLT_DoubleMu4_3_LowMass1);
+    outtree->Branch("MuonId_HLT_DoubleMu4_3_LowMass2", &MuonId_HLT_DoubleMu4_3_LowMass2);
+    outtree->Branch("Prescale_HLT_DoubleMu4_3_LowMass", &Prescale_HLT_DoubleMu4_3_LowMass);
+    
+
     // outtree->Branch("MuonId_chi2LocalPosition",&MuonId_chi2LocalPosition,32000,0);
     // outtree->Branch("MuonId_glbNormChi2",&MuonId_glbNormChi2,32000,0);
     // outtree->Branch("MuonId_glbTrackProbability",&MuonId_glbTrackProbability,32000,0);
@@ -405,6 +430,10 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
         Muon_isTracker1 = muon_isTracker[idx1];
         Muon_isTracker2 = muon_isTracker[idx2];
 
+        MuonId_HLT_DoubleMu4_3_LowMass1 = MuonId_hlt_DoubleMu4_3_LowMass[idx1];
+        MuonId_HLT_DoubleMu4_3_LowMass2 = MuonId_hlt_DoubleMu4_3_LowMass[idx2];
+
+
         // for (int j=0; j<2; j++) {
         //     int i = idx1;
         //     if (j == 1){i = idx2;}
@@ -473,6 +502,13 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
         Event = *event;
         NMuonId = *nMuonId;
 
+        HLT_DoubleMu4_3_LowMass = *hlt_DoubleMu4_3_LowMass;
+        HLT_DoubleMu4_3_Jpsi = *hlt_DoubleMu4_3_Jpsi;
+        HLT_Dimuon10_Upsilon_y1p4 = *hlt_Dimuon10_Upsilon_y1p4;
+        HLT_Dimuon12_Upsilon_y1p4 = *hlt_Dimuon12_Upsilon_y1p4;
+        Prescale_HLT_DoubleMu4_3_LowMass = *prescale_HLT_DoubleMu4_3_LowMass;
+
+        
 	outtree->Fill(); 
    }
      

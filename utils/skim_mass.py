@@ -22,6 +22,7 @@ trigger = "dimuon" #or inclusive
 
 #directory to extract ntuples. dump dir has slightly different definition
 off_data_dir = config["locations"]["offline"]
+MC_data_dir = config["locations"]["MC_InclusiveMinBias"]
 
 def write_tree_data(particle, data_dir):
 
@@ -75,7 +76,7 @@ def write_tree_data(particle, data_dir):
 
     return
 
-def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_factor=0.05):
+def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_factor=0.05,isMC=False):
 
     #extract tree suited for tagnprobe
 
@@ -88,13 +89,14 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
     with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}.root")) as outfile:
         outfile.mktree("tree",branch_dic)
         error_indices = []
-        nfiles=config["extraction"]["offline"]["njobs"]
+        if isMC: nfiles=config["extraction"]["MC_InclusiveMinBias"]["njobs"]
+        else: nfiles=config["extraction"]["offline"]["njobs"]
         for i in range(nfiles):
             if i and i%10 == 0: 
                 print(f"Processing {i}/{nfiles}", end="\r")
                 sys.stdout.flush()
             try: 
-                filename = data_dir["dump"]+"DimuonTree"+str(i)+".root:tree"
+                filename = data_dir["dump"]+"DimuonTree"+isMC*particle+str(i)+".root:tree"
                 intree = up.open(filename)
 
                 #define mass cut 
@@ -164,7 +166,9 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
     return
 
 if __name__ == "__main__":
+    print("please unindent a function in the main of skim_mass.py")
     # write_tree_data("Y",off_data_dir)
     # write_tree_data("Jpsi",off_data_dir)
     # prepareTP('Y',off_data_dir)
-    prepareTP('Jpsi',off_data_dir)
+    # prepareTP('Jpsi',off_data_dir)
+    # prepareTP('Jpsi',MC_data_dir,reduction_factor=1,isMC=True)

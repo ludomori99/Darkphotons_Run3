@@ -82,7 +82,8 @@ ntuple_branches:
   - Muon_Dxy2
   - Muon_Dz1
   - Muon_Dz2
-  - Muon_looseId
+  - Muon_looseId1
+  - Muon_looseId2
   - Muon_mediumId1
   - Muon_mediumId2 
   - Muon_mediumPromptId1
@@ -307,22 +308,22 @@ BDT_training:
       forest_prompt:
         hyperpars:
           objective: 'binary:logistic'
-          max_depth: 9
+          max_depth: 10
           subsample: 0.3
-          # alpha: 8.0
-          # gamma: 2.0
-          # lambda: 2.0
+          alpha: 8.0
+          gamma: 2.0
+          lambda: 2.0
           min_child_weight: 0.1
           colsample_bytree: 0.4
           num_parallel_tree: 500
-          eval_metric: "auc"
+          eval_metric: "logloss"
           tree_method: "hist"
           device: "cuda"
         reweighing:
           do: True
           lxy_cutoff: 0.5
-          nbins_fit: 100
-          nbins_corrections: 100 
+          nbins_fit: 200
+          nbins_corrections: 200
         num_rounds: 20
         random_seed: 10
         train_vars:

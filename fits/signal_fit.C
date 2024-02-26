@@ -27,7 +27,7 @@ using namespace RooStats;
 using namespace std;
  
 // see below for implementationbelow for implementatio
-void load_config(const char* ,bool, const char*&, const char*&, const char*&, Double_t&, Double_t&, const char*);
+void load_config(const char* ,bool, const char*&, const char*&, const char*&, Double_t&, Double_t&);
 void AddModelJ_dCB_G(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
 void AddModelJ_dG(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
 void AddModelJ_VG(RooWorkspace &, bool, const  char*,  Double_t, Double_t);
@@ -49,28 +49,28 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi"
 
    RooWorkspace ws_dCB{"ws_dCB"};
    model_name = "dCB";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
    AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
    DoFit(ws_dCB,model_name, file_name);
 
    RooWorkspace ws_dG{"ws_dG"};
    model_name = "dG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
    AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
    DoFit(ws_dG,model_name, file_name);
 
    RooWorkspace ws_VG{"ws_VG"};
    model_name = "VG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
    AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
    DoFit(ws_VG,model_name, file_name);
 
    RooWorkspace ws_dCB_V{"ws_dCB_V"};
    model_name = "dCB_V";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange, "1M");
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
    AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
    DoFit(ws_dCB_V,model_name, file_name);
@@ -83,8 +83,7 @@ void load_config(const char* meson, bool isMC,
                const char*& model_name, 
                const char*& inputfilename, 
                Double_t& lowRange,
-               Double_t& highRange, 
-               const char* extra = "")
+               Double_t& highRange)
 {
    const char** data_or_MC = new const char*;
    if (isMC) *data_or_MC = "_MC_";
