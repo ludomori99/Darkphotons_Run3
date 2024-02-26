@@ -70,14 +70,12 @@ class Trainer:
             print(f"Successfully imported data file {self.MC_filename} to memory")
         return
     
-    def prepare_training_set(self,data_particle = None, data_override=None, weights = None,w_frac_bkg=0.1, signal_indices=None, **kwargs):
+    def prepare_training_set(self,data_particle = None, prompt_reweight=False, w_frac_bkg=0.1, signal_indices=None, plot_reweight=False, **kwargs):
         """
         data_particle: if want to evaluate on particle different from particle from training given in __init__
         signal_indices: array like [1,2] to say to get just Y1 and Y2 
         """
-        if data_override is not None: 
-            self.full_mass_range = data_override
-            self.mass = self.full_mass_range["Mm_mass"]
+
         #Define signal and background
         if signal_indices is not None: 
             sig_lims = np.array(self.particle_config["limits"]["signal"])[signal_indices] if not data_particle else np.array(config["BDT_training"][data_particle]["limits"]["signal"])[signal_indices]
@@ -101,8 +99,18 @@ class Trainer:
         for lims in bkg_lims:
             bkg_cut = bkg_cut | ((self.mass>lims[0])&(self.mass<lims[1]))
 
-        sig = pd.DataFrame(self.full_mass_range[sig_cut])
-        bkg = pd.DataFrame(self.full_mass_range[bkg_cut])
+        sig = pd.DataFrame(self.full_mass_range[sig_cut]).reset_index(drop=True)
+        bkg = pd.DataFrame(self.full_mass_range[bkg_cut]).reset_index(drop=True)
+
+
+        #Define data and compute weights
+        if prompt_reweight:
+            lxy_cutoff = self.particle_config["models"][self.modelname]["reweighing"]["lxy_cutoff"]
+            nbins_fit = self.particle_config["models"][self.modelname]["reweighing"]["nbins_fit"]
+            nbins_corrections = self.particle_config["models"][self.modelname]["reweighing"]["nbins_corrections"]
+
+            sig = sig[sig["Mm_kin_lxy"]<lxy_cutoff].reset_index(drop=True)
+            sig_prompt_w = self.compute_reweight(sig,'Mm_kin_lxy', nonPrompt_tail,nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,fit_range=(0.1,0.5),fitting_limits=[(0,1)],plot_reweight=plot_reweight,**kwargs)
 
 
         sig['Score'] = 1
@@ -117,7 +125,7 @@ class Trainer:
         #discard random events to equalize sig and bkg 
         if len(sig)>len(bkg):
             print(f"Threw {(len(sig)-len(bkg))/len(sig)} of signal events")
-            sig = slice_df(sig,len(bkg)).reset_index(drop=True)
+            sig = slice_df(sig,len(bkg))
         else:
             print(f"Threw {-(len(sig)-len(bkg))/len(bkg)} of bkg events")
             bkg = slice_df(bkg,len(sig))
@@ -131,14 +139,15 @@ class Trainer:
         self.trainData_skinny = self.trainData[self.train_vars]
         self.full_mass_range_skinny = self.full_mass_range[self.train_vars]
 
-        if weights is not None:
-            sig_weights = weights[sig_cut][sampled_indices]
+        if prompt_reweight:
+            sig_weights = sig_prompt_w[sampled_indices]
             bkg_weights = w_frac_bkg*np.ones((len(bkg),))
             weights = np.concatenate([sig_weights,bkg_weights])     
             assert len(weights) == len(self.trainData)
             self.weights=weights
             self.sig_weight_frac=np.round(np.sum(sig_weights)/(np.sum(sig_weights)+np.sum(bkg_weights)),2)
-            print(f"Total signal events: {np.sum(sig_cut)}\nTotal signal weight: {np.sum(sig_weights)}, {self.sig_weight_frac} of total weight")
+            print(f"Total signal events: {len(sig)}\nTotal signal weight: {np.sum(sig_weights)}, {self.sig_weight_frac} of total weight")
+        else: weights = None
 
         
         #NB: train_test_split conserves row indexing throughout splitting. Indexing range remains that of trainData (meaning X_train and X_val will be smaller than trainData but retain the corresponding indices)
@@ -190,7 +199,9 @@ class Trainer:
 
     def plot_model(self,plot_training=False,plot_MC=False, apply_weights=False,density=True,compute_optimal_cut=True,**kwargs):
 
-        if 'MC_full_mass_range' not in dir(self): self.MC_full_mass_range = {"weights_prompt":[]}
+        if plot_MC and 'MC_full_mass_range' not in dir(self): 
+            print("ERROR: Cannot plot MC, must load by using load_data(include_MC=True)")
+            plot_MC=False
 
         self.val_bkg=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==0]))
         self.val_sig=self.bst.predict(xgb.DMatrix(self.X_val[self.y_val==1]))
@@ -209,8 +220,8 @@ class Trainer:
         text= None
         if apply_weights:
             weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
-                        plot_training*[self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]] + 
-                        plot_MC*[self.MC_full_mass_range["weights_prompt"]])
+                        plot_training*[self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]])
+            if plot_MC: weights+= self.MC_full_mass_range["weights_prompt"]
 
         if compute_optimal_cut:
             if apply_weights:
@@ -240,13 +251,13 @@ class Trainer:
                                           sample_weight=np.concatenate([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]]))
             else:
                 sig_eff = np.sum(self.val_sig > max_cut)/len(self.val_sig)
-                bkg_eff = 1-np.sum(self.val_bkg > max_cut)/len(self.val_bkg)
+                bkg_rej = 1-np.sum(self.val_bkg > max_cut)/len(self.val_bkg)
                 ROC_score = roc_auc_score(np.concatenate([self.y_val[self.y_val==0],self.y_val[self.y_val==1]]),np.concatenate([self.val_bkg,self.val_sig]))
-            text = f"max cut={round(max_cut,3)}\nsig eff.={round(sig_eff,3)}\nbkg eff.={round(bkg_eff,3)}\nROC area={round(ROC_score,3)}"
+            text = f"max cut={round(max_cut,3)}\nsig. eff.={round(sig_eff,3)}\nbkg. rej.={round(bkg_rej,3)}\nROC area={round(ROC_score,3)}"
 
         self.plot_hist(data_to_plot,labels,weights = weights,density=density, text=text, xlabel="BDT score",**kwargs)
         
-        if compute_optimal_cut and apply_weights: return ROC_score, sig_eff, bkg_eff
+        if compute_optimal_cut and apply_weights: return ROC_score, sig_eff, bkg_rej
 
     def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
         if plot_MC and 'MC_full_mass_range' not in dir(self):
@@ -264,7 +275,7 @@ class Trainer:
        
 
     @staticmethod
-    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot=False,saveas=None, nonnegative=False, xrange=None, plot_logscale=False):
+    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot_reweight=False,saveas=None, nonnegative=True, xrange=(0,0.5), plot_logscale=False):
         """
         data: ak array, dic-like, containing all events
         variable: string, name of var to compute the reweighing. e.g.: Mm_kin_lxy
@@ -303,13 +314,15 @@ class Trainer:
         Nonprompt_in_prompt,_ = scipy.integrate.quad(lambda x: fitting_func(x,*mData.values)/dx_fit, 0, xe_corr[-1])
         prompt = np.sum(histSlxy) - Nonprompt_in_prompt
 
+        if nonnegative: weights = np.where(weights<0, 0, weights)
+
         print(f"""\nSome General infos:\n
                 Total number of events considered: {len(data)} \n
                 Sum of weights: {np.sum(weights)} \n
                 Fitted prompt: {prompt}\n
                 Sum of weights>0 {np.sum(weights[weights>=0])}\n\n""")
 
-        if plot:
+        if plot_reweight:
             hep.style.use("CMS")
             fig, ax = plt.subplots(figsize=(10,8))
             x = np.linspace(0,xe_corr[-1], 1000)
@@ -332,7 +345,6 @@ class Trainer:
                 plt.savefig(saveas)
                 print(f"saved {saveas}")
         
-        if nonnegative: weights = np.where(weights<0, 0, weights)
         return weights
     
     @staticmethod
@@ -511,6 +523,32 @@ def train_prompt_Jpsi():
     Jpsi_trainer = Trainer(particle, modelname)
     Jpsi_trainer.load_data()
 
+    #Perform training and plot with different w parameters
+    w_bkg = np.linspace(0.1,1,21)
+    roc_scores = []
+    sig_eff_at_wp = []
+    bkg_rej_at_wp = []
+    for w in w_bkg:   
+        Jpsi_trainer.prepare_training_set(prompt_reweight=True, w_frac_bkg=w)
+        Jpsi_trainer.train_model(name_extra=f"_w={np.round(w,3)}")
+        roc_score, sig_eff, bkg_rej = Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+f"BDTs/{particle}/{particle}_{modelname}_w={np.round(w,3)}.png",apply_weights=True,compute_optimal_cut=True)
+        roc_scores.append(roc_score)
+        sig_eff_at_wp.append(sig_eff)
+        bkg_rej_at_wp.append(bkg_rej)
+    Jpsi_trainer.plot_scatter([w_bkg,w_bkg,w_bkg],[roc_scores,sig_eff_at_wp,bkg_rej_at_wp], ["ROC AUC", "Sig. eff. at WP", "Bkg. rej. at WP"],xlabel="Bkg. weight at training",saveas=config["locations"]["public_html"]+"BDTs/w_ROC_Jpsi_"+modelname+".png")
+    return 
+
+
+def save_Jpsi_weights():
+
+    ##### First process data. use lxy cutoff ######
+
+    modelname = "forest_prompt"
+    particle = "Jpsi"
+
+    Jpsi_trainer = Trainer(particle, modelname)
+    Jpsi_trainer.load_data()
+
     #import reweighing parameters
     lxy_cutoff = Jpsi_trainer.particle_config["models"][modelname]["reweighing"]["lxy_cutoff"]
     nbins_fit = Jpsi_trainer.particle_config["models"][modelname]["reweighing"]["nbins_fit"]
@@ -527,23 +565,8 @@ def train_prompt_Jpsi():
     weights_extended[Jpsi_trainer.full_mass_range["Mm_kin_lxy"]<lxy_cutoff] = weights
     Jpsi_trainer.save_weight_to_tree(Jpsi_trainer.filename, weights_extended,"weights_prompt")
 
-    #Perform training and plot with different w parameters
-    w_bkg = np.linspace(0.1,1,21)
-    roc_scores = []
-    sig_eff_at_wp = []
-    bkg_rej_at_wp = []
-    for w in w_bkg:   
-        Jpsi_trainer.prepare_training_set(data_override=data_prompt, weights=weights, w_frac_bkg=w)
-        Jpsi_trainer.train_model(name_extra=f"_w={w}")
-        roc_score, sig_eff, bkg_rej = Jpsi_trainer.plot_model(saveas=config["locations"]["public_html"]+f"BDTs/{particle}/{particle}_{modelname}_w={w}.png",apply_weights=True,compute_optimal_cut=True)
-        roc_scores.append(roc_score)
-        sig_eff_at_wp.append(sig_eff)
-        bkg_rej_at_wp.append(bkg_rej)
-    Jpsi_trainer.plot_scatter([w_bkg,w_bkg,w_bkg],[roc_scores,sig_eff_at_wp,bkg_rej_at_wp], ["ROC AUC", "Sig. eff. at WP", "Bkg. rej. at WP"],xlabel="Bkg. weight at training",saveas=config["locations"]["public_html"]+"BDTs/w_ROC_Jpsi_"+modelname+".png")
-    return 
+    ##### Now for MC ######
 
-
-def Jpsi_MC_weights():
     MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Jpsi"], "merged_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
@@ -587,8 +610,8 @@ def add_branch_weights_prompt():
 
 if __name__ == "__main__":
     print("Executing training block")
-    # train_prompt_Jpsi()
-    Jpsi_MC_weights()
+    train_prompt_Jpsi()
+    # Jpsi_MC_weights()
     # add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
