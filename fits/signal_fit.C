@@ -38,7 +38,7 @@ void AddData(RooWorkspace &, const char*, Double_t, Double_t, int);
 void DoFit(RooWorkspace &, const char*, const char*);
 
 
-void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "Y"
+void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y"; nEntries==0 means take all entries in dataset
 {
    // Create a workspace to manage the project.
    const char* file_name;
@@ -47,26 +47,26 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi"
    Double_t lowRange;
    Double_t highRange;
 
-   RooWorkspace ws_dCB{"ws_dCB"};
-   model_name = "dCB";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
-   DoFit(ws_dCB,model_name, file_name);
+   // RooWorkspace ws_dCB{"ws_dCB"};
+   // model_name = "dCB";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_dCB,model_name, file_name);
 
-   RooWorkspace ws_dG{"ws_dG"};
-   model_name = "dG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
-   DoFit(ws_dG,model_name, file_name);
+   // RooWorkspace ws_dG{"ws_dG"};
+   // model_name = "dG";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_dG,model_name, file_name);
 
-   RooWorkspace ws_VG{"ws_VG"};
-   model_name = "VG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
-   DoFit(ws_VG,model_name, file_name);
+   // RooWorkspace ws_VG{"ws_VG"};
+   // model_name = "VG";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_VG,model_name, file_name);
 
    RooWorkspace ws_dCB_V{"ws_dCB_V"};
    model_name = "dCB_V";
@@ -74,7 +74,6 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi"
    AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
    DoFit(ws_dCB_V,model_name, file_name);
-
 }
 
 
@@ -159,10 +158,10 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    }
 
    else{
-      sigYield.setVal(90000);
-      sigYield.setRange(0,1000000);
+      sigYield.setVal(900000);
+      sigYield.setRange(0,100000000);
       bkgYield.setVal(10000);
-      bkgYield.setRange(0,1000000);
+      bkgYield.setRange(0,10000000);
    }
 
    // now make the combined models
@@ -308,16 +307,16 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    RooRealVar bkgYield("bkgYield", "fitted yield for Background",0);
 
    if (isMC){
-      sigYield.setVal(1000);
+      sigYield.setVal(1000000);
       sigYield.setRange(0., 100000000);
       bkgYield.setVal(50 );
       bkgYield.setRange(0,1000000);
    }
 
    else{
-      sigYield.setVal(90000);
-      sigYield.setRange(0,1000000);
-      bkgYield.setVal(10000);
+      sigYield.setVal(1500000);
+      sigYield.setRange(0,10000000);
+      bkgYield.setVal(100000);
       bkgYield.setRange(0,1000000);
    }
 
@@ -463,18 +462,27 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    TTree *tree = inputfile->Get<TTree>("tree");
     
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange); 
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass), Import(*tree));
+   RooDataSet* data_full = new RooDataSet("data_full", "data_full", RooArgSet(Mm_mass), Import(*tree));
+   RooAbsData* data = data_full->emptyClone("data");
 
-   Int_t numEntries = data_full.numEntries();
+   if(nEvents==0) {
+      Int_t numEntries = data_full->numEntries();
+      for (int i=0; i < numEntries; i++){
+         data->add(*data_full->get(i))   ; 
+      }
+      ws.import(*data);
+      return;
+   }
+
+   Int_t numEntries = data_full->numEntries();
    TBits outputBits = TBits(numEntries);
    for(int i=0; i<nEvents; i++){
       Int_t rnd = gRandom->Integer(numEntries);
       outputBits.SetBitNumber(rnd);
    }
-   RooAbsData* data = data_full.emptyClone("data");
    Int_t startBit = outputBits.FirstSetBit(0);
    while (startBit < numEntries){
-      data->add(*data_full.get(startBit))   ;                                                              
+      data->add(*data_full->get(startBit))   ;                                                              
       startBit = outputBits.FirstSetBit(startBit + 1);
    }
 

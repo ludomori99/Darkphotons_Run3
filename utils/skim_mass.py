@@ -107,19 +107,19 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 num_events_surviving = int(len_before*reduction_factor)
                 cut_reduction_idc = random.sample(range(len_before), num_events_surviving)
 
+                working_point_id=0.223
+                softId1 = intree["Muon_softMva1"].array(library='np')>working_point_id
+                softId2 = intree["Muon_softMva2"].array(library='np')>working_point_id
+
                 #define global tag cut
                 if tag=="tightId":
-                    tightID1=intree["Muon_tightId1"].array(library='np')[mass_cut][cut_reduction_idc]
-                    tightID2=intree["Muon_tightId2"].array(library='np')[mass_cut][cut_reduction_idc]
-                    tag_cut1= (tightID1==1) 
-                    tag_cut2= (tightID2==1) 
+                    tag_cut1= intree["Muon_tightId1"].array(library='np')[mass_cut][cut_reduction_idc] 
+                    tag_cut2= intree["Muon_tightId2"].array(library='np')[mass_cut][cut_reduction_idc] 
                 #else ... 
 
                 if probe=="softMvaId":
-                    softMvaID1=intree["Muon_softMvaId1"].array(library='np')[mass_cut][cut_reduction_idc]
-                    softMvaID2=intree["Muon_softMvaId2"].array(library='np')[mass_cut][cut_reduction_idc]
-                    probe_cut1= (softMvaID1==1) 
-                    probe_cut2= (softMvaID2==1) 
+                    probe_cut1= softId1[mass_cut][cut_reduction_idc] 
+                    probe_cut2= softId2[mass_cut][cut_reduction_idc] 
                 #else ... 
                     
                 isEven = intree["Event"].array(library='np')[mass_cut][cut_reduction_idc]%2==0
@@ -149,7 +149,7 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 eta = np.zeros(len(isEven))
                 eta[((isEven& (~charge1) & tag_cut2) | ((~isEven)&(charge1)&tag_cut2))] = intree["Mm_mu1_eta"].array(library='np')[mass_cut][cut_reduction_idc][((isEven& (~charge1) & tag_cut2) | ((~isEven)&(charge1)&tag_cut2))] 
                 eta[((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] = intree["Mm_mu2_eta"].array(library='np')[mass_cut][cut_reduction_idc][((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] 
-                tree["Probe_eta"]=eta[denom]
+                tree["Probe_eta"]=np.abs(eta[denom])
                 
                 tree["PassingProbeSoftId"]=num[denom]
 
@@ -166,9 +166,9 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
     return
 
 if __name__ == "__main__":
-    print("please unindent a function in the main of skim_mass.py")
-    # write_tree_data("Y",off_data_dir)
-    # write_tree_data("Jpsi",off_data_dir)
+    # print("please unindent a function in the main of skim_mass.py")
+    write_tree_data("Y",off_data_dir)
+    write_tree_data("Jpsi",off_data_dir)
     # prepareTP('Y',off_data_dir)
-    # prepareTP('Jpsi',off_data_dir)
-    # prepareTP('Jpsi',MC_data_dir,reduction_factor=1,isMC=True)
+    prepareTP('Jpsi',off_data_dir)
+    prepareTP('Jpsi',MC_data_dir,reduction_factor=1,isMC=True)

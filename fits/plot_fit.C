@@ -33,20 +33,20 @@ void plot_fit(){ //fit all models in sequence
    
    map<const char*, vector<Double_t>> *outputs = new map<const char*, vector<Double_t>>; //dictionary with: {model: {Nsig,Nbkg,chi2}}
 
-   std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB.root", "READ")};
-   auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB"));  
-   ws_dCB->Print();
-   plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB.png",outputs);
+   // std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB.root", "READ")};
+   // auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB"));  
+   // ws_dCB->Print();
+   // plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB.png",outputs);
 
-   std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
-   auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
-   ws_dG->Print();
-   plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG.png",outputs);
+   // std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
+   // auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
+   // ws_dG->Print();
+   // plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG.png",outputs);
 
-   std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
-   auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
-   ws_VG->Print();
-   plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG.png",outputs);
+   // std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
+   // auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
+   // ws_VG->Print();
+   // plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG.png",outputs);
 
    std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V.root", "READ")};
    auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V"));

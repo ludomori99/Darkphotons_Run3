@@ -135,7 +135,6 @@ BDT_training:
           tree_method: "hist"
           device: "cuda"
         reweighing:
-          do: True
           lxy_cutoff: 0.5
           nbins_fit: 100
           nbins_corrections: 100 
@@ -282,7 +281,9 @@ BDT_training:
           tree_method: "hist"
           device: "cuda"
         reweighing:
-          do: False
+          lxy_cutoff: 0.5
+          nbins_fit: 200
+          nbins_corrections: 200
         num_rounds: 30
         random_seed: 10
         train_vars:
@@ -308,7 +309,7 @@ BDT_training:
       forest_prompt:
         hyperpars:
           objective: 'binary:logistic'
-          max_depth: 10
+          max_depth: 8
           subsample: 0.3
           alpha: 8.0
           gamma: 2.0
@@ -320,11 +321,10 @@ BDT_training:
           tree_method: "hist"
           device: "cuda"
         reweighing:
-          do: True
           lxy_cutoff: 0.5
           nbins_fit: 200
           nbins_corrections: 200
-        num_rounds: 20
+        num_rounds: 30
         random_seed: 10
         train_vars:
           - Mm_kin_lxy
@@ -358,7 +358,8 @@ BDT_training:
           colsample_bytree: 1.0
           num_parallel_tree: 500
           eval_metric: "logloss"
-          tree_method: "gpu_hist"
+          tree_method: "hist"
+          device: "cuda"
         reweighing:
           lxy_cutoff: 10
           nbins_fit: 1000

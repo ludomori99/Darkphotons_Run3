@@ -30,10 +30,21 @@ void scatter(map<string, vector<double>>*, const char* );
 void sandbox(){
     map<string, vector<double>>* data = new map<string, vector<double>>;
     (*data)["hi"]=vector{1.2,2.0,3.};
-    cout<<"check 1";
-    scatter(data,"hi.png");
-}
+    cout<<"check 1 \n";
+   //  scatter(data,"hi.png");
 
+   vector<double> bins; 
+    int bin_n;
+
+    if (true){
+        double bins_tmp[] =  {2, 4, 4.2, 4.4, 4.7, 5.0, 5.1, 5.2, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.2, 6.4, 6.6, 6.8, 7.3, 9.5, 13.0, 17.0, 40}; // pt
+        bin_n = 22;
+        bins.assign(bins_tmp, bins_tmp + bin_n + 1);
+    }
+
+    cout<<bins[12]<<"\n";
+    cout<<bins[22];
+}
 void scatter(map<string, vector<double>>* data, const char* outfilename) {
    TCanvas canvas("canvas", "CMS Scatter Plot", 800, 600);
    TGraph graph(data->size());

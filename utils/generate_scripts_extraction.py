@@ -259,7 +259,9 @@ hadd -f {MC_InclusiveMinBias_Jpsi_dir}merged_A.root /data/submit/{MC_InclusiveMi
 hadd -f {MC_InclusiveMinBias_Y_dir}mergedY1_A.root /data/submit/{MC_InclusiveMinBias_dump_short_dir}DimuonTreeY1_*.root
 hadd -f {MC_InclusiveMinBias_Y_dir}mergedY2_A.root /data/submit/{MC_InclusiveMinBias_dump_short_dir}DimuonTreeY2_*.root
 hadd -f {MC_InclusiveMinBias_Y_dir}mergedY3_A.root /data/submit/{MC_InclusiveMinBias_dump_short_dir}DimuonTreeY3_*.root
-hadd -f {MC_InclusiveMinBias_Y_dir}mergedY_A.root /data/submit/{MC_InclusiveMinBias_dump_short_dir}DimuonTreeY*.root
+hadd -f {MC_InclusiveMinBias_Y_dir}mergedY12_A.root {MC_InclusiveMinBias_Y_dir}mergedY1_A.root {MC_InclusiveMinBias_Y_dir}mergedY2_A.root
+hadd -f {MC_InclusiveMinBias_Y_dir}mergedY13_A.root {MC_InclusiveMinBias_Y_dir}mergedY1_A.root {MC_InclusiveMinBias_Y_dir}mergedY3_A.root
+hadd -f {MC_InclusiveMinBias_Y_dir}mergedY123_A.root {MC_InclusiveMinBias_Y_dir}mergedY1_A.root {MC_InclusiveMinBias_Y_dir}mergedY2_A.root {MC_InclusiveMinBias_Y_dir}mergedY3_A.root
 """
 with open(os.path.join(MCMINBIAS_FOLDER,"merge_final.sh"), "w") as file:
     file.write(template_MC_InclusiveMinBias_merge_final_bash)

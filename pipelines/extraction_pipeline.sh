@@ -65,7 +65,7 @@ test_or_depl='depl'
 ########### END OF EXTRACTION ##################### 
 
 
-########## SKIM DATA FOR BDT #######################
+######### SKIM DATA FOR BDT #######################
 # python3 $DPUSER/utils/skim_mass.py $test_or_depl
 
 
@@ -93,7 +93,6 @@ test_or_depl='depl'
 
 # root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\)
 # root -l -b -q ${DPUSER}fits/plot_fit.C\(\)
-
 # root -l -b -q ${DPUSER}fits/sandbox.C\(\)
 
 
