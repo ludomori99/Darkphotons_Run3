@@ -2,7 +2,7 @@
 
 #This is the only file with hard coded stuff (besides config)
 export HOMEUSER=/home/submit/mori25/
-export DPUSER=/work/submit/mori25/Darkphotons_ludo/
+export DPUSER=/work/submit/mori25/Darkphotons_ludo/offline_analysis/
 export PYTHONPATH="$DPUSER/utils/"
 
 test_or_depl='depl'
