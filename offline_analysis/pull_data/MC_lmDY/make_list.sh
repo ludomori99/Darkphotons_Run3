@@ -1,0 +1,1 @@
+ls /data/submit/cms/store/user/wangzqe/darkphoton/run3/ntuple/2022*/* >& $DPUSER/pull_data/scouting/list_scouting.txt
