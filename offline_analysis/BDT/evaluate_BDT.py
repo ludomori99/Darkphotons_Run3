@@ -28,7 +28,7 @@ def evaluate_BDT(meson, model):
     print(f'successfully extracted offline data: {off_file_name}')
     
     #extract MC
-    MC_file_name = os.path.join(config["locations"]["MCRun3"][meson], "merged_A.root")
+    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"][meson], f"merged{(meson=="Y")*"Y123"}_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
     print(f'successfully extracted MC data: {MC_file_name}')
@@ -75,6 +75,34 @@ def evaluate_BDT(meson, model):
 
     return
 
+
+def evaluate_BDT_lmDY(model):
+    
+    #extract MC lmDY
+    MC_file_name = os.path.join(config["locations"]["MC_lmDY"]["inclusive"], "merged_A.root")
+    MC_file=up.open(MC_file_name)
+    MC_data = MC_file["tree"].arrays()#,library = 'pd')
+    print(f'successfully extracted MC data: {MC_file_name}')
+
+
+    #load model
+    method = model[:model.rfind("_")]
+    train_meson = model[1+model.rfind("_"):]
+    vars = config["BDT_training"][train_meson]["models"][method]["train_vars"] 
+    bst = xgb.Booster()
+    bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
+    print(f"Model {model} loaded")
+
+    #extend MC tree
+    print("\nBegin processing MC")
+    pred_MC=bst.predict(xgb.DMatrix(ak.to_dataframe(MC_data[vars])))
+    MC_data[model+"_mva"] = pred_MC
+    with up.recreate(MC_file_name) as output_file:
+        output_file["tree"] = MC_data
+    print("Finished processing MC\n\n")
+
+    return
+
 def evaluate_dump(model):
 
     return
@@ -85,4 +113,5 @@ if __name__=="__main__":
     # evaluate_BDT("Y", "forest_standard_Y")
     # evaluate_BDT("Jpsi", "forest_standard_Y")
     evaluate_BDT("Y", "forest_prompt_Jpsi")
-    evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
+    # evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
+    # evaluate_BDT_lmDY("forest_prompt_Jpsi")

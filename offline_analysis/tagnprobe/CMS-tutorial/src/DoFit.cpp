@@ -1,3 +1,4 @@
+#include "tdrstyle.C"
 using namespace RooFit;
 
 double* doFit(string condition, string MuonID_str, string quant, double* init_conditions, bool save = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
@@ -16,26 +17,22 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
         limits[0] = 0;
         limits[1] = 40;
     }
-    if (quant == "Eta") {
-        limits[0] = -3;
+    if (quant == "Probe_eta") {
+        limits[0] = 0;
         limits[1] = 3;
     }
     RooRealVar quantity(quant.c_str(), quant.c_str(), limits[0], limits[1]);
     
-    RooFormulaVar* redeuce = new RooFormulaVar("PPTM", condition.c_str(), RooArgList(quantity));
-    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree, RooArgSet(quantity, MuonID,Mm_mass),*redeuce);
-    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + " && " + MuonID_str + " == 1").c_str() , RooArgList(quantity,MuonID));
-
+    RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), RooArgList(quantity));
+    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree, RooArgSet(quantity, MuonID,Mm_mass),*reduce);
+    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + "&&" + MuonID_str + "==1").c_str() , RooArgList(quantity,MuonID));
     RooDataSet *Data_PASSING = new RooDataSet("DATA_PASS", "DATA_PASS", DataTree, RooArgSet(quantity,MuonID,Mm_mass), *cutvar);
     
     RooDataHist* dh_ALL     = Data_ALL->binnedClone();
     RooDataHist* dh_PASSING = Data_PASSING->binnedClone();
     
-    TCanvas* c_all  = new TCanvas("ALL","ALL",800,800);
-    TCanvas* c_pass = new TCanvas("PASS","PASS",800,800);
+   
     
-    RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
-
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
     RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
@@ -99,54 +96,212 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     output[2] = yield_ALL->getError();
     output[3] = yield_PASS->getError();
 
+
+
+   setTDRStyle();
+
+//  Now plot All events
+    TCanvas* c_all  = new TCanvas("ALL","ALL",800,800);
+    c_all->Divide(1,2);
+    c_all->cd(1);
+
+    RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
+
     frame->SetTitle("ALL");
     frame->SetXTitle("#mu^{+}#mu^{-} invariant mass [GeV/c^{2}]");
-    Data_ALL->plotOn(frame);
+    Data_ALL->plotOn(frame,XErrorSize(1), Name("data"), MarkerSize(1.3), DrawOption("PZ"));
     
-    model->plotOn(frame);
-    model->plotOn(frame,RooFit::Components("sigModel"),RooFit::LineStyle(kDashed),RooFit::LineColor(kGreen));
-    model->plotOn(frame,RooFit::Components("bkgModel"),RooFit::LineStyle(kDashed),RooFit::LineColor(kRed));
+    model->plotOn(frame,Name("Full model"));
+    model->plotOn(frame,Components("sigModel"),Name("Signal model"),DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
+    model->plotOn(frame,LineStyle(7), LineColor(2), Name("Background model"));
     
-    c_all->cd();
-    frame->Draw("");
+    gPad->SetLeftMargin(0.15);
+    gPad->SetBottomMargin(0.02);
+    gPad->SetPad(0.01,0.3,0.99,0.99);
+    frame->GetYaxis()->SetLabelSize(0.05);
+    frame->GetYaxis()->SetTitleSize(0.05);
+    frame->GetYaxis()->SetTitleOffset(0.8);
+    frame->GetXaxis()->SetLabelSize(0.);
+    frame->GetXaxis()->SetTitleSize(0.);
+    frame->Draw();
     
+    //compute chisquare
+    RooAbsCollection *flparams = model->getParameters(Data_ALL)->selectByAttrib("Constant", kFALSE);
+    Int_t nflparams = flparams->getSize();
+    Double_t chisquare = -1;
+    chisquare = frame->chiSquare("Full model", "data", nflparams);
+    // cout<<massModel->GetName()<<"\n"<<chisquare;
+    
+    TLegend leg(0.8, 0.6, 0.9,0.85);
+    leg.AddEntry(frame->findObject("data"), "Data", "E2");
+    leg.AddEntry(frame->findObject("Full model"), "Full model", "l");
+    leg.AddEntry(frame->findObject("Signal model"), "Signal model", "f");
+    leg.AddEntry(frame->findObject("Background model"), "Bkg model", "l");
+    leg.SetBorderSize(0);
+    leg.SetFillStyle(0);
+    leg.SetTextSize(0.04);
+    leg.SetTextFont(42);
+    leg.Draw();
+
+
+    TPaveText *label_2 = new TPaveText(0.25, 0.63, 0.34, 0.78, "NDC");
+    label_2->SetBorderSize(0);
+    label_2->SetFillColor(0);
+    label_2->SetTextSize(0.041);
+    label_2->SetTextFont(42);
+    gStyle->SetStripDecimals(kTRUE);
+    label_2->SetTextAlign(11);
+    TString sYield = to_string(int(round(n_signal_total.getValV())));
+    TString bYield = to_string(int(round(n_back.getValV())));
+    TString csquare = to_string(chisquare);
+    label_2->AddText("N_{sig} = " + sYield);
+    label_2->AddText("N_{bkg} = " + bYield);
+    label_2->AddText("#chi^{2} = " + csquare);
+    label_2->Draw();     
+
+
+    c_all->cd(2);
+    RooHist *hpull = frame->pullHist("data", "Full model"); //massModel->GetName());
+    RooPlot *frame_pulls = Mm_mass.frame(Title("Pull"));
+    TLine* line = new TLine(Mm_mass.getMin(), 0, Mm_mass.getMax(), 0);
+    line->SetLineColor(kBlue);
+    frame_pulls->addObject(line);
+    frame_pulls->addPlotable(hpull, "P"); //,"E3")
+    frame_pulls->SetMarkerStyle(2);
+    frame_pulls->SetMarkerSize(0.01);
+
+    gPad->SetLeftMargin(0.15);
+    gPad->SetPad(0.01, 0.01, 0.99, 0.3);
+    gPad->SetTopMargin(0.01);
+    gPad->SetBottomMargin(0.5); 
+    frame_pulls->GetYaxis()->SetNdivisions(202);
+    frame_pulls->GetYaxis()->SetRangeUser(-4, 4);
+    frame_pulls->GetXaxis()->SetTitle("m_{#mu#mu} [GeV]");
+    frame_pulls->GetYaxis()->SetTitle("Pulls");
+    frame_pulls->GetXaxis()->SetTitleSize(0.1);
+    frame_pulls->GetYaxis()->SetTitleSize(0.1);
+    frame_pulls->GetXaxis()->SetLabelSize(0.08);
+    frame_pulls->GetYaxis()->SetLabelSize(0.08);
+    frame_pulls->GetXaxis()->SetLabelOffset(0.01);
+    frame_pulls->GetYaxis()->SetLabelOffset(0.01);
+    frame_pulls->GetYaxis()->SetTitleOffset(0.1);
+    frame_pulls->GetXaxis()->SetTickLength(0.1);
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+    frame_pulls->Draw();
+    
+
+
+//   Now plot pass plot
+    TCanvas* c_pass = new TCanvas("PASS","PASS",1200,1200);
+    c_pass->Divide(1,2);
+    c_pass->cd(1);
+
     RooPlot *frame_pass = Mm_mass.frame(RooFit::Title("Invariant Mass"));
-    
-    c_pass->cd();
     
     frame_pass->SetTitle("PASSING");
     frame_pass->SetXTitle("#mu^{+}#mu^{-} invariant mass [GeV/c^{2}]");
-    Data_PASSING->plotOn(frame_pass);
+    Data_PASSING->plotOn(frame_pass, Name("data"), MarkerSize(1.3), DrawOption("PZ"));
     
-    model_pass->plotOn(frame_pass);
-    model_pass->plotOn(frame_pass,RooFit::Components("sigModel"),RooFit::LineStyle(kDashed),RooFit::LineColor(kGreen));
-    model_pass->plotOn(frame_pass,RooFit::Components("bkgModel"),RooFit::LineStyle(kDashed),RooFit::LineColor(kRed));
-    
+    model_pass->plotOn(frame_pass,Name("Full model"));
+    model_pass->plotOn(frame_pass,Components("sigModel"),Name("Signal model"),DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
+    model_pass->plotOn(frame_pass,LineStyle(7), LineColor(2), Name("Background model"));
+
+    gPad->SetLeftMargin(0.15);
+    gPad->SetBottomMargin(0.02);
+    gPad->SetPad(0.01,0.3,0.99,0.99);
+    frame_pass->GetYaxis()->SetLabelSize(0.05);
+    frame_pass->GetYaxis()->SetTitleSize(0.05);
+    frame_pass->GetYaxis()->SetTitleOffset(0.8);
+    frame_pass->GetXaxis()->SetLabelSize(0.);
+    frame_pass->GetXaxis()->SetTitleSize(0.);
     frame_pass->Draw();
+    
+    //compute chisquare
+    RooAbsCollection *flparams_pass = model->getParameters(Data_PASSING)->selectByAttrib("Constant", kFALSE);
+    Int_t nflparams_pass = flparams_pass->getSize();
+    Double_t chisquare_pass = -1;
+    chisquare = frame_pass->chiSquare("Full model", "data", nflparams_pass);
+    // cout<<massModel->GetName()<<"\n"<<chisquare;
+    
+    TLegend leg_pass(0.8, 0.6, 0.9,0.85);
+    leg_pass.AddEntry(frame_pass->findObject("data"), "Data", "E2");
+    leg_pass.AddEntry(frame_pass->findObject("Full model"), "Full model", "l");
+    leg_pass.AddEntry(frame_pass->findObject("Signal model"), "Signal model", "f");
+    leg_pass.AddEntry(frame_pass->findObject("Background model"), "Bkg. model", "l");
+    leg_pass.SetBorderSize(0);
+    leg_pass.SetFillStyle(0);
+    leg_pass.SetTextSize(0.04);
+    leg_pass.SetTextFont(42);
+    leg_pass.Draw();
+
+    TPaveText *label_pass = new TPaveText(0.25, 0.63, 0.34, 0.78, "NDC");
+    label_pass->SetBorderSize(0);
+    label_pass->SetFillColor(0);
+    label_pass->SetTextSize(0.041);
+    label_pass->SetTextFont(42);
+    gStyle->SetStripDecimals(kTRUE);
+    label_pass->SetTextAlign(11);
+    TString sYield_pass = to_string(int(round(n_signal_total_pass.getValV())));
+    TString bYield_pass = to_string(int(round(n_back_pass.getValV())));
+    TString csquare_pass = to_string(chisquare_pass);
+    label_pass->AddText("N_{sig} = " + sYield_pass);
+    label_pass->AddText("N_{bkg} = " + bYield_pass);
+    label_pass->AddText("#chi^{2} = " + csquare_pass);
+    label_pass->Draw();     
+
+    c_pass->cd(2);
+    RooHist *hpull_pass = frame_pass->pullHist("data", "Full model"); //massModel->GetName());
+    RooPlot *frame_pulls_pass = Mm_mass.frame(Title("Pull"));
+    TLine* line1 = new TLine(Mm_mass.getMin(), 0, Mm_mass.getMax(), 0);
+    line1->SetLineColor(kBlue);
+    frame_pulls_pass->addObject(line1);
+    frame_pulls_pass->addPlotable(hpull, "P"); //,"E3")
+    frame_pulls_pass->SetMarkerStyle(2);
+    frame_pulls_pass->SetMarkerSize(0.01);
+
+    gPad->SetLeftMargin(0.15);
+    gPad->SetPad(0.01, 0.01, 0.99, 0.3);
+    gPad->SetTopMargin(0.01);
+    gPad->SetBottomMargin(0.5); 
+    frame_pulls_pass->GetYaxis()->SetNdivisions(202);
+    frame_pulls_pass->GetYaxis()->SetRangeUser(-4, 4);
+    frame_pulls_pass->GetXaxis()->SetTitle("m_{#mu#mu} [GeV]");
+    frame_pulls_pass->GetYaxis()->SetTitle("Pulls");
+    frame_pulls_pass->GetXaxis()->SetTitleSize(0.1);
+    frame_pulls_pass->GetYaxis()->SetTitleSize(0.1);
+    frame_pulls_pass->GetXaxis()->SetLabelSize(0.08);
+    frame_pulls_pass->GetYaxis()->SetLabelSize(0.08);
+    frame_pulls_pass->GetXaxis()->SetLabelOffset(0.01);
+    frame_pulls_pass->GetYaxis()->SetLabelOffset(0.01);
+    frame_pulls_pass->GetYaxis()->SetTitleOffset(0.1);
+    frame_pulls_pass->GetXaxis()->SetTickLength(0.1);
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+    frame_pulls_pass->Draw();
+    
 
     if(save)
     {
-        c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/tagnprobe/CMS-tutorial/Fit Result/" + condition + "_PASS.png").c_str());
-        c_all->SaveAs (("/work/submit/mori25/Darkphotons_ludo/tagnprobe/CMS-tutorial/Fit Result/" + condition + "_ALL.png").c_str());
+        c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fit Result/" + condition + "_PASS.png").c_str());
+        cout<<"hi";
+        c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fit Result/" + condition + "_ALL.png").c_str());
     }
-        
     // DELETING ALLOCATED MEMORY
     delete[] limits;
-    //
     delete file0;
-    //
     delete Data_ALL;
     delete Data_PASSING;
-    //
     delete dh_ALL;
     delete dh_PASSING;
-    //
     delete cutvar;
-    delete redeuce;
-    //
+    delete reduce;
     delete c_all;
     delete c_pass;
-    //
     delete model;
     delete model_pass;
     delete fitres;

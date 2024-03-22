@@ -9,7 +9,7 @@ import os,sys
 # Script to write the bash scripts with proper current configuration 
 
 os.environ["HOMELUDO"]="/home/submit/mori25/"
-os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/"
+os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/offline_analysis/"
 HOME_USER = os.environ["HOMELUDO"]
 DP_USER = os.environ["DPUSER"]
 
@@ -26,7 +26,7 @@ config = load_analysis_config()
 njob = sys.argv[1]
 
 # extract MC data
-MC_file_name = os.path.join("/data/submit/",config["locations"]["MCRun3"]["dump_large"], f"DimuonTree{njob}.root")
+MC_file_name = os.path.join(config["locations"]["MC_lmDY"]["dump"], f"DimuonTree{njob}.root")
 MC_file=up.open(MC_file_name)["tree"]
 
 #load model
@@ -37,7 +37,7 @@ bst = xgb.Booster()
 bst.load_model(os.path.join(DP_USER, f"BDT/trained_models/{model}_{meson}.json"))
 
 # extend tree using BDT prediction
-with up.create(os.path.join("/data/submit/",config["locations"]["MCRun3"]["dump_large_post_BDT"], f"DimuonTree{njob}_BDT.root")) as output_file:
+with up.create(os.path.join(config["locations"]["MC_lmDY"]["dump_post_BDT"], f"DimuonTree{njob}_BDT.root")) as output_file:
     dic_mm = {branch: "float" for branch in MC_file.keys()}
     dic = {**dic_mm, model+"_mva" : "float"}
     output_file.mktree("tree", dic)

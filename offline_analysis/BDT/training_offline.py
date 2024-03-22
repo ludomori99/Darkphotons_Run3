@@ -70,7 +70,7 @@ class Trainer:
             print(f"Successfully imported data file {self.MC_filename} to memory")
         return
     
-    def prepare_training_set(self,data_particle = None, prompt_reweight=False, w_frac_bkg=0.1, signal_indices=None, plot_reweight=False, **kwargs):
+    def prepare_training_set(self,data_particle = None, prompt_reweight=False, w_frac_bkg=0.325, signal_indices=None, plot_reweight=False, **kwargs):
         """
         data_particle: if want to evaluate on particle different from particle from training given in __init__
         signal_indices: array like [1,2] to say to get just Y1 and Y2 
@@ -597,7 +597,7 @@ def add_branch_weights_prompt():
     Add branch "weights_prompt" to Y data and MC. quick fix to be able to work with sPlot consistently
     Effectively adding constant weights to Y events (since Y already prompt) to have the name in 
     """
-    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Y"], "merged_A.root")
+    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"]["Y"], "mergedY123_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays(library = 'pd')    #import reweighing parameters
     weights_extended = np.ones_like(MC_data["Mm_mass"])
@@ -616,7 +616,7 @@ if __name__ == "__main__":
     print("Executing training block")
     # train_prompt_Jpsi()
     # save_Jpsi_weights()
-    # add_branch_weights_prompt()
+    add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
     # Y_trainer.complete_load(signal_indices=[1],include_MC=True)

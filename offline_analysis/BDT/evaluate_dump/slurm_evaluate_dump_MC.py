@@ -3,7 +3,7 @@ import subprocess
 import yaml
 
 os.environ["HOMELUDO"]="/home/submit/mori25/"
-os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/"
+os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/offline_analysis/"
 HOME_USER = os.environ["HOMELUDO"]
 DP_USER = os.environ["DPUSER"]
 
@@ -33,9 +33,9 @@ slurm_script_template = """#!/bin/bash
 echo done
 """
 
-dump_dir = os.path.join("/data/submit",config["locations"]["MCRun3"]["dump"])
+dump_dir = os.path.join("/data/submit",config["locations"]["MC_lmDY"]["dump"])
 dump_files = os.listdir(dump_dir)
-log_dir = os.path.join(config["locations"]["MCRun3"]["logs"],"eval_BDT")
+log_dir = os.path.join(config["locations"]["MC_lmDY"]["logs"],"eval_BDT")
 
 for i,file in enumerate(dump_files):
     cmd1 = rf"python3 {DP_USER}BDT/evaluate_dump/evaluate_dump_MC_BDT.py {i}"

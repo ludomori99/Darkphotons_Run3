@@ -9,7 +9,7 @@ import os,sys
 # Script to write the bash scripts with proper current configuration 
 
 os.environ["HOMELUDO"]="/home/submit/mori25/"
-os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/"
+os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/offline_analysis"
 HOME_USER = os.environ["HOMELUDO"]
 DP_USER = os.environ["DPUSER"]
 

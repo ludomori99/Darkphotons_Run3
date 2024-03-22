@@ -9,7 +9,7 @@ double* McYield(string condition, string quant, string MuonID_str = "PassingProb
     RooRealVar MuonID(MuonID_str.c_str(), MuonID_str.c_str(), 0, 1); //Muon_Id
     
     RooRealVar Mm_mass("Mm_mass", "Mm_mass", _mmin, _mmax);
-    
+
     double* limits = new double[2];
     if (quant == "Probe_pt") {
         limits[0] = 0;

@@ -1,7 +1,7 @@
-executable = /work/submit/mori25/Darkphotons_ludo/pull_data/MC_InclusiveMinBias/run_merge_MC_InclusiveMinBias.sh
+executable = /work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_InclusiveMinBias/run_merge_MC_InclusiveMinBias.sh
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = /work/submit/mori25/Darkphotons_ludo/pull_data/MC_InclusiveMinBias/list_InclMinBias.txt,/work/submit/mori25/Darkphotons_ludo/pull_data/MC_InclusiveMinBias/generateMCDimuonTree.C
+transfer_input_files = /work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_InclusiveMinBias/list_InclMinBias.txt,/work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_InclusiveMinBias/generateMCDimuonTree.C
 transfer_output_files = ""
 MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)

@@ -55,7 +55,7 @@ void compare_plot(TFile *file0, TFile *file1, const char* path, string quantity)
     
     if (quantity == "Probe_pt")
     {
-        pEff0->SetTitle("Efficiency of Tracker Probe Muon;_{p}T (GeV/c);Efficiency_pt");
+        pEff0->SetTitle("Efficiency of Tracker Probe Muon;p_{T} [GeV/c];Efficiency_pt");
     }
     if (quantity == "Probe_eta")
     {
@@ -114,7 +114,7 @@ void compare_plot(TFile *file0, TFile *file1, const char* path, string quantity)
     txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
 
     //Results stored in...
-    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + quantity;
+    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + quantity + string("/");
     const char* directoryToSave = dir.c_str();
 
     //Check if dir exists

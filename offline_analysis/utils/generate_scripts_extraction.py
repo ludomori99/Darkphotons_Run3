@@ -181,6 +181,35 @@ with open(os.path.join(MCMINBIAS_FOLDER,"run_merge_MC_InclusiveMinBias_Y.sh"), "
     file.write(template_MC_InclusiveMinBias_Y_bash)
 
 
+template_MC_InclusiveMinBias_bash = rf"""
+RELEASE=CMSSW_13_0_6
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+if [ -r $RELEASE/src ] ; then
+ echo release CMSSW_13_0_6 already exists
+else
+scram p CMSSW $RELEASE
+fi
+
+cd $RELEASE/src
+eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
+cd ../..
+
+start=$(($1*{MC_InclusiveMinBias_grouping_amount_data}+1))
+end=$(($start+{MC_InclusiveMinBias_grouping_amount_data}))
+
+for (( N=start; N<end; N++ )); do
+
+    file=$(cat ./list_InclMinBias.txt | sed -n ''$N'p')
+    echo running $file
+    xrdcp -f root://eoscms.cern.ch/$file input.root
+    root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,0\,{MC_InclusiveMinBias_event_fraction}\,\false\)
+done
+hadd r3tree.root r3tree_*.root
+xrdcp -f r3tree.root root://submit50.mit.edu//{MC_InclusiveMinBias_dump_short_dir}DimuonTree_$1.root
+"""
+with open(os.path.join(MCMINBIAS_FOLDER,"run_merge_MC_InclusiveMinBias.sh"), "w") as file:
+    file.write(template_MC_InclusiveMinBias_bash)
+
 template_MC_InclusiveMinBias_Jpsi_condor = rf"""executable = {MCMINBIAS_FOLDER}run_merge_MC_InclusiveMinBias_Jpsi.sh
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT

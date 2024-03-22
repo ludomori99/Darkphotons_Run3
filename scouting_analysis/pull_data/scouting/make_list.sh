@@ -1,0 +1,1 @@
+ls /data/submit/wangzqe/lowDY/1to10/nano/* >& $DPUSER/pull_data/scouting/list_scouting.txt

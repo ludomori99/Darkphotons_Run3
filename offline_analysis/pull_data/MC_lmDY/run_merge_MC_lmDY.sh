@@ -3,7 +3,7 @@ RELEASE=CMSSW_13_0_6
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 cd $RELEASE/src
 eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
-cd /work/submit/mori25/Darkphotons_ludo/pull_data/MC_lmDY/ 
+cd /work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_lmDY/ 
 
 start=$(( $1*40+1 ))
 end=$(( $start+40 ))

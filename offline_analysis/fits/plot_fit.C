@@ -144,13 +144,21 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    label_2->Draw();
 
 
-   TPaveText *cms = new TPaveText(0.14, 0.972, 0.3, 0.98, "NDC");
-   cms->AddText("CMS preliminary");
-   cms->SetBorderSize(0);
-   cms->SetFillColor(0);
-   cms->SetTextSize(0.04);
-   cms->SetTextFont(42);
-   cms->Draw();
+   // TPaveText *cms = new TPaveText(0.14, 0.972, 0.3, 0.98, "NDC");
+   // cms->AddText("CMS preliminary");
+   // cms->SetBorderSize(0);
+   // cms->SetFillColor(0);
+   // cms->SetTextSize(0.04);
+   // cms->SetTextFont(42);
+   // cms->Draw();
+
+    //CMS Open Data
+    TLatex* txCOD = new TLatex();
+    txCOD->SetTextSize(0.04);
+    txCOD->SetTextAlign(12);
+    txCOD->SetTextFont(42);
+    txCOD->SetNDC(kTRUE);
+    txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
    
 
    //plot pulls

@@ -95,13 +95,13 @@ void load_config(const char* meson, bool isMC,
    if (string(meson) == string("Jpsi")) {
       lowRange = 2.6;
       highRange = 3.56;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/merged_A.root"; //JPsi MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/merged_A.root"; //JPsi MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/merged_A.root"; //Jpsi data
    }
    else if(string(meson) == string("Y")){
       lowRange = 8.5;
       highRange = 11.2;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root"; //Upsilon MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Y/mergedY123_A.root"; //Upsilon MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root"; //Upsilon data
    }
    else {cout<<"type of meson not recognized";}
@@ -112,7 +112,7 @@ void load_config(const char* meson, bool isMC,
 void AddModelJ(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange)
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
-   RooRealVar forest_standard_Y_mva("forest_standard_Y_mva", "forest_standard_Y_mva", 0., 1., "");
+   RooRealVar forest_prompt_Jpsi_mva("forest_prompt_Jpsi_mva", "forest_prompt_Jpsi_mva", 0., 1., "");
 
    // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
    RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
@@ -169,7 +169,7 @@ void AddModelJ(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
 void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange)
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
-   RooRealVar forest_standard_Y_mva("forest_standard_Y_mva", "forest_standard_Y_mva", 0., 1., "");
+   RooRealVar forest_prompt_Jpsi_mva("forest_prompt_Jpsi_mva", "forest_prompt_Jpsi_mva", 0., 1., "");
 
    // mass model for multiple resonances. Gauss + dCB. In this case employed for Y
    RooRealVar mu1("mu1", "Y Mass",9.44796, lowRange, highRange);
@@ -237,7 +237,7 @@ void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
 void AddModelYMC(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRange)
 {
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
-   RooRealVar forest_standard_Y_mva("forest_standard_Y_mva", "forest_standard_Y_mva", 0., 1., "");
+   RooRealVar forest_prompt_Jpsi_mva("forest_prompt_Jpsi_mva", "forest_prompt_Jpsi_mva", 0., 1., "");
 
    // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
    RooRealVar mu("mu", "J/Psi Mass", 9, lowRange, highRange);
@@ -305,7 +305,6 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    TTree *tree = inputfile->Get<TTree>("tree");
     
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange); 
-   RooRealVar forest_standard_Y_mva("forest_standard_Y_mva", "forest_standard_Y_mva", 0, 1);
    RooRealVar forest_prompt_Jpsi_mva("forest_prompt_Jpsi_mva", "forest_prompt_Jpsi_mva", 0, 1);
    RooRealVar weights_prompt("weights_prompt", "weights_prompt", 0, 10);
    // RooRealVar vtx_BDT_Y_forest("vtx_BDT_Y_forest", "vtx_BDT_Y_forest", 0, 1);
@@ -334,7 +333,7 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    RooRealVar Mm_otherVtxMaxProb1("Mm_otherVtxMaxProb1", "Mm_otherVtxMaxProb1", -1000000, 1000000);
    RooRealVar Mm_otherVtxMaxProb2("Mm_otherVtxMaxProb2", "Mm_otherVtxMaxProb2", -1000000, 1000000);
 
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass, forest_standard_Y_mva,forest_prompt_Jpsi_mva,weights_prompt,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
+   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass,forest_prompt_Jpsi_mva,weights_prompt,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
       Mm_kin_vtx_prob,Mm_kin_alpha,Mm_kin_alphaBS,Mm_closetrk,Mm_closetrks1,Mm_closetrks2,Mm_kin_pvip,Mm_kin_spvip,Mm_kin_pvlip,Mm_kin_slxy,Mm_iso,Mm_otherVtxMaxProb,
       Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree));
 
@@ -614,7 +613,7 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    RooAbsPdf *bkgModel = ws.pdf("bkgModel");
    RooAbsPdf *massModel = ws.pdf("massModel");
 
-   RooRealVar *forest_standard_Y_mva = ws.var("forest_standard_Y_mva");
+   RooRealVar *forest_prompt_Jpsi_mva = ws.var("forest_prompt_Jpsi_mva");
    RooRealVar *Mm_mass = ws.var("Mm_mass");
  
    // note, we get the dataset with sWeights
@@ -653,7 +652,7 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    // yield + "_sw".
    // cdata->cd(2);
  
-   // RooPlot *frame2 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out signal"));
+   // RooPlot *frame2 = forest_prompt_Jpsi_mva->frame(Title("BDT distribution with s weights to project out signal"));
    // // Since the data are weighted, we use SumW2 to compute the errors.
    // dataw_sig.plotOn(frame2, DataError(RooAbsData::SumW2));
    // // sigModel->plotOn(frame2, LineStyle(kDashed), LineColor(kRed));
@@ -665,7 +664,7 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    // // The SPlot class adds a new variable that has the name of the corresponding
    // // yield + "_sw".
    // cdata->cd(3);
-   // RooPlot *frame3 = forest_standard_Y_mva->frame(Title("BDT distribution with s weights to project out bkg"));
+   // RooPlot *frame3 = forest_prompt_Jpsi_mva->frame(Title("BDT distribution with s weights to project out bkg"));
    // dataw_bkg.plotOn(frame3, DataError(RooAbsData::SumW2));
    // // bkgModel->plotOn(frame3, LineStyle(kDashed), LineColor(kGreen));
  

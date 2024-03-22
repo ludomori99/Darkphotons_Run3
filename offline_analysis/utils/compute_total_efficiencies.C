@@ -13,11 +13,11 @@ float compute_eff(TString dump, float dimuon_mva, float muonID);
 
 void compute_total_efficiencies(){
 
-    TString offline="/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root";
-    TString MC="/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root";
+    TString offline="/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/*.root";
+    TString MC="/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump_post_BDT/DimuonTree*_BDT.root";
 
     // for now use the looser efficiency cuts
-    float dimuon_mva=0.9445454545454546;
+    float dimuon_mva=0.857;
     float muonID=-3; //0.3836734693877551;
 
     // float off_eff=compute_eff(offline, dimuon_mva, muonID);
@@ -37,10 +37,10 @@ float compute_eff(TString dump, float dimuon_mva, float muonID){
     chain->Add(dump); 
 
     TTreeReader reader(chain);
-    TTreeReaderValue<float>          mass  (reader, "Mm_mass"    );
-    TTreeReaderValue<float>          forest_prompt_mva  (reader, "forest_prompt_Jpsi_mva"    );
-    TTreeReaderValue<float>          soft1  (reader, "Muon_softMva1"    );
-    TTreeReaderValue<float>          soft2  (reader, "Muon_softMva2"    );
+    TTreeReaderValue<double>          mass  (reader, "Mm_mass"    );
+    TTreeReaderValue<double>          forest_prompt_mva  (reader, "forest_prompt_mva"    );
+    TTreeReaderValue<double>          soft1  (reader, "Muon_softMva1"    );
+    TTreeReaderValue<double>          soft2  (reader, "Muon_softMva2"    );
 
     int j=0;
     int count[2]={0};
@@ -52,7 +52,7 @@ float compute_eff(TString dump, float dimuon_mva, float muonID){
             cout.flush();
 	    }
 	    if (*forest_prompt_mva <dimuon_mva) continue;
-	    if (*soft1 < muonID || *soft2 < muonID ) continue;	
+	    // if (*soft1 < muonID || *soft2 < muonID ) continue;	
         count[1]++;
     }
 

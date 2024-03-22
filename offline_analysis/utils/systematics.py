@@ -166,7 +166,7 @@ class Systematics:
             $\epsilon_{{MC}} = ${round(self.effMC,3)}"""+plot_corr*f"""
             $\epsilon_{{data}}^{{corr}} = ${round(self.effData_corr,3)} 
             $\epsilon_{{MC}}^{{corr}} = ${round(self.effMC_corr,3)}"""
-        ax.text(0.01,0.3, text, fontsize=10,  transform=ax.transAxes)
+        ax.text(0.25,0.3, text, fontsize=12,  transform=ax.transAxes)
         ax.grid()
         ax.legend()    
         ax.set_xlabel("BDT score")

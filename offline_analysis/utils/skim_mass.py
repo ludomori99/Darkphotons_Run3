@@ -82,11 +82,11 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
 
     mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
     out_dir = data_dir[particle]
-    branches = ["Mm_mass", "Probe_pt", "Probe_eta","PassingProbeSoftId"]
-    types = ['float','float','float','int']
+    branches = ["Mm_mass", "Probe_pt", "Probe_eta","Probe_abs_eta","Probe_dR","PassingProbeSoftId"]
+    types = ['float','float','float','float','float','int']
     branch_dic = {branch: t for branch,t in zip(branches,types)}
 
-    with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}.root")) as outfile:
+    with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}_new.root")) as outfile:
         outfile.mktree("tree",branch_dic)
         error_indices = []
         if isMC: nfiles=config["extraction"]["MC_InclusiveMinBias"]["njobs"]
@@ -136,6 +136,7 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
 
                 #initialize empty dictionary tree
                 tree = {}    
+                tree["Probe_dR"] = np.sqrt(np.abs(intree["Mm_mu1_eta"].array()-intree["Mm_mu2_eta"].array())**2 + np.abs(intree["Mm_mu1_phi"].array()-intree["Mm_mu2_phi"].array())**2)[mass_cut][cut_reduction_idc][denom]
                 tree["Mm_mass"] = intree["Mm_mass"].array()[mass_cut][cut_reduction_idc][denom]
                 """
                 I look at events that satisfy either  isEven&charge1 or (~isEven)&(~charge1) to avoid double counting 
@@ -149,7 +150,8 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 eta = np.zeros(len(isEven))
                 eta[((isEven& (~charge1) & tag_cut2) | ((~isEven)&(charge1)&tag_cut2))] = intree["Mm_mu1_eta"].array(library='np')[mass_cut][cut_reduction_idc][((isEven& (~charge1) & tag_cut2) | ((~isEven)&(charge1)&tag_cut2))] 
                 eta[((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] = intree["Mm_mu2_eta"].array(library='np')[mass_cut][cut_reduction_idc][((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] 
-                tree["Probe_eta"]=np.abs(eta[denom])
+                tree["Probe_abs_eta"]=np.abs(eta[denom])
+                tree["Probe_eta"]=eta[denom]
                 
                 tree["PassingProbeSoftId"]=num[denom]
 
@@ -167,8 +169,8 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
 
 if __name__ == "__main__":
     # print("please unindent a function in the main of skim_mass.py")
-    write_tree_data("Y",off_data_dir)
-    write_tree_data("Jpsi",off_data_dir)
+    # write_tree_data("Y",off_data_dir)
+    # write_tree_data("Jpsi",off_data_dir)
     # prepareTP('Y',off_data_dir)
     prepareTP('Jpsi',off_data_dir)
     prepareTP('Jpsi',MC_data_dir,reduction_factor=1,isMC=True)
