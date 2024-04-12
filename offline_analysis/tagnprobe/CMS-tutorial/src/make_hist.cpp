@@ -6,15 +6,18 @@ TH1F* make_hist(string name, double** values, int qnt, int bin_n, Double_t* binn
 
     for (int i = 0; i < bin_n; i++)
     {
-        hist->SetBinContent(i, values[i][qnt]);
+        // cout<<"\n\nbinning: "<<binning[i]<<","<<binning[i+1]<<"\ncontent: "<<values[i][qnt];
+        hist->SetBinContent(i+1, values[i][qnt]);
         if (IsDataMc == false)
-            hist->SetBinError(i, values[i][qnt+2]);
+            hist->SetBinError(i+1, values[i][qnt+2]);
     }
     if (DRAW)
     {
         TCanvas* xperiment = new TCanvas;
         xperiment->cd();
         hist->Draw();
+        string saveAs = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/Probe_abs_eta/") + to_string(qnt) + ".png";
+        xperiment->SaveAs(saveAs.data());
     }
     return hist;
 }
