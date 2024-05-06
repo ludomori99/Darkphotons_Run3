@@ -3,6 +3,7 @@
 #This is the only file with hard coded stuff (besides config)
 export HOMEUSER=/home/submit/mori25/
 export DPUSER=/work/submit/mori25/Darkphotons_ludo/offline_analysis/
+export DPUSERBASE=/work/submit/mori25/Darkphotons_ludo/
 export PYTHONPATH="$DPUSER/utils/"
 
 test_or_depl='depl'
@@ -17,7 +18,6 @@ test_or_depl='depl'
 ############### DATA EXTRACTION ############
 # # ###generate the scripts to extract data and MC 
 # python3 $DPUSER/utils/generate_scripts_extraction.py
-# echo Generated scripts
 
 # # ###If needed., create a list with the offline files to extract
 # bash $DPUSER/pull_data/offline/make_list.sh
@@ -32,7 +32,7 @@ test_or_depl='depl'
 # echo Made list of files to extract \(MC_lmDY\)
 
 
-#### Condor section 
+### Condor section 
 # condor_submit $DPUSER/pull_data/offline/offline.sub
 
 # bash $DPUSER/pull_data/offline_normal/run_merge_off_normal.sh
@@ -57,7 +57,7 @@ test_or_depl='depl'
 # bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
 
 
-## need to wait until extraction is completed
+# need to wait until extraction is completed
 # bash $DPUSER/pull_data/MC_InclusiveMinBias/merge_final.sh
 
 # hadd -f /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/inclusive/merged_A.root /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump/*.root
@@ -66,7 +66,7 @@ test_or_depl='depl'
 
 
 ######### SKIM DATA FOR BDT #######################
-# python3 $DPUSER/utils/skim_mass.py $test_or_depl
+python3 $DPUSER/utils/skim_mass.py $test_or_depl
 
 
 ############## EXECUTE TRAINING ON SKIMMED DATA #################
@@ -98,7 +98,7 @@ test_or_depl='depl'
 
 ########## Tag and probe #################
 
-root -l -b -q ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C
 
 
 #####################################

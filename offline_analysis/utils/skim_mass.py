@@ -20,13 +20,11 @@ else:
 trigger = "dimuon" #or inclusive
 
 
-#directory to extract ntuples. dump dir has slightly different definition
-off_data_dir = config["locations"]["offline"]
-MC_data_dir = config["locations"]["MC_InclusiveMinBias"]
 
-def write_tree_data(particle, data_dir):
+def write_tree_data(particle):
 
     #particle = "Y" or "Jpsi"
+    data_dir = config["locations"]["offline"]
 
     #Extract config infos: mass range, branches to be used and included in the trees
     mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
@@ -76,27 +74,39 @@ def write_tree_data(particle, data_dir):
 
     return
 
-def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_factor=0.05,isMC=False):
+def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
 
     #extract tree suited for tagnprobe
 
+    if dataset not in ["Run3", "MC_InclusiveMinBias","MC_lmDY"]:
+        raise ValueError("dataset not recognized")
+    
+    if dataset=="MinBias": 
+        data_dir = config["locations"]["MC_InclusiveMinBias"]
+        nfiles=config["extraction"]["MC_InclusiveMinBias"]["njobs"]
+    elif dataset =="lmDY":
+        data_dir = config["locations"]["MC_lmDY"]
+        nfiles=config["extraction"]["MC_lmDY"]["njobs"]
+    else: 
+        data_dir = config["locations"]["offline"]
+        nfiles=config["extraction"]["offline"]["njobs"]
+
     mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
     out_dir = data_dir[particle]
-    branches = ["Mm_mass", "Probe_pt", "Probe_eta","Probe_abs_eta","Probe_dR","PassingProbeSoftId"]
-    types = ['float','float','float','float','float','int']
+    branches = ["Mm_mass", "Mm_dR", "Probe_pt", "Probe_eta","Probe_abs_eta","isBarrelMuon","PassingProbeSoftId","PassingProbeLooseId"]
+    types = ['float','float','float','float','float','int','int','int']
     branch_dic = {branch: t for branch,t in zip(branches,types)}
 
-    with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}_new.root")) as outfile:
+    with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}.root")) as outfile:
         outfile.mktree("tree",branch_dic)
         error_indices = []
-        if isMC: nfiles=config["extraction"]["MC_InclusiveMinBias"]["njobs"]
-        else: nfiles=config["extraction"]["offline"]["njobs"]
+        
         for i in range(nfiles):
             if i and i%10 == 0: 
                 print(f"Processing {i}/{nfiles}", end="\r")
                 sys.stdout.flush()
             try: 
-                filename = data_dir["dump"]+"DimuonTree"+isMC*particle+str(i)+".root:tree"
+                filename = data_dir["dump"]+"DimuonTree"+(dataset=="MinBias")*particle+str(i)+".root:tree"
                 intree = up.open(filename)
 
                 #define mass cut 
@@ -107,20 +117,23 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 num_events_surviving = int(len_before*reduction_factor)
                 cut_reduction_idc = random.sample(range(len_before), num_events_surviving)
 
-                working_point_id=0.223
+                working_point_id=config["muon_ID"]["working_point"]
                 softId1 = intree["Muon_softMva1"].array(library='np')>working_point_id
                 softId2 = intree["Muon_softMva2"].array(library='np')>working_point_id
+
+                looseId1 = intree["Muon_looseId1"].array(library='np')
+                looseId2 = intree["Muon_looseId2"].array(library='np')
 
                 #define global tag cut
                 if tag=="tightId":
                     tag_cut1= intree["Muon_tightId1"].array(library='np')[mass_cut][cut_reduction_idc] 
                     tag_cut2= intree["Muon_tightId2"].array(library='np')[mass_cut][cut_reduction_idc] 
-                #else ... 
+               
+                softProbe_cut1= softId1[mass_cut][cut_reduction_idc] 
+                softProbe_cut2= softId2[mass_cut][cut_reduction_idc] 
 
-                if probe=="softMvaId":
-                    probe_cut1= softId1[mass_cut][cut_reduction_idc] 
-                    probe_cut2= softId2[mass_cut][cut_reduction_idc] 
-                #else ... 
+                looseProbe_cut1= looseId1[mass_cut][cut_reduction_idc] 
+                looseProbe_cut2= looseId2[mass_cut][cut_reduction_idc] 
                     
                 isEven = intree["Event"].array(library='np')[mass_cut][cut_reduction_idc]%2==0
                 charge1 = intree["Muon_charge1"].array(library='np')[mass_cut][cut_reduction_idc]==1
@@ -129,15 +142,19 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 denom = ((isEven & (charge1&tag_cut1 | (~charge1)&tag_cut2)) | 
                         (~isEven & (charge1&tag_cut2 | (~charge1)&tag_cut1)))
 
-                num = ((isEven & (charge1&tag_cut1&probe_cut2 | (~charge1)&tag_cut2&probe_cut1)) |
-                        (~isEven & (charge1&tag_cut2&probe_cut1 | (~charge1)&tag_cut1&probe_cut2)))
+                softNum = ((isEven & (charge1&tag_cut1&softProbe_cut2 | (~charge1)&tag_cut2&softProbe_cut1)) |
+                        (~isEven & (charge1&tag_cut2&softProbe_cut1 | (~charge1)&tag_cut1&softProbe_cut2)))
                 
-                assert(len(denom) == len(num))
+                looseNum = ((isEven & (charge1&tag_cut1&looseProbe_cut2 | (~charge1)&tag_cut2&looseProbe_cut1)) |
+                        (~isEven & (charge1&tag_cut2&looseProbe_cut1 | (~charge1)&tag_cut1&looseProbe_cut2)))
+                
+                assert(len(denom) == len(softNum))
 
                 #initialize empty dictionary tree
                 tree = {}    
-                tree["Probe_dR"] = np.sqrt(np.abs(intree["Mm_mu1_eta"].array()-intree["Mm_mu2_eta"].array())**2 + np.abs(intree["Mm_mu1_phi"].array()-intree["Mm_mu2_phi"].array())**2)[mass_cut][cut_reduction_idc][denom]
                 tree["Mm_mass"] = intree["Mm_mass"].array()[mass_cut][cut_reduction_idc][denom]
+                tree["Mm_dR"] = np.sqrt((intree["Mm_mu1_eta"].array()-intree["Mm_mu2_eta"].array())**2 + (intree["Mm_mu1_phi"].array()-intree["Mm_mu2_phi"].array())**2)[mass_cut][cut_reduction_idc][denom]
+
                 """
                 I look at events that satisfy either  isEven&charge1 or (~isEven)&(~charge1) to avoid double counting 
                 in the first case I tag on muon 1 . hence probe is muon2 .  
@@ -152,8 +169,12 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
                 eta[((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] = intree["Mm_mu2_eta"].array(library='np')[mass_cut][cut_reduction_idc][((isEven& charge1 & tag_cut1) | ((~isEven)&(~charge1)&tag_cut1))] 
                 tree["Probe_abs_eta"]=np.abs(eta[denom])
                 tree["Probe_eta"]=eta[denom]
-                
-                tree["PassingProbeSoftId"]=num[denom]
+
+                barrel_cut = eta<1.46
+
+                tree["isBarrelMuon"] = barrel_cut[denom]
+                tree["PassingProbeSoftId"]=softNum[denom]
+                tree["PassingProbeLooseId"]=looseNum[denom]
 
                 #extend the outfile with the dictionary for current file
                 outfile["tree"].extend(tree)
@@ -169,8 +190,9 @@ def prepareTP(particle, data_dir,tag="tightId",probe="softMvaId",reduction_facto
 
 if __name__ == "__main__":
     # print("please unindent a function in the main of skim_mass.py")
-    # write_tree_data("Y",off_data_dir)
-    # write_tree_data("Jpsi",off_data_dir)
-    # prepareTP('Y',off_data_dir)
-    prepareTP('Jpsi',off_data_dir)
-    prepareTP('Jpsi',MC_data_dir,reduction_factor=1,isMC=True)
+    # write_tree_data("Y")
+    # write_tree_data("Jpsi")
+    # prepareTP('Y')
+    # prepareTP('Jpsi')
+    prepareTP('Jpsi',"MC_lmDY",reduction_factor=1)
+    # prepareTP('Jpsi',MC_data_dir,"MC_InclusiveMinBias",reduction_factor=1)

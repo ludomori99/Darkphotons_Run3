@@ -10,6 +10,7 @@ extraction:
   MC_lmDY: #uses slurm
     event_fraction: 1
     grouping_amount_data: 40
+    njobs: 97
 
   MC_InclusiveMinBias: #uses condor
     event_fraction: 1
@@ -48,6 +49,11 @@ locations:
 
 
 ntuple_branches: 
+  - run
+  - lumSec
+  - Event
+  - nMuonId
+  - Mm_docatrk
   - Mm_kin_lxy
   - Mm_kin_l3d
   - Mm_kin_sl3d
@@ -103,6 +109,22 @@ ntuple_branches:
   - Muon_triggerIdLoose2 
   - Muon_isTracker1
   - Muon_isTracker2 
+  - HLT_DoubleMu4_3_LowMass
+  - HLT_DoubleMu4_3_Jpsi
+  - HLT_Dimuon10_Upsilon_y1p4
+  - HLT_Dimuon12_Upsilon_y1p4
+  - MuonId_HLT_DoubleMu4_3_LowMass1
+  - MuonId_HLT_DoubleMu4_3_LowMass2
+  - Prescale_HLT_DoubleMu4_3_LowMass
+  - L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6
+  - L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5
+  - L1_DoubleMu4_SQ_OS_dR_Max1p2
+  - L1_DoubleMu4p5_SQ_OS_dR_Max1p2
+  - L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4
+  - L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4
+
+muon_ID:
+  working_point: 0.223
 
 #Section for training 
 BDT_training:

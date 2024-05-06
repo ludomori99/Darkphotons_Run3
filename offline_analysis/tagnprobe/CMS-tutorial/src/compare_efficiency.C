@@ -79,8 +79,8 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
      if (quantity == "Probe_pt")
      {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(0.,80.);
-        graph->SetMinimum(0.5);
-        graph->SetMaximum(1.2);
+        graph->SetMinimum(0.9);
+        graph->SetMaximum(1.02);
      }
     
     if (quantity == "Probe_eta")
@@ -111,7 +111,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     tl->Draw();
 
     //Label
-    TPaveText label(0.68, 0.63, 0.94, 0.73, "NDC");
+    TPaveText label(0.68, 0.7, 0.94, 0.75, "NDC");
     label.SetBorderSize(0);
     label.SetFillColor(0);
     label.SetTextSize(0.031);
@@ -132,7 +132,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
 
     //Results stored in...
-    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + quantity + string("/");
+    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/")  + quantity + string("/");
     const char* directoryToSave = dir.c_str();
 
     //Check if dir exists
@@ -159,12 +159,12 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     c1->SaveAs(saveAs.data());
 }
 
-void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* path, string quantity, string MuonId)
+void compare_plot_BarrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* path, string quantity, string MuonId)
 {
     TEfficiency* pEffMCBarrel = (TEfficiency*)fileMC->Get((string(path) + string("barrel")).c_str());
     TEfficiency* pEffMCEndcap = (TEfficiency*)fileMC->Get((string(path) + string("endcap")).c_str());
-    TEfficiency* pEffOfflineBarrel = (TEfficiency*)fileOffline->Get(path);
-    TEfficiency* pEffOfflineEndcap = (TEfficiency*)fileOffline->Get(path);
+    TEfficiency* pEffOfflineBarrel = (TEfficiency*)fileOffline->Get((string(path) + string("barrel")).c_str());
+    TEfficiency* pEffOfflineEndcap = (TEfficiency*)fileOffline->Get((string(path) + string("endcap")).c_str());
 
     int colorScheme[][4] = {
         {kGreen - 2, kBlue, kRed, kOrange},
@@ -195,15 +195,11 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
 
     //Plot
     pEffMCBarrel->SetMarkerColor(colorScheme[useScheme][0]);
+    pEffMCBarrel->SetMarkerStyle(21);
     pEffMCBarrel->SetLineColor(colorScheme[useScheme][0]);
     pEffMCBarrel->Draw("PZ");
     // MarkerSize(0.7)
     
-    pEffMCEndcap->SetMarkerColor(colorScheme[useScheme][1]);
-    pEffMCEndcap->SetLineColor(colorScheme[useScheme][1]);
-    pEffMCEndcap->Draw("PZ");
-    // MarkerSize(0.7)
-    gPad->Update();
     
     if (quantity == "Probe_pt")
     {
@@ -222,14 +218,6 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
         pEffMCBarrel->SetTitle("Efficiency of Tracker Probe Muon;dR;Efficiency");
     }
 
-    pEffOfflineBarrel->SetMarkerColor(colorScheme[useScheme][2]);
-    pEffOfflineBarrel->SetLineColor(colorScheme[useScheme][2]);
-    pEffOfflineBarrel->Draw("same");
-
-    pEffOfflineEndcap->SetMarkerColor(colorScheme[useScheme][3]);
-    pEffOfflineEndcap->SetLineColor(colorScheme[useScheme][3]);
-    pEffOfflineEndcap->Draw("same");
-
     //Set range in y axis
     gPad->Update();
     auto graph = pEffMCBarrel->GetPaintedGraph();
@@ -241,8 +229,8 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
      if (quantity == "Probe_pt")
      {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(0.,80.);
-        graph->SetMinimum(0.5);
-        graph->SetMaximum(1.2);
+        graph->SetMinimum(0.8);
+        graph->SetMaximum(1.05);
      }
     
     if (quantity == "Probe_eta")
@@ -261,12 +249,28 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     if (quantity == "Mm_dR")
     {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(0,1.);
-        graph->SetMinimum(0.9);
+        graph->SetMinimum(0.8);
         graph->SetMaximum(1.05);
     }
 
+
+    pEffMCEndcap->SetMarkerColor(colorScheme[useScheme][1]);
+    pEffMCEndcap->SetMarkerStyle(21);
+    pEffMCEndcap->SetLineColor(colorScheme[useScheme][1]);
+    pEffMCEndcap->Draw("same");
+
+    pEffOfflineBarrel->SetMarkerColor(colorScheme[useScheme][2]);
+    pEffOfflineBarrel->SetMarkerStyle(21);
+    pEffOfflineBarrel->SetLineColor(colorScheme[useScheme][2]);
+    pEffOfflineBarrel->Draw("same");
+
+    pEffOfflineEndcap->SetMarkerColor(colorScheme[useScheme][3]);
+    pEffOfflineEndcap->SetMarkerStyle(21);
+    pEffOfflineEndcap->SetLineColor(colorScheme[useScheme][3]);
+    pEffOfflineEndcap->Draw("same");
+
     //Legenda
-    TLegend* tl = new TLegend(0.68,0.78,0.94,0.88);
+    TLegend* tl = new TLegend(0.64,0.78,0.94,0.95);
     tl->SetTextSize(0.03);
     tl->AddEntry(pEffOfflineBarrel, nameScheme[useScheme][0], "lep");
     tl->AddEntry(pEffOfflineEndcap, nameScheme[useScheme][1], "lep");
@@ -275,10 +279,10 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     tl->Draw();
 
     //Label
-    TPaveText label(0.25, 0.63, 0.34, 0.78, "NDC");
+    TPaveText label(0.68, 0.7, 0.94, 0.75, "NDC");
     label.SetBorderSize(0);
     label.SetFillColor(0);
-    label.SetTextSize(0.041);
+    label.SetTextSize(0.031);
     label.SetTextFont(42);
     gStyle->SetStripDecimals(kTRUE);
     label.SetTextAlign(11);
@@ -296,7 +300,7 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
 
     //Results stored in...
-    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + quantity + string("/");
+    string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/")  + quantity + string("/");
     const char* directoryToSave = dir.c_str();
 
     //Check if dir exists
@@ -316,7 +320,7 @@ void compare_plot_barrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
 
 
 //Compare efficiency
-void compare_efficiency(string quantity, string Run3, string MC, string MuonId, bool barrelVsEndcap = false)
+void compare_efficiency(string quantity, string MC, string Run3, string MuonId, bool barrelVsEndcap = false)
 {
     TFile *file0 = TFile::Open(MC.c_str());
     TFile *file1 = TFile::Open(Run3.c_str());
@@ -326,6 +330,8 @@ void compare_efficiency(string quantity, string Run3, string MC, string MuonId, 
         std::cerr << "ABORTING...\n";
         abort();
     }
-    if (barrelVsEndcap)  compare_plot(file0, file1, "Efficiency_", quantity, MuonId);
+    if (barrelVsEndcap)  compare_plot_BarrelVsEndcap(file0, file1, "Efficiency_", quantity, MuonId);
     else compare_plot(file0, file1, "Efficiency", quantity, MuonId);
 }
+
+

@@ -52,8 +52,8 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
 	}
 
 
-	if (*forest_prompt_mva <0.9445454545454546) continue;
-	if (*soft1 < 0.3836734693877551 || *soft2 < 0.3836734693877551  ) continue;	
+	if (*forest_prompt_mva <0.857) continue;
+	if (*soft1 < 0.223 || *soft2 < 0.223  ) continue;	
 
         count[1]++;
 

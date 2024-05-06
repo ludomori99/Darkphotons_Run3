@@ -1,0 +1,13 @@
+[#1] INFO:Minimization -- p.d.f. provides expected number of events, including extended term in likelihood.
+RooAbsTestStatistic::initSimMode: creating slave calculator #0 for state ALL (100 dataset entries)
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+RooAbsTestStatistic::initSimMode: creating slave calculator #1 for state PASSING (100 dataset entries)
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+[#1] INFO:Fitting -- RooAbsTestStatistic::initSimMode: created 2 slave calculators.
+[#1] INFO:Minimization -- RooAbsMinimizerFcn::setOptimizeConst: activating const optimization
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+[#1] INFO:Minimization --  The following expressions will be evaluated in cache-and-track mode: (Voigtian,CB,bkgModel)
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+[#1] INFO:NumericIntegration -- RooRealIntegral::init(Voigtian_Int[Mm_mass]) using numeric integrator RooIntegrator1D to calculate Int(Mm_mass)
+[#1] INFO:Minimization --  The following expressions will be evaluated in cache-and-track mode: (Voigtian,CB,bkgModel)

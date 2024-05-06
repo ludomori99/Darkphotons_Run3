@@ -7,7 +7,7 @@ MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)
 arguments = "$(Extention)"
 Requirements = ( BOSCOCluster =!= "t3serv008.mit.edu" && BOSCOCluster =!= "ce03.cmsaf.mit.edu" && BOSCOCluster =!= "eofe8.mit.edu")
-+REQUIRED_OS = "rhel7"
+# +REQUIRED_OS = "rhel7"
 +DESIRED_Sites = "mit_tier3,mit_tier2"  
 use_x509userproxy = True
 x509userproxy = /home/submit/mori25/x509up_u238361

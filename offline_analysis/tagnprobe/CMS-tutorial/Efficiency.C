@@ -7,6 +7,7 @@
 #include "src/McYield.cpp"
 
 void compute_eff(bool, string, string, bool=false, bool=false);
+void full_study(string, string);
 
 void Efficiency(){
 
@@ -26,29 +27,31 @@ void Efficiency(){
         (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/Efficiency_Run3.root")).c_str(),
          MuonId);
     
-    // compute_eff(true,"Probe_abs_eta",MuonId);
-    // compute_eff(false,"Probe_abs_eta",MuonId);
-    // compare_efficiency("Probe_abs_eta", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_MC.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_Run3.root")).c_str());
+    compute_eff(true,"Probe_abs_eta",MuonId);
+    compute_eff(false,"Probe_abs_eta",MuonId);
+    compare_efficiency("Probe_abs_eta", 
+        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_MC.root")).c_str(), 
+        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_Run3.root")).c_str(),
+        MuonId);
 
-    // compute_eff(true,"Mm_dR",MuonId);
-    // compute_eff(true,"Mm_dR",MuonId, true,false);
-    // compute_eff(true,"Mm_dR",MuonId, false,true);
-    // compute_eff(false,"Mm_dR",MuonId);
-    // compute_eff(false,"Mm_dR",MuonId, true,false);
-    // compute_eff(false,"Mm_dR",MuonId,false, true);
 
-    // compare_efficiency("Mm_dR", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Mm_dR/Efficiency_MC.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Mm_dR/Efficiency_Run3.root")).c_str(),
-    //     MuonId, false); 
-    // compare_efficiency("Mm_dR", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Mm_dR/Efficiency_MC.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Mm_dR/Efficiency_Run3.root")).c_str(),
-    //     MuonId, true); 
-
+    full_study("Probe_pt", MuonId);
+    full_study("Mm_dR", MuonId);
 }
+
+void full_study(string quantity, string MuonId){
+    compute_eff(true,quantity,MuonId);
+    compute_eff(true,quantity,MuonId, true,false);
+    compute_eff(true,quantity,MuonId, false,true);
+    compute_eff(false,quantity,MuonId);
+    compute_eff(false,quantity,MuonId, true,false);
+    compute_eff(false,quantity,MuonId,false, true);
+    string pathMC = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_MC.root");
+    string pathOffline = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_Run3.root");
+    compare_efficiency(quantity,pathMC.c_str(),pathOffline.c_str(),MuonId,false); 
+    compare_efficiency(quantity,pathMC.c_str(),pathOffline.c_str(),MuonId,true); 
+}
+
 
 void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=false, bool isEndcap=false){
 
@@ -71,7 +74,7 @@ void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=fa
         bins.assign(bins_tmp, bins_tmp + bin_n + 1);
     }    
     if (quantity=="Mm_dR"){
-        double bins_tmp[] =  { 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8 }; // |eta|
+        double bins_tmp[] =  { 0., 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8 }; 
         bin_n = 8;
         bins.assign(bins_tmp, bins_tmp + bin_n + 1);
     }    

@@ -31,6 +31,13 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     TTreeReaderValue<unsigned long long>   event (reader, "event");
     TTreeReaderValue<unsigned int>            nMuonId (reader, "nMuonId");
 
+TTreeReaderValue<bool>    l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6(reader,"L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6");
+TTreeReaderValue<bool> l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5(reader,"L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5");
+TTreeReaderValue<bool> l1_DoubleMu4_SQ_OS_dR_Max1p2(reader,"L1_DoubleMu4_SQ_OS_dR_Max1p2"); 
+TTreeReaderValue<bool> l1_DoubleMu4p5_SQ_OS_dR_Max1p2(reader,"L1_DoubleMu4p5_SQ_OS_dR_Max1p2"); 
+TTreeReaderValue<bool> l1_DoubleMu0er1p5_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4"); 
+TTreeReaderValue<bool> l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4");
+
     // TTreeReaderArray<float>          muonId_chi2LocalPosition (reader, "MuonId_chi2LocalPosition");
     // TTreeReaderArray<float>          muonId_glbNormChi2 (reader, "MuonId_glbNormChi2");
     // TTreeReaderArray<float>          muonId_glbTrackProbability (reader, "MuonId_glbTrackProbability");
@@ -117,6 +124,13 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     unsigned luminosityBlock;
     unsigned long long Event;
     unsigned int NMuonId;
+
+bool L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6;
+bool L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5;
+bool L1_DoubleMu4_SQ_OS_dR_Max1p2; 
+bool L1_DoubleMu4p5_SQ_OS_dR_Max1p2; 
+bool L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4; 
+bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
 
     // vector<float> MuonId_chi2LocalPosition;
     // vector<float> MuonId_glbNormChi2;
@@ -218,6 +232,15 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Event", &Event);
     outtree->Branch("nMuonId", &NMuonId);
             
+
+outtree->Branch("L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6", &L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6);
+outtree->Branch("L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5", &L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5);
+outtree->Branch("L1_DoubleMu4_SQ_OS_dR_Max1p2", &L1_DoubleMu4_SQ_OS_dR_Max1p2);
+outtree->Branch("L1_DoubleMu4p5_SQ_OS_dR_Max1p2", &L1_DoubleMu4p5_SQ_OS_dR_Max1p2);
+outtree->Branch("L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4);
+outtree->Branch("L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4);
+    
+
     // outtree->Branch("MuonId_chi2LocalPosition",&MuonId_chi2LocalPosition,32000,0);
     // outtree->Branch("MuonId_glbNormChi2",&MuonId_glbNormChi2,32000,0);
     // outtree->Branch("MuonId_glbTrackProbability",&MuonId_glbTrackProbability,32000,0);
@@ -488,6 +511,13 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         NMuonId = *nMuonId;
         Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
         DoubleMu4_3_LowMass = *HLT_DoubleMu4_3_LowMass;
+
+L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6;
+L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5;
+L1_DoubleMu4_SQ_OS_dR_Max1p2 = *l1_DoubleMu4_SQ_OS_dR_Max1p2;
+L1_DoubleMu4p5_SQ_OS_dR_Max1p2 = *l1_DoubleMu4p5_SQ_OS_dR_Max1p2;
+L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4 = *l1_DoubleMu0er1p5_SQ_OS_dR_Max1p4;
+L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4 = *l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
 
 	outtree->Fill(); 
    }

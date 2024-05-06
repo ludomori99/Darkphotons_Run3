@@ -117,7 +117,8 @@ void AddModelJ(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
    RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
    RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
-   RooGaussian Gaussian("Gaussian", "Gaussian", Mm_mass, mu, sigma);
+   RooRealVar l("l", "Width of BW", 0.0378, 0.01, 10, "GeV");
+   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
 
    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
@@ -130,7 +131,7 @@ void AddModelJ(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    RooRealVar GaussFraction("GaussFraction", "Fraction of Gaussian", 0.5, 0, 1, "");
 
    // Final model is sigModel
-   RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Gaussian, CB), GaussFraction);
+   RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Voigtian, CB), GaussFraction);
    // --------------------------------------
    // make bkg model
  

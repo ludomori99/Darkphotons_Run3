@@ -25,7 +25,7 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
         limits[0] = -3;
         limits[1] = 3;
     }   
-    if (quant == "Probe_dR") {
+    if (quant == "Mm_dR") {
         limits[0] = 0;
         limits[1] = 2;
     }
@@ -45,12 +45,12 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
 
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-    RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
-    RooRealVar l("l", "Width of BW", 0.0378, 0.001, 10, "GeV");
+    RooRealVar sigma("sigma", "Width of Gaussian", 0.09, 0.005, 0.1, "GeV");
+    RooRealVar l("l", "Width of BW", 0.0378, 0.01, 10, "GeV");
     RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
 
-    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
-    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
+    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.05, 0.01, 1, "GeV");
+    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.5, 0.01, 1, "GeV");
     RooRealVar nL("nL", "nL CB", 0.8, 0.1,15, "");
     RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.1, 5, "");
     RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
@@ -90,6 +90,12 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
 
     simPdf.addPdf(*model,"ALL");
     simPdf.addPdf(*model_pass,"PASSING");
+
+    //Store logs
+    ofstream logFile(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_output.log").c_str());
+    streambuf* oldCoutStreamBuf = cout.rdbuf();
+    cout.rdbuf(logFile.rdbuf());
+
 
     RooFitResult* fitres = new RooFitResult;
     fitres = simPdf.fitTo(combData, RooFit::Save());
@@ -148,7 +154,7 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     Double_t chisquare = -1;
     chisquare = frame->chiSquare("Full model", "data", nflparams);
 
-    TPaveText label_2(0.25, 0.63, 0.34, 0.78, "NDC");
+    TPaveText label_2(0.25, 0.63, 0.34, 0.85, "NDC");
     label_2.SetBorderSize(0);
     label_2.SetFillColor(0);
     label_2.SetTextSize(0.041);
@@ -240,7 +246,7 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     Double_t chisquare_pass = -1;
     chisquare_pass = frame_pass->chiSquare("Full model", "data", nflparams_pass);
 
-    TPaveText label_pass(0.25, 0.63, 0.34, 0.78, "NDC");
+    TPaveText label_pass(0.25, 0.63, 0.34, 0.85, "NDC");
     label_pass.SetBorderSize(0);
     label_pass.SetFillColor(0);
     label_pass.SetTextSize(0.041);
@@ -295,9 +301,14 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
 
     if(save)
     {
-        c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fit Result/" + MuonID_str + "/" + quant + "/" + condition + "_PASS.png").c_str());
-        c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fit Result/"  + MuonID_str + "/" + quant + "/" + condition + "_ALL.png").c_str());
+        c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_PASS.png").c_str());
+        c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/"  + MuonID_str + "/" + quant + "/" + condition + "_ALL.png").c_str());
     }
+
+    // Restore old cout stream buffer
+    cout.rdbuf(oldCoutStreamBuf);
+    logFile.close();
+
     // DELETING ALLOCATED MEMORY
     delete[] limits;
     //

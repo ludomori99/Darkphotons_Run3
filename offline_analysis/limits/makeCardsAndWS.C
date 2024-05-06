@@ -57,8 +57,8 @@ void makeCardsAndWS(){
   TH1F* histChi2_A=new TH1F("histChi2_A","histChi2_A",50,0.5,1.5);
 
   //WHICH YEAR
-  	TString year="2018C";
-	TString suff="IterV0";
+  	TString year="2022-2023";
+	TString suff="";
   //INPUT FILE WITH HISTOGRAMS TO FIT BACKGROUND
   	TFile* file=TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram.root");
 	
@@ -67,6 +67,8 @@ void makeCardsAndWS(){
 	//LUMINOSITY
 	double luminosity = 34291.449027853321075;//pb-1
 	//EFFICIENCY
+
+	double trigger_eff = 0.94
 	
 	//scale
 	double xSec = 1.;

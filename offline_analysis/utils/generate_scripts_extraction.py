@@ -5,6 +5,7 @@ from config_loader import load_analysis_config,load_test_config
 
 HOME_USER = os.environ["HOMEUSER"]
 DP_USER = os.environ["DPUSER"]
+DP_USERBASE = os.environ["DPUSERBASE"]
 OFFLINE_FOLDER = os.path.join(DP_USER,"pull_data/offline/")
 MCMINBIAS_FOLDER = os.path.join(DP_USER,"pull_data/MC_InclusiveMinBias/") 
 MCLMDY_FOLDER = os.path.join(DP_USER,"pull_data/MC_lmDY/") 
@@ -75,7 +76,7 @@ MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)
 arguments = "$(Extention)"
 Requirements = ( BOSCOCluster =!= "t3serv008.mit.edu" && BOSCOCluster =!= "ce03.cmsaf.mit.edu" && BOSCOCluster =!= "eofe8.mit.edu")
-+REQUIRED_OS = "rhel7"
+# +REQUIRED_OS = "rhel7"
 +DESIRED_Sites = "mit_tier3,mit_tier2"  
 use_x509userproxy = True
 x509userproxy = {HOME_USER}x509up_u238361
@@ -219,7 +220,7 @@ MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)
 arguments = "$(Extention)"
 Requirements = ( BOSCOCluster =!= "t3serv008.mit.edu" && BOSCOCluster =!= "ce03.cmsaf.mit.edu" && BOSCOCluster =!= "eofe8.mit.edu")
-+REQUIRED_OS = "rhel7"
+# +REQUIRED_OS = "rhel7"
 +DESIRED_Sites = "mit_tier3,mit_tier2,T2_AT_Vienna,T2_BE_IIHE,T2_BE_UCL,T2_BR_SPRACE,T2_BR_UERJ,T2_CH_CERN,T2_CH_CERN_AI,T2_CH_CERN_HLT,T2_CH_CERN_Wigner,T2_CH_CSCS,T2_CH_CSCS_HPC,T2_CN_Beijing,T2_DE_DESY,T2_DE_RWTH,T2_EE_Estonia,T2_ES_CIEMAT,T2_ES_IFCA,T2_FI_HIP,T2_FR_CCIN2P3,T2_FR_GRIF_IRFU,T2_FR_GRIF_LLR,T2_FR_IPHC,T2_GR_Ioannina,T2_HU_Budapest,T2_IN_TIFR,T2_IT_Bari,T2_IT_Legnaro,T2_IT_Pisa,T2_IT_Rome,T2_KR_KISTI,T2_MY_SIFIR,T2_MY_UPM_BIRUNI,T2_PK_NCP,T2_PL_Swierk,T2_PL_Warsaw,T2_PT_NCG_Lisbon,T2_RU_IHEP,T2_RU_INR,T2_RU_ITEP,T2_RU_JINR,T2_RU_PNPI,T2_RU_SINP,T2_TH_CUNSTDA,T2_TR_METU,T2_TW_NCHC,T2_UA_KIPT,T2_UK_London_IC,T2_UK_SGrid_Bristol,T2_UK_SGrid_RALPP,T2_US_Caltech,T2_US_Nebraska,T2_US_Purdue,T2_US_UCSD,T3_CH_CERN_CAF,T3_CH_CERN_DOMA,T3_CH_CERN_HelixNebula,T3_CH_CERN_HelixNebula_REHA,T3_CH_CMSAtHome,T3_CH_Volunteer,T3_US_HEPCloud,T3_US_NERSC,T3_US_OSG,T3_US_PSC,T3_US_SDSC,T3_US_MIT"  
 use_x509userproxy = True
 x509userproxy = {HOME_USER}x509up_u238361
@@ -242,7 +243,7 @@ MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)
 arguments = "$(Extention)"
 Requirements = ( BOSCOCluster =!= "t3serv008.mit.edu" && BOSCOCluster =!= "ce03.cmsaf.mit.edu" && BOSCOCluster =!= "eofe8.mit.edu")
-+REQUIRED_OS = "rhel7"
+# +REQUIRED_OS = "rhel7"
 +DESIRED_Sites = "mit_tier3,mit_tier2,T2_AT_Vienna,T2_BE_IIHE,T2_BE_UCL,T2_BR_SPRACE,T2_BR_UERJ,T2_CH_CERN,T2_CH_CERN_AI,T2_CH_CERN_HLT,T2_CH_CERN_Wigner,T2_CH_CSCS,T2_CH_CSCS_HPC,T2_CN_Beijing,T2_DE_DESY,T2_DE_RWTH,T2_EE_Estonia,T2_ES_CIEMAT,T2_ES_IFCA,T2_FI_HIP,T2_FR_CCIN2P3,T2_FR_GRIF_IRFU,T2_FR_GRIF_LLR,T2_FR_IPHC,T2_GR_Ioannina,T2_HU_Budapest,T2_IN_TIFR,T2_IT_Bari,T2_IT_Legnaro,T2_IT_Pisa,T2_IT_Rome,T2_KR_KISTI,T2_MY_SIFIR,T2_MY_UPM_BIRUNI,T2_PK_NCP,T2_PL_Swierk,T2_PL_Warsaw,T2_PT_NCG_Lisbon,T2_RU_IHEP,T2_RU_INR,T2_RU_ITEP,T2_RU_JINR,T2_RU_PNPI,T2_RU_SINP,T2_TH_CUNSTDA,T2_TR_METU,T2_TW_NCHC,T2_UA_KIPT,T2_UK_London_IC,T2_UK_SGrid_Bristol,T2_UK_SGrid_RALPP,T2_US_Caltech,T2_US_Nebraska,T2_US_Purdue,T2_US_UCSD,T3_CH_CERN_CAF,T3_CH_CERN_DOMA,T3_CH_CERN_HelixNebula,T3_CH_CERN_HelixNebula_REHA,T3_CH_CMSAtHome,T3_CH_Volunteer,T3_US_HEPCloud,T3_US_NERSC,T3_US_OSG,T3_US_PSC,T3_US_SDSC,T3_US_MIT"  
 use_x509userproxy = True
 x509userproxy = {HOME_USER}x509up_u238361
@@ -264,7 +265,7 @@ MyIndex=$(ProcId)
 Extention=$INT(MyIndex,%d)
 arguments = "$(Extention)"
 Requirements = ( BOSCOCluster =!= "t3serv008.mit.edu" && BOSCOCluster =!= "ce03.cmsaf.mit.edu" && BOSCOCluster =!= "eofe8.mit.edu")
-+REQUIRED_OS = "rhel7"
+# +REQUIRED_OS = "rhel7"
 +DESIRED_Sites = "mit_tier3,mit_tier2,T2_AT_Vienna,T2_BE_IIHE,T2_BE_UCL,T2_BR_SPRACE,T2_BR_UERJ,T2_CH_CERN,T2_CH_CERN_AI,T2_CH_CERN_HLT,T2_CH_CERN_Wigner,T2_CH_CSCS,T2_CH_CSCS_HPC,T2_CN_Beijing,T2_DE_DESY,T2_DE_RWTH,T2_EE_Estonia,T2_ES_CIEMAT,T2_ES_IFCA,T2_FI_HIP,T2_FR_CCIN2P3,T2_FR_GRIF_IRFU,T2_FR_GRIF_LLR,T2_FR_IPHC,T2_GR_Ioannina,T2_HU_Budapest,T2_IN_TIFR,T2_IT_Bari,T2_IT_Legnaro,T2_IT_Pisa,T2_IT_Rome,T2_KR_KISTI,T2_MY_SIFIR,T2_MY_UPM_BIRUNI,T2_PK_NCP,T2_PL_Swierk,T2_PL_Warsaw,T2_PT_NCG_Lisbon,T2_RU_IHEP,T2_RU_INR,T2_RU_ITEP,T2_RU_JINR,T2_RU_PNPI,T2_RU_SINP,T2_TH_CUNSTDA,T2_TR_METU,T2_TW_NCHC,T2_UA_KIPT,T2_UK_London_IC,T2_UK_SGrid_Bristol,T2_UK_SGrid_RALPP,T2_US_Caltech,T2_US_Nebraska,T2_US_Purdue,T2_US_UCSD,T3_CH_CERN_CAF,T3_CH_CERN_DOMA,T3_CH_CERN_HelixNebula,T3_CH_CERN_HelixNebula_REHA,T3_CH_CMSAtHome,T3_CH_Volunteer,T3_US_HEPCloud,T3_US_NERSC,T3_US_OSG,T3_US_PSC,T3_US_SDSC,T3_US_MIT"  
 use_x509userproxy = True
 x509userproxy = {HOME_USER}x509up_u238361
@@ -281,7 +282,7 @@ with open(os.path.join(MCMINBIAS_FOLDER,"MC_InclusiveMinBias.sub"), "w") as file
 ### BASH SCRIPT FOR FINAL MERGING OF MC AND CLEANUP #####
 template_MC_InclusiveMinBias_merge_final_bash = rf"""
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-cd {DP_USER}CMSSW_13_0_6/src
+cd {DP_USERBASE}CMSSW_13_0_6/src
 eval `scramv1 runtime -sh`
 cd {MCMINBIAS_FOLDER}
 hadd -f {MC_InclusiveMinBias_Jpsi_dir}merged_A.root /data/submit/{MC_InclusiveMinBias_dump_short_dir}DimuonTreeJpsi*.root

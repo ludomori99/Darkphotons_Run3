@@ -19,7 +19,7 @@ cd {work_dir}
 echo done
 """
 
-njobs=97
+njobs=config["extraction"]["MC_lmDY"]["njobs"]
 
 for i in range(njobs):
     work_dir = DP_USER

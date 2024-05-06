@@ -39,6 +39,13 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     TTreeReaderArray<int>            MuonId_hlt_DoubleMu4_3_LowMass (reader, "MuonId_HLT_DoubleMu4_3_LowMass");
     TTreeReaderValue<double>            prescale_HLT_DoubleMu4_3_LowMass (reader, "prescale_HLT_DoubleMu4_3_LowMass");
 
+TTreeReaderValue<bool>    l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6(reader,"L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6");
+TTreeReaderValue<bool> l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5(reader,"L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5");
+TTreeReaderValue<bool> l1_DoubleMu4_SQ_OS_dR_Max1p2(reader,"L1_DoubleMu4_SQ_OS_dR_Max1p2"); 
+TTreeReaderValue<bool> l1_DoubleMu4p5_SQ_OS_dR_Max1p2(reader,"L1_DoubleMu4p5_SQ_OS_dR_Max1p2"); 
+TTreeReaderValue<bool> l1_DoubleMu0er1p5_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4"); 
+TTreeReaderValue<bool> l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4");
+
     // TTreeReaderArray<float>          muonId_chi2LocalPosition (reader, "MuonId_chi2LocalPosition");
     // TTreeReaderArray<float>          muonId_glbNormChi2 (reader, "MuonId_glbNormChi2");
     // TTreeReaderArray<float>          muonId_glbTrackProbability (reader, "MuonId_glbTrackProbability");
@@ -128,6 +135,13 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     int MuonId_HLT_DoubleMu4_3_LowMass1;
     int MuonId_HLT_DoubleMu4_3_LowMass2;
     double Prescale_HLT_DoubleMu4_3_LowMass;
+
+bool L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6;
+bool L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5;
+bool L1_DoubleMu4_SQ_OS_dR_Max1p2; 
+bool L1_DoubleMu4p5_SQ_OS_dR_Max1p2; 
+bool L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4; 
+bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
 
     // vector<float> MuonId_chi2LocalPosition;
     // vector<float> MuonId_glbNormChi2;
@@ -232,6 +246,13 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
     outtree->Branch("MuonId_HLT_DoubleMu4_3_LowMass1", &MuonId_HLT_DoubleMu4_3_LowMass1);
     outtree->Branch("MuonId_HLT_DoubleMu4_3_LowMass2", &MuonId_HLT_DoubleMu4_3_LowMass2);
     outtree->Branch("Prescale_HLT_DoubleMu4_3_LowMass", &Prescale_HLT_DoubleMu4_3_LowMass);
+
+    outtree->Branch("L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6", &L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6);
+    outtree->Branch("L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5", &L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5);
+    outtree->Branch("L1_DoubleMu4_SQ_OS_dR_Max1p2", &L1_DoubleMu4_SQ_OS_dR_Max1p2);
+    outtree->Branch("L1_DoubleMu4p5_SQ_OS_dR_Max1p2", &L1_DoubleMu4p5_SQ_OS_dR_Max1p2);
+    outtree->Branch("L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4);
+    outtree->Branch("L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4);
     
 
     // outtree->Branch("MuonId_chi2LocalPosition",&MuonId_chi2LocalPosition,32000,0);
@@ -411,6 +432,8 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
         Muon_Dxy2 = Dxy[idx2];
         Muon_Dz1 = Dz[idx1];
         Muon_Dz2 = Dz[idx2];
+        Muon_looseId1 = muon_looseId[idx1];
+        Muon_looseId2 = muon_looseId[idx2];
         Muon_mediumId1 = muon_mediumId[idx1];
         Muon_mediumId2 = muon_mediumId[idx2];
         Muon_mediumPromptId1 = muon_mediumPromptId[idx1];
@@ -507,6 +530,13 @@ void generateOffDimuonTree(TString inputfilename, const char* outfilename, int e
         HLT_Dimuon10_Upsilon_y1p4 = *hlt_Dimuon10_Upsilon_y1p4;
         HLT_Dimuon12_Upsilon_y1p4 = *hlt_Dimuon12_Upsilon_y1p4;
         Prescale_HLT_DoubleMu4_3_LowMass = *prescale_HLT_DoubleMu4_3_LowMass;
+
+L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6;
+L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5;
+L1_DoubleMu4_SQ_OS_dR_Max1p2 = *l1_DoubleMu4_SQ_OS_dR_Max1p2;
+L1_DoubleMu4p5_SQ_OS_dR_Max1p2 = *l1_DoubleMu4p5_SQ_OS_dR_Max1p2;
+L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4 = *l1_DoubleMu0er1p5_SQ_OS_dR_Max1p4;
+L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4 = *l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
 
         
 	outtree->Fill(); 

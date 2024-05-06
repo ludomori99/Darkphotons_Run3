@@ -1,11 +1,11 @@
 
 #This is the only file with hard coded stuff (besides config)
 export HOMEUSER=/home/submit/mori25/
-export DPUSER=/work/submit/mori25/Darkphotons_ludo/
+export DPUSER=/work/submit/mori25/Darkphotons_ludo/scouting_analysis/
 export PYTHONPATH="$DPUSER/utils/"
 
 
-source $DPUSER/pull_data/scouting/make_list.sh
+# source $DPUSER/pull_data/scouting/make_list.sh
 
 # bash extract data
 
@@ -16,4 +16,9 @@ source $DPUSER/pull_data/scouting/make_list.sh
 
 # create histo...
 
-# compute limits
+# ##### create mass histogramm
+root -l -b -q ${DPUSER}limits/make_hist.C
+
+
+# # ##### make cards out of histogram (edit the systematics manually)
+# root -l -b -q ${DPUSER}utils/makeCardsAndWS.C
