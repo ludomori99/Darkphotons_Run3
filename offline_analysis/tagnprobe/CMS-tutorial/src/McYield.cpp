@@ -1,7 +1,10 @@
 
-double* McYield(string condition, string MuonID_str, string quant,bool isBarrel, bool isEndcap)
+double* McYield(const char* data_filepath, string condition, string MuonID_str, string quant,bool isBarrel, bool isEndcap)
 {
-    TFile *file0    = TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/TP_samples_Jpsi.root");
+    TFile *file0    = TFile::Open(data_filepath);
+    if (!file0 || file0->IsZombie()) {
+        cout << "Error: Could not open file " << data_filepath << endl;
+    }
     TTree *DataTree = (TTree*)file0->Get(("tree"));
     
     double _mmin = 2.6;  double _mmax = 3.56;
@@ -39,6 +42,7 @@ double* McYield(string condition, string MuonID_str, string quant,bool isBarrel,
     double* output = new double[2];
     output[0] = Data_ALL->sumEntries();
     output[1] = Data_PASSING->sumEntries();
+
     cout<<condition<<":\n"<<"all: "<<output[0]<<"\npass: "<<output[1];
     return output;
 }

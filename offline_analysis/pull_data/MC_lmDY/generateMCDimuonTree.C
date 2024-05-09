@@ -10,7 +10,7 @@
 using namespace std;
 
 
-void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 1, bool use_particleID = true) {
+void generateMCDimuonTree(TString inputfilename, const char* outfilename, int particle_ID, int event_fraction = 1, bool use_particleID = false) {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree","tree");
@@ -100,14 +100,14 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     TTreeReaderArray<int>           mm_mu2_index (reader, "mm_mu2_index");
     TTreeReaderArray<int>           mm_kin_valid (reader, "mm_kin_valid");
 
-    // TTreeReaderArray<bool>          muon_looseId (reader, "Muon_looseId");
+    TTreeReaderArray<bool>          muon_looseId (reader, "Muon_looseId");
     // TTreeReaderArray<bool>          muon_mediumId (reader, "Muon_mediumId");
     // TTreeReaderArray<bool>          muon_mediumPromptId (reader, "Muon_mediumPromptId");
     // TTreeReaderArray<unsigned char>          muon_mvaId (reader, "Muon_mvaId");
     // TTreeReaderArray<unsigned char>          muon_mvaLowPtId (reader, "Muon_mvaLowPtId");
     // TTreeReaderArray<bool>          muon_softId (reader, "Muon_softId");
     // TTreeReaderArray<float>          muon_softMvaId (reader, "Muon_softMvaId");
-    // TTreeReaderArray<bool>          muon_tightId (reader, "Muon_tightId");
+    TTreeReaderArray<bool>          muon_tightId (reader, "Muon_tightId");
     // TTreeReaderArray<bool>          muon_triggerIdLoose (reader, "Muon_triggerIdLoose");
 
     TTreeReaderValue<bool>          HLT_Dimuon0_LowMass (reader, "HLT_Dimuon0_LowMass");   
@@ -182,6 +182,10 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
 
     float Muon_softMva1;
     float Muon_softMva2;
+    bool Muon_looseId1;
+    bool Muon_looseId2;
+    bool Muon_tightId1;
+    bool Muon_tightId2;
     float Muon_Dxy1;
     float Muon_Dxy2;
     float Muon_Dz1;
@@ -272,6 +276,10 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
 
     outtree->Branch("Muon_softMva1",&Muon_softMva1,32000,0);
     outtree->Branch("Muon_softMva2",&Muon_softMva2,32000,0);
+    outtree->Branch("Muon_looseId1",&Muon_looseId1,32000,0);
+    outtree->Branch("Muon_looseId2",&Muon_looseId2,32000,0);
+    outtree->Branch("Muon_tightId1",&Muon_tightId1,32000,0);
+    outtree->Branch("Muon_tightId2",&Muon_tightId2,32000,0);
     outtree->Branch("Muon_charge1",&Muon_charge1,32000,0);
     outtree->Branch("Muon_charge2",&Muon_charge2,32000,0);
     outtree->Branch("Muon_Dxy1",&Muon_Dxy1,32000,0);
@@ -284,7 +292,6 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     outtree->Branch("Mm_gen_pdgId",&Mm_gen_pdgId,32000,0);
 
 
-    // outtree->Branch("Muon_looseId",&Muon_looseId,32000,0);
     // outtree->Branch("Muon_mediumId",&Muon_mediumId,32000,0);
     // outtree->Branch("Muon_mediumPromptId",&Muon_mediumPromptId,32000,0);
     // outtree->Branch("Muon_mvaId",&Muon_mvaId,32000,0);
@@ -297,8 +304,7 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     int counter=0;
 
     while(reader.Next()) {
-        counter+=1;
-        if (counter%10000==0) cout << counter << " events parsed" << endl;
+        if (counter%10000==0 && counter>0) cout << counter << " events parsed" << endl;
         if (counter%event_fraction!=0) continue;
         if (*nMuon<2) continue;
         // MuonId_chi2LocalPosition.clear();
@@ -380,8 +386,15 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
 
         if (use_particleID && mm_gen_pdgId[mm_idx] != particle_ID) continue;        
 
+        counter+=1;
+
         Muon_softMva1 = muon_softMva[idx1];
         Muon_softMva2 = muon_softMva[idx2];
+        Muon_looseId1 = muon_looseId[idx1];
+        Muon_looseId2 = muon_looseId[idx2];
+        Muon_tightId1 = muon_tightId[idx1];
+        Muon_tightId2 = muon_tightId[idx2];
+
         Muon_charge1 = mcharge[idx1];
         Muon_charge2 = mcharge[idx2];
         Muon_Dxy1 = Dxy[idx1];
@@ -456,7 +469,6 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
         Mm_closetrks3 = mm_closetrks3[mm_idx];
         Mm_nDisTrks = mm_nDisTrks[mm_idx];
 
-
         Mm_mu1_pt = mm_mu1_pt[mm_idx];
         Mm_mu1_eta = mm_mu1_eta[mm_idx];
         Mm_mu2_pt = mm_mu2_pt[mm_idx];
@@ -472,6 +484,8 @@ void generateMCDimuonTree(TString inputfilename, const char* outfilename, int pa
     
 	outtree->Fill(); 
    }
+
+   cout<<"Total events: "<< counter<<"\n";
      
    outfile->cd();
    outtree->Write();

@@ -1,12 +1,12 @@
 
 
-TEfficiency* get_efficiency(TH1F* ALL, TH1F* PASS, string quantity, string MuonId, bool DataIsMc, bool isBarrel, bool isEndcap)
+TEfficiency* get_efficiency(const char* filepath, TH1F* ALL, TH1F* PASS, string quantity, string MuonId, bool DataIsMc, bool isBarrel, bool isEndcap)
 {    
-    string* file_name = new string[2];
-    file_name[0] = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/")+MuonId+string("/")+quantity+string("/Efficiency_Run3.root");
-    file_name[1] = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/")+MuonId+string("/")+quantity+string("/Efficiency_MC.root");
-    
-    TFile* pFile = ((isBarrel||isEndcap) ? (new TFile(file_name[DataIsMc].c_str(),"update")) : (new TFile(file_name[DataIsMc].c_str(),"recreate")));
+    TFile* pFile = ((isBarrel||isEndcap) ? (new TFile(filepath,"update")) : (new TFile(filepath,"recreate")));
+    if (!pFile || pFile->IsZombie()) {
+        cout << "Error: Could not open file " << filepath << endl;
+    }
+    cout<<filepath<<"n";
     TEfficiency* pEff = new TEfficiency();
     string name = string("Efficiency") + string(isBarrel ? "_barrel" : "") + string(isEndcap ? "_endcap" : "");
     pEff->SetName(name.c_str());
@@ -28,7 +28,6 @@ TEfficiency* get_efficiency(TH1F* ALL, TH1F* PASS, string quantity, string MuonI
     gPad->Update();
     
     gSystem->cd("../..");
-    delete[] file_name;
     
     return pEff;
 }

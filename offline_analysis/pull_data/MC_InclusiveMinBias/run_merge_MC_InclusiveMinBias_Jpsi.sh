@@ -23,4 +23,4 @@ for (( N=start; N<end; N++ )); do
 
 done
 hadd r3tree.root r3tree_*.root
-xrdcp -f r3tree.root root://submit50.mit.edu//mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/DimuonTreeJpsi$1.root
+xrdcp -f r3tree.root root://submit50.mit.edu//mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/DimuonTreeJpsi_$1.root

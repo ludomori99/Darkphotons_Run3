@@ -22,4 +22,4 @@ for (( N=start; N<end; N++ )); do
     root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,0\,1\,\false\)
 done
 hadd r3tree.root r3tree_*.root
-xrdcp -f r3tree.root root://submit50.mit.edu//mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/DimuonTree_$1.root
+xrdcp -f r3tree.root root://submit50.mit.edu//mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/DimuonTreeInclusive_$1.root

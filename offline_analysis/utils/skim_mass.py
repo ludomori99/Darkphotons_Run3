@@ -77,30 +77,28 @@ def write_tree_data(particle):
 def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
 
     #extract tree suited for tagnprobe
-
-    if dataset not in ["Run3", "MC_InclusiveMinBias","MC_lmDY"]:
-        raise ValueError("dataset not recognized")
-    
-    if dataset=="MinBias": 
+    if dataset=="Run3":
+        data_dir = config["locations"]["offline"]
+        nfiles=config["extraction"]["offline"]["njobs"]
+    elif dataset=="MC_InclusiveMinBias": 
         data_dir = config["locations"]["MC_InclusiveMinBias"]
         nfiles=config["extraction"]["MC_InclusiveMinBias"]["njobs"]
-    elif dataset =="lmDY":
+    elif dataset =="MC_lmDY":
         data_dir = config["locations"]["MC_lmDY"]
         nfiles=config["extraction"]["MC_lmDY"]["njobs"]
     else: 
-        data_dir = config["locations"]["offline"]
-        nfiles=config["extraction"]["offline"]["njobs"]
+        raise ValueError("dataset not recognized")
 
-    mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
+    mass_ranges = config["signal_regions"][particle]
     out_dir = data_dir[particle]
     branches = ["Mm_mass", "Mm_dR", "Probe_pt", "Probe_eta","Probe_abs_eta","isBarrelMuon","PassingProbeSoftId","PassingProbeLooseId"]
     types = ['float','float','float','float','float','int','int','int']
     branch_dic = {branch: t for branch,t in zip(branches,types)}
+    outfilename = os.path.join(out_dir, f"TP_samples_{particle}.root")
 
-    with up.recreate(os.path.join(out_dir, f"TP_samples_{particle}.root")) as outfile:
+    with up.recreate(outfilename) as outfile:
         outfile.mktree("tree",branch_dic)
         error_indices = []
-        
         for i in range(nfiles):
             if i and i%10 == 0: 
                 print(f"Processing {i}/{nfiles}", end="\r")
@@ -111,7 +109,9 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
 
                 #define mass cut 
                 mass = intree["Mm_mass"].array()
-                mass_cut = ((mass>mass_range[0])&(mass<mass_range[1]))
+                mass_cut = np.zeros(len(mass),dtype=bool)
+                for mass_range in mass_ranges:
+                    mass_cut = mass_cut | ((mass>mass_range[0])&(mass<mass_range[1]))
 
                 len_before=np.sum(mass_cut)
                 num_events_surviving = int(len_before*reduction_factor)
@@ -185,6 +185,7 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
                 continue
                 
         print("Error extracting files with indices: ", error_indices)
+        print(f"Generated outfile {outfilename}")
 
     return
 
@@ -192,7 +193,6 @@ if __name__ == "__main__":
     # print("please unindent a function in the main of skim_mass.py")
     # write_tree_data("Y")
     # write_tree_data("Jpsi")
-    # prepareTP('Y')
-    # prepareTP('Jpsi')
-    prepareTP('Jpsi',"MC_lmDY",reduction_factor=1)
-    # prepareTP('Jpsi',MC_data_dir,"MC_InclusiveMinBias",reduction_factor=1)
+    prepareTP('DP',"MC_lmDY",reduction_factor=1)
+    # prepareTP('Jpsi',"MC_InclusiveMinBias",reduction_factor=1)
+    # prepareTP('Jpsi',"Run3",reduction_factor=0.2)

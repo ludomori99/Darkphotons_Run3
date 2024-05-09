@@ -28,7 +28,7 @@ def evaluate_BDT(meson, model):
     print(f'successfully extracted offline data: {off_file_name}')
     
     #extract MC
-    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"][meson], f"merged{(meson=="Y")*"Y123"}_A.root")
+    MC_file_name = os.path.join(config["locations"]["MC_InclusiveMinBias"][meson], f"merged{'Y123' if meson=='Y' else ''}_A.root")
     MC_file=up.open(MC_file_name)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
     print(f'successfully extracted MC data: {MC_file_name}')
@@ -103,15 +103,81 @@ def evaluate_BDT_lmDY(model):
 
     return
 
-def evaluate_dump(model):
+def evaluate_dump(njob,dataset,model,verbose=False):
+    #to be used in batch system, njob is the job number
+
+    if dataset not in ["MC_lmDY","MC_InclusiveMinBias","offline"]:
+        raise ValueError(f"dataset {dataset} not recognized")
+    
+    #extract file
+    infile_name = os.path.join(config["locations"][dataset]["dump"], f"DimuonTree{njob}.root")
+    infile=up.open(infile_name)
+    intree = infile["tree"]
+    indata = intree.arrays()
+    if verbose: print(f'successfully extracted MC data: {infile_name}')
+
+    #load model
+    method = model[:model.rfind("_")]
+    train_meson = model[1+model.rfind("_"):]
+    vars = config["BDT_training"][train_meson]["models"][method]["train_vars"] 
+    bst = xgb.Booster()
+    bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
+    if verbose: print(f"Model {model} loaded")
+
+    #Create new file 
+    outfile_name = os.path.join(config["locations"][dataset]["dump_post_BDT"], f"DimuonTree{njob}.root")
+
+    if verbose: print(f"\nBegin processing file {infile_name}")
+    pred=bst.predict(xgb.DMatrix(ak.to_dataframe(indata[vars])))
+    indata[model+"_mva"] = pred
+    with up.recreate(outfile_name) as output_file:
+        dic_mm = {branch: "float" for branch in intree.keys()}
+        dic = {**dic_mm, model+"_mva" : "float"}
+        output_file.mktree("tree", dic)
+        output_file["tree"].extend(indata)
+    if verbose: print(f"Finished processing data, output file is {outfile_name}\n\n")
 
     return
 
+def evaluate_dumps(model = "forest_prompt_Jpsi"):
+
+    #Switch for each type of dataset
+    bools = "111"
+
+    num = int(bools, 2)
+    do_off =     bool(num & 0b100)
+    do_lmDY =    bool(num & 0b010)
+    do_MinBias = bool(num & 0b001)
+
+    njobs_offline = config["extraction"]["offline"]["njobs"]
+    njobs_MC_lmDY = config["extraction"]["MC_lmDY"]["njobs"]
+    njobs_MC_InclusiveMinBias = config["extraction"]["MC_InclusiveMinBias"]["njobs"]
+
+    if do_off:
+        print(f"\nBegin processing offline")
+        for i in range(njobs_offline):
+            print(f"Job {i}/{njobs_offline}", end = '\r')
+            evaluate_dump(i,"offline",model, verbose=False)
+        print("Finished processing offline\n\n")
+    if do_lmDY:
+        print(f"\nBegin processing MC_lmDY")
+        for i in range(njobs_MC_lmDY):
+            print(f"Job {i}/{njobs_MC_lmDY}", end = '\r')
+            evaluate_dump(i,"MC_lmDY",model, verbose=False)
+        print("Finished processing MC_lmDY\n\n")
+    if do_MinBias:
+        print(f"\nBegin processing MC_InclusiveMinBias")
+        for i in range(njobs_MC_InclusiveMinBias):
+            print(f"Job {i}/{njobs_MC_InclusiveMinBias}", end = '\r')
+            evaluate_dump(i,"MC_InclusiveMinBias",model, verbose=False)
+        print("Finished processing MC_InclusiveMinBias\n\n")
+    return
 
 if __name__=="__main__":
-    print("")
+    # print("")
     # evaluate_BDT("Y", "forest_standard_Y")
     # evaluate_BDT("Jpsi", "forest_standard_Y")
-    evaluate_BDT("Y", "forest_prompt_Jpsi")
+    # evaluate_BDT("Y", "forest_prompt_Jpsi")
     # evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
     # evaluate_BDT_lmDY("forest_prompt_Jpsi")
+    evaluate_dumps()

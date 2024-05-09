@@ -94,7 +94,7 @@ with open(os.path.join(OFFLINE_FOLDER,"offline.sub"), "w") as file:
 template_MC_lmDY_bash = rf"""
 RELEASE=CMSSW_13_0_6
 source /cvmfs/cms.cern.ch/cmsset_default.sh
-cd $RELEASE/src
+cd {DP_USERBASE}$RELEASE/src
 eval `scramv1 runtime -sh` # cmsenv is an alias not on the workers
 cd {MCLMDY_FOLDER} 
 
@@ -140,7 +140,7 @@ for (( N=start; N<end; N++ )); do
 
 done
 hadd r3tree.root r3tree_*.root
-xrdcp -f r3tree.root root://submit50.mit.edu//{MC_InclusiveMinBias_dump_short_dir}DimuonTreeJpsi$1.root
+xrdcp -f r3tree.root root://submit50.mit.edu//{MC_InclusiveMinBias_dump_short_dir}DimuonTreeJpsi_$1.root
 """
 with open(os.path.join(MCMINBIAS_FOLDER,"run_merge_MC_InclusiveMinBias_Jpsi.sh"), "w") as file:
     file.write(template_MC_InclusiveMinBias_Jpsi_bash)
@@ -206,7 +206,7 @@ for (( N=start; N<end; N++ )); do
     root -l -b -q generateMCDimuonTree.C\(\"input.root\"\,\"r3tree_$N.root\"\,0\,{MC_InclusiveMinBias_event_fraction}\,\false\)
 done
 hadd r3tree.root r3tree_*.root
-xrdcp -f r3tree.root root://submit50.mit.edu//{MC_InclusiveMinBias_dump_short_dir}DimuonTree_$1.root
+xrdcp -f r3tree.root root://submit50.mit.edu//{MC_InclusiveMinBias_dump_short_dir}DimuonTreeInclusive_$1.root
 """
 with open(os.path.join(MCMINBIAS_FOLDER,"run_merge_MC_InclusiveMinBias.sh"), "w") as file:
     file.write(template_MC_InclusiveMinBias_bash)

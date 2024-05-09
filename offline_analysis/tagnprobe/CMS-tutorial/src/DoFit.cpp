@@ -1,9 +1,9 @@
 #include "tdrstyle.C"
 using namespace RooFit;
 
-double* doFit(string condition, string MuonID_str, string quant, double* init_conditions, bool isBarrel, bool isEndcap, bool save = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
+double* doFit(const char* filepath, string condition, string MuonID_str, string quant, double* init_conditions, bool isBarrel, bool isEndcap, bool save = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
 {
-    TFile *file0    = TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/TP_samples_Jpsi.root");
+    TFile *file0    = TFile::Open(filepath);
     TTree *DataTree = (TTree*)file0->Get(("tree"));
 
     double lowRange = 2.6;  double highRange = 3.56;
@@ -45,19 +45,19 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
 
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-    RooRealVar sigma("sigma", "Width of Gaussian", 0.09, 0.005, 0.1, "GeV");
+    RooRealVar sigma("sigma", "Width of Gaussian", 0.05, 0.005, 0.1, "GeV");
     RooRealVar l("l", "Width of BW", 0.0378, 0.01, 10, "GeV");
     RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
 
     RooRealVar sigmaL("sigmaL", "Width of left CB", 0.05, 0.01, 1, "GeV");
-    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.5, 0.01, 1, "GeV");
+    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.05, 0.01, 1, "GeV");
     RooRealVar nL("nL", "nL CB", 0.8, 0.1,15, "");
     RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.1, 5, "");
     RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
     RooRealVar alphaR("alphaL", "Alpha left CB", 1.7, 0.1, 5, "");
     RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
 
-    RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");
+    RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.1, 0, 1, "");
 
     // Final model is sigModel
     RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Voigtian, CB), GaussFraction);
@@ -65,8 +65,8 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
     RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);
 
-    double n_signal_initial =(Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)<0.1",init_conditions[1])));
-    double n_back_initial = (Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)>0.3",init_conditions[1])));
+    double n_signal_initial =(Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)<0.1",init_conditions[0])));
+    double n_back_initial = (Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)>0.3",init_conditions[0])));
 
     RooRealVar n_signal_total("n_signal_total","n_signal_total",n_signal_initial,0.,Data_ALL->sumEntries());
     RooRealVar n_signal_total_pass("n_signal_total_pass","n_signal_total_pass",n_signal_initial,0.,Data_PASSING->sumEntries());
@@ -92,13 +92,12 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     simPdf.addPdf(*model_pass,"PASSING");
 
     //Store logs
-    ofstream logFile(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_output.log").c_str());
-    streambuf* oldCoutStreamBuf = cout.rdbuf();
-    cout.rdbuf(logFile.rdbuf());
-
-
+    string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_output.log";
+    ofstream logFile((logpath).c_str());
+    
     RooFitResult* fitres = new RooFitResult;
-    fitres = simPdf.fitTo(combData, RooFit::Save());
+    fitres = simPdf.fitTo(combData, RooFit::Save(), RooFit::Strategy(2), RooFit::Minos());
+    fitres->printMultiline(logFile,0,true);
 
     // OUTPUT ARRAY
     double* output = new double[4];
@@ -168,6 +167,7 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
     label_2.AddText("N_{sig} = " + sYield);
     label_2.AddText("N_{bkg} = " + bYield);
     label_2.AddText("#chi^{2} = " + csquare);
+    logFile << "\nchisquare=" << chisquare<<"\n";
 
     frame->Draw();
     label_2.Draw();     
@@ -305,8 +305,6 @@ double* doFit(string condition, string MuonID_str, string quant, double* init_co
         c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/"  + MuonID_str + "/" + quant + "/" + condition + "_ALL.png").c_str());
     }
 
-    // Restore old cout stream buffer
-    cout.rdbuf(oldCoutStreamBuf);
     logFile.close();
 
     // DELETING ALLOCATED MEMORY

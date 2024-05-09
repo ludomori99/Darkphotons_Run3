@@ -13,6 +13,8 @@ slurm_script_template = """#!/bin/bash
 #SBATCH --time=02:00:00
 #SBATCH --mem=2GB
 #SBATCH --partition=submit
+#SBATCH --exclude=submit[05,06,80,81]
+#SBATCH --exclude=submit[05,06,80,81]
 
 cd {work_dir}
 {cmd1}

@@ -2,11 +2,8 @@ import os
 import subprocess
 import yaml
 
-os.environ["HOMELUDO"]="/home/submit/mori25/"
-os.environ["DPUSER"]="/work/submit/mori25/Darkphotons_ludo/offline_analysis"
-HOME_USER = os.environ["HOMELUDO"]
+HOME_USER = os.environ["HOMEUSER"]
 DP_USER = os.environ["DPUSER"]
-
 
 def load_analysis_config():
     try:
@@ -28,6 +25,7 @@ slurm_script_template = """#!/bin/bash
 #SBATCH --time=02:00:00
 #SBATCH --mem=2GB
 #SBATCH --partition=submit
+#SBATCH --exclude=submit[05,06,80,81]
 
 {cmd1}
 echo done
@@ -35,7 +33,7 @@ echo done
 
 dump_dir = os.path.join("/data/submit",config["locations"]["offline"]["dump"])
 dump_files = os.listdir(dump_dir)
-log_dir = os.path.join(config["locations"]["offline"]["logs"],"eval_BDT")
+log_dir = os.path.join(config["locations"]["offline"]["logs"],"eval_BDT/")
 
 for i,file in enumerate(dump_files):
     cmd1 = rf"python3 {DP_USER}BDT/evaluate_dump/evaluate_dump_BDT.py {i}"

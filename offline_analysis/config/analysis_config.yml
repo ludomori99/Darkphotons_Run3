@@ -25,7 +25,7 @@ locations:
     #have root://submit50.mit.edu// in front 
     dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump/
     dump_short: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
-    dump_post_BDT: mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/
+    dump_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
@@ -33,20 +33,19 @@ locations:
     dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump/
     dump_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump_post_BDT/
     inclusive: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/inclusive/
+    DP: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/DP/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/logs/
     tmp: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/tmp/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/Y/
   MC_InclusiveMinBias:
-    dump_large: mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump_large/
-    dump_large_post_BDT: mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump_large_post_BDT/
-    dump_short:  mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/
     dump:  /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/
+    dump_short:  mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump/
+    dump_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/dump_post_BDT/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/
     Y:    /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Y/
   sPlot: /data/submit/mori25/dark_photons_ludo/DimuonTrees/sPlot/
-
 
 ntuple_branches: 
   - run
@@ -124,7 +123,17 @@ ntuple_branches:
   - L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4
 
 muon_ID:
-  working_point: 0.223
+  working_point: 0.4
+
+signal_regions:
+  Y:
+    - [8.5,11.2]
+  Jpsi:
+    - [2.6,3.56]
+  DP:
+   - [1.1, 2.6]
+   - [4.2,7.9]
+
 
 #Section for training 
 BDT_training:
