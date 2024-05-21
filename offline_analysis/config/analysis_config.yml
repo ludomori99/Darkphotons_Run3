@@ -29,6 +29,8 @@ locations:
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
+    Phi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Phi/
+    Psi2: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Psi2/
   MC_lmDY:
     dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump/
     dump_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_lmDY/dump_post_BDT/
@@ -122,10 +124,19 @@ ntuple_branches:
   - L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4
   - L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4
 
-muon_ID:
-  working_point: 0.4
+working_points:
+  MuonId: 0.4
+  vertexMva: 0.8
+
+com: 13.6
+lumi:
+  offline: 34.3
 
 signal_regions:
+  Phi:
+    - [0.85,1.17]
+  Psi2:
+    - [3.25,4.15]
   Y:
     - [8.5,11.2]
   Jpsi:
@@ -289,7 +300,7 @@ BDT_training:
     limits:
       inclusive: [2.6,3.56]
       signal: 
-        - [3.0886,3.0986]
+        - [3.0886,3.0986] # ~half of sigma
       background:
         - [2.6,2.9]
         - [3.26,3.56]

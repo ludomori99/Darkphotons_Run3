@@ -115,9 +115,11 @@ TTreeReaderValue<bool> l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1
     TTreeReaderArray<bool>          muon_triggerIdLoose (reader, "Muon_triggerIdLoose");
     TTreeReaderArray<bool>          muon_isTracker (reader, "Muon_isTracker");
 
-    TTreeReaderValue<bool>          HLT_Dimuon0_LowMass (reader, "HLT_Dimuon0_LowMass");   
-    TTreeReaderValue<bool>          HLT_DoubleMu4_3_LowMass (reader, "HLT_DoubleMu4_3_LowMass");   
-    
+    TTreeReaderValue<bool>          hlt_DoubleMu4_3_LowMass (reader, "HLT_DoubleMu4_3_LowMass");   
+    TTreeReaderValue<bool>            hlt_DoubleMu4_3_Jpsi (reader, "HLT_DoubleMu4_3_Jpsi");
+    TTreeReaderValue<bool>            hlt_Dimuon10_Upsilon_y1p4 (reader, "HLT_Dimuon10_Upsilon_y1p4");
+    TTreeReaderValue<bool>            hlt_Dimuon12_Upsilon_y1p4 (reader, "HLT_Dimuon12_Upsilon_y1p4");
+
     TTreeReaderArray<float>          muon_softMva (reader, "Muon_softMva");
 
     unsigned run; 
@@ -202,8 +204,10 @@ bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
     float Muon_charge1;
     float Muon_charge2;
 
-    bool Dimuon0_LowMass;
-    bool DoubleMu4_3_LowMass;
+    bool HLT_DoubleMu4_3_LowMass;
+    bool HLT_DoubleMu4_3_Jpsi;
+    bool HLT_Dimuon10_Upsilon_y1p4;
+    bool HLT_Dimuon12_Upsilon_y1p4;
     int Mm_gen_pdgId;
 
     bool Muon_looseId1;
@@ -313,8 +317,11 @@ outtree->Branch("L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p4_SQ_OS_dR
     outtree->Branch("Muon_Dz1",&Muon_Dz1,32000,0);
     outtree->Branch("Muon_Dz2",&Muon_Dz2,32000,0);
 
-    outtree->Branch("HLT_Dimuon0_LowMass",&Dimuon0_LowMass, 32000,0);
-    outtree->Branch("HLT_DoubleMu4_3_LowMass",&DoubleMu4_3_LowMass, 32000,0);
+    outtree->Branch("HLT_DoubleMu4_3_LowMass",&HLT_DoubleMu4_3_LowMass, 32000,0);
+    outtree->Branch("HLT_DoubleMu4_3_Jpsi", &HLT_DoubleMu4_3_Jpsi);
+    outtree->Branch("HLT_Dimuon10_Upsilon_y1p4", &HLT_Dimuon10_Upsilon_y1p4);
+    outtree->Branch("HLT_Dimuon12_Upsilon_y1p4", &HLT_Dimuon12_Upsilon_y1p4);
+
     outtree->Branch("Mm_gen_pdgId",&Mm_gen_pdgId,32000,0);
 
     outtree->Branch("Muon_looseId1",&Muon_looseId1,32000,0);
@@ -509,8 +516,10 @@ outtree->Branch("L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4", &L1_DoubleMu0er1p4_SQ_OS_dR
         luminosityBlock = *LumSec;
         Event = *event;
         NMuonId = *nMuonId;
-        Dimuon0_LowMass = *HLT_Dimuon0_LowMass;
-        DoubleMu4_3_LowMass = *HLT_DoubleMu4_3_LowMass;
+        HLT_DoubleMu4_3_LowMass = *hlt_DoubleMu4_3_LowMass;
+        HLT_DoubleMu4_3_Jpsi = *hlt_DoubleMu4_3_Jpsi;
+        HLT_Dimuon10_Upsilon_y1p4 = *hlt_Dimuon10_Upsilon_y1p4;
+        HLT_Dimuon12_Upsilon_y1p4 = *hlt_Dimuon12_Upsilon_y1p4;
 
 L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6;
 L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5 = *l1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5;

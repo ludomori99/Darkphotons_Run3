@@ -46,12 +46,12 @@ class Trainer:
         else: self.modelname = self.particle_config["BDT_training"]["modelname"]
         return
     
-    def load_data(self, data_particle = None,include_MC=False,signal_indices=None,**kwargs):
+    def load_data(self, data_particle = None,trigger=None,include_MC=False,signal_indices=None,**kwargs):
         print("\n\n\nStart loading data")
         if data_particle: self.off_dir = config["locations"]["offline"][data_particle]
         else :  self.off_dir = config["locations"]["offline"][self.particle]
         self.filename=self.off_dir+"merged_A.root"
-        self.full_mass_range = up.open(self.filename + ":tree").arrays(library = 'pd')
+        self.full_mass_range = up.open(self.filename + ":tree").arrays(library = 'pd') if trigger is None else up.open(self.filename + ":tree").arrays(library = 'pd', cut = f"{trigger}==1")
         self.mass = self.full_mass_range["Mm_mass"]
         print(f"Successfully imported data file {self.filename} to memory")
 
@@ -65,7 +65,7 @@ class Trainer:
                 for i in signal_indices:
                     peak_index += str(i)
             self.MC_filename=self.MC_dir+"merged"+peak_index+"_A.root"
-            self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd')
+            self.MC_full_mass_range = up.open(self.MC_filename + ":tree").arrays(library = 'pd') if trigger is None else up.open(self.MC_filename + ":tree").arrays(library = 'pd', cut = f"{trigger}==1")
             self.MC_mass = self.MC_full_mass_range["Mm_mass"]
             print(f"Successfully imported data file {self.MC_filename} to memory")
         return
@@ -188,12 +188,12 @@ class Trainer:
     
     def complete_train(self,include_MC=False,**kwargs):
         #out-of-the-box for training
-        self.load_data(include_MC=include_MC,**kwargs)
+        self.load_data(trigger=None,include_MC=include_MC,**kwargs)
         self.prepare_training_set(**kwargs)
         self.train_model(**kwargs)
 
-    def complete_load(self, data_particle = None, include_MC=False, **kwargs):
-        self.load_data(data_particle,include_MC=include_MC,**kwargs)
+    def complete_load(self, data_particle = None,trigger=None,include_MC=False, **kwargs):
+        self.load_data(data_particle,trigger=trigger,include_MC=include_MC,**kwargs)
         self.prepare_training_set(data_particle,**kwargs)
         self.load_model(**kwargs)
 
@@ -613,9 +613,9 @@ def add_branch_weights_prompt():
 
 
 if __name__ == "__main__":
-    print("Executing training block")
     # train_prompt_Jpsi()
-    # save_Jpsi_weights()
+    
+    save_Jpsi_weights()
     add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')

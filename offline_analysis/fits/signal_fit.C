@@ -47,26 +47,26 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y
    Double_t lowRange;
    Double_t highRange;
 
-   // RooWorkspace ws_dCB{"ws_dCB"};
-   // model_name = "dCB";
-   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   // AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
-   // AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
-   // DoFit(ws_dCB,model_name, file_name);
+   RooWorkspace ws_dCB{"ws_dCB"};
+   model_name = "dCB";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dCB,model_name, file_name);
 
-   // RooWorkspace ws_dG{"ws_dG"};
-   // model_name = "dG";
-   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   // AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
-   // AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
-   // DoFit(ws_dG,model_name, file_name);
+   RooWorkspace ws_dG{"ws_dG"};
+   model_name = "dG";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dG,model_name, file_name);
 
-   // RooWorkspace ws_VG{"ws_VG"};
-   // model_name = "VG";
-   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   // AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
-   // AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
-   // DoFit(ws_VG,model_name, file_name);
+   RooWorkspace ws_VG{"ws_VG"};
+   model_name = "VG";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
+   DoFit(ws_VG,model_name, file_name);
 
    RooWorkspace ws_dCB_V{"ws_dCB_V"};
    model_name = "dCB_V";
@@ -74,6 +74,14 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y
    AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
    DoFit(ws_dCB_V,model_name, file_name);
+
+
+   RooWorkspace ws_dCB_V_var{"ws_dCB_V_var"};
+   model_name = "dCB_V_var";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   AddData(ws_dCB_V_var, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dCB_V(ws_dCB_V_var,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dCB_V_var,model_name, file_name);
 }
 
 
@@ -99,13 +107,13 @@ void load_config(const char* meson, bool isMC,
    if (string(meson) == string("Jpsi")) {
       lowRange = 2.6;
       highRange = 3.56;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Jpsi/merged_A.root"; //JPsi MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/merged_A.root"; //JPsi MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/merged_A.root"; //Jpsi data
    }
    else if(string(meson) == string("Y")){
       lowRange = 8.5;
       highRange = 11.2;
-      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MCRun3/Y/merged_A.root"; //Upsilon MC
+      if (isMC) inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Y/mergedY123_A.root"; //Upsilon MC
       else inputfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/merged_A.root"; //Upsilon data
    }
    else {cout<<"type of meson not recognized";}
@@ -283,6 +291,69 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.001, 5, "");
    RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
    RooRealVar alphaR("alphaL", "Alpha left CB", 1.7, 0.001, 5, "");
+   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+   RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");
+
+   // Final model is sigModel
+   RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Voigtian, CB), GaussFraction);
+   // --------------------------------------
+   // make bkg model
+   std::cout << "make bkg model" << std::endl;
+   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
+   RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);   
+
+   // RooRealVar c0("c0","c0",1,-100,100,"");
+   // RooRealVar c1("c1","c1",1,-100,100,"");
+   // RooRealVar c2("c2","c2",1,-100,100,"");
+   // RooRealVar c3("c3","c3",1,-100,100,"");
+   // RooBernstein bkgModel("bkgModel", "bkg Mass Model", Mm_mass,RooArgList(c0,c1,c2,c3));
+ 
+   // --------------------------------------
+   //Signal and bkg yields
+   RooRealVar sigYield("sigYield", "fitted yield for Signal",0);
+   RooRealVar bkgYield("bkgYield", "fitted yield for Background",0);
+
+   if (isMC){
+      sigYield.setVal(1000000);
+      sigYield.setRange(0., 100000000);
+      bkgYield.setVal(50 );
+      bkgYield.setRange(0,1000000);
+   }
+
+   else{
+      sigYield.setVal(1500000);
+      sigYield.setRange(0,10000000);
+      bkgYield.setVal(100000);
+      bkgYield.setRange(0,1000000);
+   }
+
+   // now make the combined models
+   std::cout << "make full model" << std::endl;
+   RooAddPdf massModel(modelName, "J/psi + bkg mass model", {sigModel, bkgModel}, {sigYield, bkgYield});
+ 
+   std::cout << "import model" << std::endl;
+   ws.import(massModel);
+}
+void AddModelJ_dCB_V_var(RooWorkspace &ws, bool isMC, const char* modelName, Double_t lowRange, Double_t highRange)
+{
+   RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
+
+   // mass model for single resonance. Voigtian + dCB. In this case employed for Jpsi
+   RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
+   RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.01, 0.1, "GeV");
+   RooRealVar resl("resl", "resolution of BW", 1,0.2, 2, "GeV");
+   RooFormulaVar l("l", "l", "@0*@1", RooArgList(sigma,resl));
+   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+
+   RooRealVar sigmaL_res("sigmaL_res", "reso of left CB", 1, 0.2, 2, "GeV");
+   RooRealVar sigmaR_res("sigmaR_res", "reso of right CB", 1, 0.2, 2, "GeV");
+   RooFormulaVar sigmaL("sigmaL", "sigmaL", "@0*@1", RooArgList(sigma,sigmaL_res));
+   RooFormulaVar sigmaR("sigmaR", "sigmaR", "@0*@1", RooArgList(sigma,sigmaR_res));
+   RooRealVar nL("nL", "nL CB", 4, 3,15, "");
+   RooRealVar alphaL("alphaR", "Alpha right CB", 5, 2, 5, "");
+   RooRealVar nR("nR", "nR CB", 4, 3,15, "");
+   RooRealVar alphaR("alphaL", "Alpha left CB", 5, 2, 5, "");
    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");

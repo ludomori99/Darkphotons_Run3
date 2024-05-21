@@ -27,31 +27,33 @@ masserr=array('d')
 xsec=1.#pb
 
 
+num_mass_regions = 4 # 278
+growth_factor = 0.005
+m = 2
 #some counters
-m=1
 t=0
 #make the loop
 
 a=1.
-
-for d in range(0,470):
+print("hi")
+for d in range(0,num_mass_regions):
 	
-	m=m+(m*0.01)
+	m=m+(m*growth_factor)
 	print (m)
 	print (d)
 	
-	# if d%2==0:
-	# 	continue
 
-	file=glob.glob("/data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/30_11/higgsCombineasympMassIndex_"+str(d)+".AsymptoticLimits.mH*.root")
-	print (file[0])
+	if (d%3!=0): continue
+
+	if(d>51 and d<146):
+		continue
+
+	file=glob.glob("/data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/16_5/output_expected/higgsCombineasympMassIndex_"+str(d)+".AsymptoticLimits.mH*.root")
 
 	f=ROOT.TFile.Open(file[0])
 	tree=f.Get("limit")
 	tree.GetEntry(2)
 	limit1.append(tree.limit*a)
-
-	
 	
 	
 	tree=f.Get("limit")
@@ -76,7 +78,7 @@ for d in range(0,470):
 	print (m)
 	
 
-c1=ROOT.TCanvas("c1","c1",700,500)
+c1=ROOT.TCanvas("c1","c1",800,700)
 #c1.SetGrid()
 c1.SetLogy()
 #c1.SetLogx()
@@ -92,7 +94,7 @@ graph_limit1.SetMarkerColor(kBlack)
 graph_limit1.SetLineWidth(2)
 graph_limit1.SetLineStyle(7)
 graph_limit1.GetYaxis().SetRangeUser(0,100)
-graph_limit1.GetXaxis().SetRangeUser(0,12)
+graph_limit1.GetXaxis().SetRangeUser(2,8)
 graph_limit1.GetYaxis().SetTitle("#sigma(pp#rightarrow A)#times BR(A#rightarrow #mu#mu)[pb]")
 graph_limit1.GetYaxis().SetTitleSize(2)
 graph_limit1.GetXaxis().SetTitle("Dark Photon Mass [GeV]")
@@ -130,27 +132,30 @@ mg.Add(graph_limit1,"pl")
 
 mg.Draw("APC")
 
-mg.GetXaxis().SetRangeUser(0., 12.)
+mg.GetXaxis().SetRangeUser(2.,8.)
 mg.GetYaxis().SetRangeUser(0.01,10)
 
 mg.GetYaxis().SetTitle("#sigma(pp#rightarrow A)#times BR(A#rightarrow #mu#mu)#times Acc. [pb]")
-mg.GetYaxis().SetTitleSize(0.05)
+mg.GetYaxis().SetTitleSize(0.055)
+mg.GetYaxis().SetLabelSize(0.05)
 mg.GetXaxis().SetTitle("Mediator Mass [GeV]")
-mg.GetXaxis().SetTitleSize(0.05)
-mg.GetYaxis().SetTitleOffset(0.8)
+mg.GetXaxis().SetLabelSize(0.05)
+mg.GetXaxis().SetTitleSize(0.055)
+mg.GetYaxis().SetTitleOffset(0.85)
+mg.GetXaxis().SetTitleOffset(0.85)
 
 c1.Update()
 legend=ROOT.TLegend(0.5,0.6,0.8,0.9)
-cmsTag=ROOT.TLatex(0.13,0.917,"#scale[1.1]{CMS}")
+cmsTag=ROOT.TLatex(0.1,0.917,"#scale[1.1]{CMS}")
 cmsTag.SetNDC()
 cmsTag.SetTextAlign(11)
 cmsTag.Draw()
-cmsTag2=ROOT.TLatex(0.215,0.917,"#scale[0.825]{#bf{#it{Preliminary}}}")
+cmsTag2=ROOT.TLatex(0.195,0.917,"#scale[0.825]{#bf{#it{Preliminary}}}")
 cmsTag2.SetNDC()
 cmsTag2.SetTextAlign(11)
 #cmsTag.SetTextFont(61)
 cmsTag2.Draw()
-cmsTag3=ROOT.TLatex(0.90,0.917,"#scale[0.9]{#bf{6.7 fb^{-1} (13 TeV, 2018)}}")
+cmsTag3=ROOT.TLatex(0.90,0.917,"#scale[0.9]{#bf{34.3 fb^{-1} (13 TeV)}}")
 cmsTag3.SetNDC()
 cmsTag3.SetTextAlign(31)
 #cmsTag.SetTextFont(61)
@@ -164,8 +169,9 @@ leg.AddEntry( graph_limit1 , "Expected",  "LP" )
 leg.AddEntry( graph_limit68up, "#pm 1#sigma",  "F" ) 
 leg.AddEntry( graph_limit95up, "#pm 2#sigma",  "F" ) 
 leg.Draw("same")
-c1.SaveAs("limit2018C_cmsdas.root")
-c1.SaveAs("limit2018C_cmsdas.pdf")
+# c1.SaveAs("limit2018C_cmsdas.root")
+# c1.SaveAs("limit2018C_cmsdas.pdf")
+c1.SaveAs("/work/submit/mori25/Darkphotons_ludo/offline_analysis/limits/limit_17_5.png")
 
 
 

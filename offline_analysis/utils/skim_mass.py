@@ -21,15 +21,14 @@ trigger = "dimuon" #or inclusive
 
 
 
-def write_tree_data(particle):
+def write_tree_data(particle,MC=False,reduction_factor = 0.05):
 
-    #particle = "Y" or "Jpsi"
+    #particle = "Psi2" or "Psi" or "Y" or "Jpsi"
     data_dir = config["locations"]["offline"]
 
     #Extract config infos: mass range, branches to be used and included in the trees
-    mass_range = config["BDT_training"][particle]["limits"]["inclusive"]
+    mass_range = config["signal_regions"][particle][0]
     out_dir = data_dir[particle]
-    reduction_factor = config["BDT_training"][particle]["reduction_factor"]
     branches = config["ntuple_branches"]
     branch_dic = {branch: 'float' for branch in branches}
 
@@ -50,6 +49,7 @@ def write_tree_data(particle):
                 #define mass cut 
                 mass = intree["Mm_mass"].array()
                 mass_cut = ((mass>mass_range[0])&(mass<mass_range[1]))
+                print
 
                 #define reduction factor cut
                 num_events_surviving = int(np.sum(mass_cut)*reduction_factor)
@@ -91,8 +91,8 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
 
     mass_ranges = config["signal_regions"][particle]
     out_dir = data_dir[particle]
-    branches = ["Mm_mass", "Mm_dR", "Probe_pt", "Probe_eta","Probe_abs_eta","isBarrelMuon","PassingProbeSoftId","PassingProbeLooseId"]
-    types = ['float','float','float','float','float','int','int','int']
+    branches = ["Mm_mass", "Mm_dR", "Probe_pt", "Probe_eta","Probe_abs_eta","isBarrelMuon","PassingProbeSoftId","PassingProbeLooseId","HLT_DoubleMu4_3_LowMass"]
+    types = ['float','float','float','float','float','int','int','int','int']
     branch_dic = {branch: t for branch,t in zip(branches,types)}
     outfilename = os.path.join(out_dir, f"TP_samples_{particle}.root")
 
@@ -104,7 +104,7 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
                 print(f"Processing {i}/{nfiles}", end="\r")
                 sys.stdout.flush()
             try: 
-                filename = data_dir["dump"]+"DimuonTree"+(dataset=="MinBias")*particle+str(i)+".root:tree"
+                filename = data_dir["dump"]+"DimuonTree"+(dataset=="MC_InclusiveMinBias")*(particle+"_")+str(i)+".root:tree"
                 intree = up.open(filename)
 
                 #define mass cut 
@@ -117,7 +117,7 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
                 num_events_surviving = int(len_before*reduction_factor)
                 cut_reduction_idc = random.sample(range(len_before), num_events_surviving)
 
-                working_point_id=config["muon_ID"]["working_point"]
+                working_point_id=config["working_points"]["MuonId"]
                 softId1 = intree["Muon_softMva1"].array(library='np')>working_point_id
                 softId2 = intree["Muon_softMva2"].array(library='np')>working_point_id
 
@@ -153,6 +153,7 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
                 #initialize empty dictionary tree
                 tree = {}    
                 tree["Mm_mass"] = intree["Mm_mass"].array()[mass_cut][cut_reduction_idc][denom]
+                tree["HLT_DoubleMu4_3_LowMass"] = intree["HLT_DoubleMu4_3_LowMass"].array()[mass_cut][cut_reduction_idc][denom]
                 tree["Mm_dR"] = np.sqrt((intree["Mm_mu1_eta"].array()-intree["Mm_mu2_eta"].array())**2 + (intree["Mm_mu1_phi"].array()-intree["Mm_mu2_phi"].array())**2)[mass_cut][cut_reduction_idc][denom]
 
                 """
@@ -191,8 +192,10 @@ def prepareTP(particle, dataset,tag="tightId",reduction_factor=0.5):
 
 if __name__ == "__main__":
     # print("please unindent a function in the main of skim_mass.py")
-    # write_tree_data("Y")
-    # write_tree_data("Jpsi")
-    prepareTP('DP',"MC_lmDY",reduction_factor=1)
+    # write_tree_data("Y",1)
+    # write_tree_data("Jpsi",0.05)
+    write_tree_data("Phi",0.08)
+    write_tree_data("Psi2",0.1)
+    # prepareTP('DP',"MC_lmDY",reduction_factor=1)
     # prepareTP('Jpsi',"MC_InclusiveMinBias",reduction_factor=1)
     # prepareTP('Jpsi',"Run3",reduction_factor=0.2)

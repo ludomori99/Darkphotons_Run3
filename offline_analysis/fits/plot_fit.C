@@ -16,7 +16,6 @@
 #include "TCanvas.h"
 #include "TLegend.h"
 #include <iomanip>
-#include "CMS_lumi.h"
 #include "tdrstyle.C"
 #include "TH1.h"
 #include "TH1F.h"
@@ -25,7 +24,7 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-vector<double> pulls(RooHist*, const char*);
+vector<double> pulls(RooHist*, string);
 void plot_model(RooWorkspace*, const char*, const char*, map<const char*,vector<Double_t>>*);
 void scatter(map<const char*,vector<Double_t>>*, const char*);
 
@@ -33,25 +32,30 @@ void plot_fit(){ //fit all models in sequence
    
    map<const char*, vector<Double_t>> *outputs = new map<const char*, vector<Double_t>>; //dictionary with: {model: {Nsig,Nbkg,chi2}}
 
-   // std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB.root", "READ")};
-   // auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB"));  
-   // ws_dCB->Print();
-   // plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB.png",outputs);
+   std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB.root", "READ")};
+   auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB"));  
+   ws_dCB->Print();
+   plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB",outputs);
 
-   // std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
-   // auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
-   // ws_dG->Print();
-   // plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG.png",outputs);
+   std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
+   auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
+   ws_dG->Print();
+   plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG",outputs);
 
-   // std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
-   // auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
-   // ws_VG->Print();
-   // plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG.png",outputs);
+   std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
+   auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
+   ws_VG->Print();
+   plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG",outputs);
 
    std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V.root", "READ")};
    auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V"));
    ws_dCB_V->Print();
-   plot_model(ws_dCB_V,"dCB_V","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V.png",outputs);
+   plot_model(ws_dCB_V,"dCB_V","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V",outputs);
+
+   std::unique_ptr<TFile> f_dCB_V_var{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V_var.root", "READ")};
+   auto ws_dCB_V_var = static_cast<RooWorkspace*>(f_dCB_V_var->FindObjectAny("ws_dCB_V_var"));
+   ws_dCB_V_var->Print();
+   plot_model(ws_dCB_V_var,"dCB_V_var","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V_var",outputs);
 
 
    for (const auto& pair : *outputs) {
@@ -195,25 +199,19 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    frame2->Draw();
 
 
-   //  size_t length = strlen(fig_name);
-   //  size_t newLength = length - 4;
-   char* name = new char[strlen(fig_name) -3 ];
-   strncpy(name, fig_name, strlen(fig_name) -4);
 
-   cout<<name;
+   string s = string(fig_name) + string("_pulls.png");
+   // string* figure_name_str = new string(s);
+   // const char* figure_name = figure_name_str->c_str();
 
-   string s = string(name) + string("_pulls.png");
-   string* figure_name_str = new string(s);
-   const char* figure_name = figure_name_str->c_str();
-
-   vector<double> pulls_fit=pulls(hpull,figure_name);
+   vector<double> pulls_fit=pulls(hpull,s);
 
 
    // CMS_lumi(cdata,4,0);
 
    cdata->Update();
-   cdata->SaveAs(fig_name);
-   cout << "\n\n saving file as " << fig_name << "\n\n";
+   cdata->SaveAs((string(fig_name)+".png").c_str());
+   cout << "\n\n saving file as " << fig_name << ".png\n\n";
 
    (*outputs)[modelName]={Double_t(round(sigYield->getValV())),Double_t(round(bkgYield->getValV())), chisquare};
 
@@ -221,7 +219,7 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
 
 }
 
-vector<double> pulls(RooHist* hpull, const char* outfilename){
+vector<double> pulls(RooHist* hpull, string outfilename){
    //pull distribution  
    TCanvas* canv_pull = new TCanvas("canv_pull", "canv_pull", 800,700);
    TH1D* hist_pull = new TH1D("hist_pull","hist_pull",120,-5,5);
@@ -273,7 +271,7 @@ vector<double> pulls(RooHist* hpull, const char* outfilename){
    leg3->SetTextFont(42);
    leg3->Draw();
 
-   canv_pull->SaveAs(outfilename);
+   canv_pull->SaveAs(outfilename.c_str());
    double redchisq = fgauss->GetChisquare()/fgauss->GetNDF();
    return vector{redchisq,fgauss->GetParameter(1),fgauss->GetParameter(2)};
 
@@ -303,7 +301,7 @@ void scatter(map<const char*, vector<Double_t>>* data, const char* outfilename) 
    for (const auto& entry : *data) {
       const vector<double>& coordinates = entry.second;
       if (coordinates.size() >= 2) {
-         float displ = 1 - (j==3)*3;
+         float displ = 1.2 - (j==3)*3;
          label.DrawLatex(coordinates[0] + displ, coordinates[2] + displ, entry.first);
       }
       j++;
@@ -320,8 +318,8 @@ void scatter(map<const char*, vector<Double_t>>* data, const char* outfilename) 
    graph.GetYaxis()->SetLabelSize(0.05);
    graph.GetXaxis()->SetTitleFont(42);
    graph.GetYaxis()->SetTitleFont(42);
-   graph.GetXaxis()->SetTitleOffset(0.8);
-   graph.GetYaxis()->SetTitleOffset(0.8);
+   graph.GetXaxis()->SetTitleOffset(1);
+   graph.GetYaxis()->SetTitleOffset(1);
    graph.GetXaxis()->SetLabelFont(42);
    graph.GetYaxis()->SetLabelFont(42); 
 
@@ -329,12 +327,12 @@ void scatter(map<const char*, vector<Double_t>>* data, const char* outfilename) 
    graph.GetYaxis()->SetTitleSize(0.05);
 
    // graph.GetXaxis()->SetTitleSize(0.05);
-   graph.GetYaxis()->SetRangeUser(-2,100);
+   graph.GetYaxis()->SetRangeUser(-2,20);
 
    TLatex cmsLabel;
    cmsLabel.SetTextSize(0.04);
    cmsLabel.SetTextFont(42);
-   cmsLabel.DrawLatexNDC(0.05, 0.97, "CMS Preliminary");
+   cmsLabel.DrawLatexNDC(0.07, 0.955, "CMS Preliminary");
 
    canvas.Update();
    canvas.SaveAs(outfilename);

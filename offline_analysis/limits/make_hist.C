@@ -14,18 +14,22 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree", "tree");
     
-    int num_mass_regions = 470;
-    float m = 1;
+    int num_mass_regions = 278;
+    float growth_factor = 0.005;
+    float m = 2;
 
-    TH1F* massforLimitFull = new TH1F("massforLimitFull","massforLimitFull",4000,0., 120.);
-    TH1F* massforLimitUpsilon = new TH1F("massforLimitUpsilon", "massforLimitUpsilon", 100 , 8.5, 11.4);
+	double id_wp = 0.4;
+	double mva_wp = 0.8;
+
+    TH1F* massforLimitFull = new TH1F("massforLimitFull","massforLimitFull",1000,0., 8.);
     TH1D* massforLimit_CatA[num_mass_regions];
     TH1D* massforLimit_CatB[num_mass_regions];
 
+    float m_tmp = m;
     for(int j=0; j<num_mass_regions; j++){
-      m = m+(m*0.01);
-      massforLimit_CatA[j] = new TH1D(Form("massforLimit_CatA%d",j),Form("massforLimit_CatA%d",j),100,m-(m*0.013*5.),m+(m*0.013*5.));  massforLimit_CatA[j]->Sumw2();
-      massforLimit_CatB[j] = new TH1D(Form("massforLimit_CatB%d",j),Form("massforLimit_CatB%d",j),100,m-(m*0.013*5.),m+(m*0.013*5.));  massforLimit_CatB[j]->Sumw2();
+      m_tmp = m_tmp+(m_tmp*growth_factor);
+      massforLimit_CatA[j] = new TH1D(Form("massforLimit_CatA%d",j),Form("massforLimit_CatA%d",j),100,m_tmp-(m_tmp*0.013*5.),m_tmp+(m_tmp*0.013*5.));  massforLimit_CatA[j]->Sumw2();
+      massforLimit_CatB[j] = new TH1D(Form("massforLimit_CatB%d",j),Form("massforLimit_CatB%d",j),100,m_tmp-(m_tmp*0.013*5.),m_tmp+(m_tmp*0.013*5.));  massforLimit_CatB[j]->Sumw2();
     }
 
     TChain* chain = new TChain("tree");
@@ -35,7 +39,8 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     TTreeReader reader(chain);
 
     TTreeReaderValue<double>          mass  (reader, "Mm_mass"    );
-    TTreeReaderValue<double>          forest_prompt_mva  (reader, "forest_prompt_mva"    );
+    TTreeReaderValue<double>             HLT_DoubleMu4_3_LowMass  (reader, "HLT_DoubleMu4_3_LowMass"    );
+    TTreeReaderValue<double>          forest_prompt_Jpsi_mva  (reader, "forest_prompt_Jpsi_mva"    );
     TTreeReaderValue<double>          soft1  (reader, "Muon_softMva1"    );
     TTreeReaderValue<double>          soft2  (reader, "Muon_softMva2"    );
     TTreeReaderValue<double>          m1eta  (reader, "Mm_mu1_eta"    );
@@ -46,33 +51,29 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     int weight=1;
     while(reader.Next()) {
         count[0]++;
-	j++;
-	if (j%1000000==0){
-	   cout << j << "events" <<endl;
-	}
+        j++;
+        if (j%1000000==0){
+        cout << j << "events" <<endl;
+        }
 
-
-	if (*forest_prompt_mva <0.857) continue;
-	if (*soft1 < 0.223 || *soft2 < 0.223  ) continue;	
+        if (*HLT_DoubleMu4_3_LowMass !=1) continue;
+        if (*forest_prompt_Jpsi_mva <mva_wp) continue;
+        if (*soft1 <id_wp || *soft2 <id_wp  ) continue;	
 
         count[1]++;
 
         massforLimitFull->Fill(*mass, weight);
-	if (*mass>=8.5 && *mass<=11.2) {
-	    massforLimitUpsilon->Fill(*mass, weight);
-	}	
-
-	float maxEta=TMath::Max(abs(*m1eta),abs(*m2eta));
-	
-	float ma=1;
+        float maxEta=TMath::Max(abs(*m1eta),abs(*m2eta));
+        
+        m_tmp = m;
         for(int j=0; j<num_mass_regions; j++){
-            ma = ma+(ma*0.01);
-            if(*mass > ma-(ma*0.013*5.) && *mass < ma+(ma*0.013*5.)) {
-		//cout << "filling catAB "<< j<< " with *mass " << mass << endl;
-		if(maxEta<0.9){ massforLimit_CatA[j]->Fill(*mass,weight); }
-		if(maxEta>=0.9 && maxEta<1.9 ){ massforLimit_CatB[j]->Fill(*mass,weight); }
-	    }
-	}
+            m_tmp = m_tmp+(m_tmp*growth_factor);
+            if(*mass > m_tmp-(m_tmp*0.013*5.) && *mass < m_tmp+(m_tmp*0.013*5.)) {
+                //cout << "filling catAB "<< j<< " with *mass " << mass << endl;
+                if(maxEta<0.9){ massforLimit_CatA[j]->Fill(*mass,weight); }
+                if(maxEta>=0.9 && maxEta<1.9 ){ massforLimit_CatB[j]->Fill(*mass,weight); }
+            }
+        }
 
     }
     
@@ -80,7 +81,6 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
 
     outfile->cd();
     massforLimitFull->Write();
-    massforLimitUpsilon->Write();
     for(int j=0; j<num_mass_regions;j++){
         massforLimit_CatA[j]->Write();
         massforLimit_CatB[j]->Write();

@@ -27,7 +27,7 @@ void load_config(const char* ,bool, const char*&, const char*&, const char*&, co
 void AddModelJ(RooWorkspace &, bool,  Double_t, Double_t);
 void AddModelY(RooWorkspace &, bool,  Double_t, Double_t);
 void AddModelYMC(RooWorkspace &, bool,  Double_t, Double_t);
-void AddData(RooWorkspace &, const char*, Double_t, Double_t, int);
+void AddData(RooWorkspace &, const char*,const char*, Double_t, Double_t, int);
 void DoSPlot(RooWorkspace &, const char*);
 void SaveData(RooWorkspace &, const char*);
 void MakePlots(RooWorkspace &, const char*);
@@ -48,13 +48,16 @@ void sPlot(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "
 
    load_config(meson, isMC, file_name, fig_name, model_name, inputfilename, lowRange, highRange, "1M");
 
-   if (string(meson) == "Jpsi") AddModelJ(wspace,isMC, lowRange, highRange);
+   if (string(meson) == "Jpsi") {
+      AddModelJ(wspace,isMC, lowRange, highRange);
+      AddData(wspace, inputfilename,meson, lowRange, highRange, nEntries);
+   }
    else if (string(meson) == "Y"){
       if (isMC) AddModelYMC(wspace,isMC, lowRange, highRange);
       else AddModelY(wspace,isMC, lowRange, highRange);
+      AddData(wspace, inputfilename, meson, lowRange, highRange, nEntries);
    }
 
-   AddData(wspace, inputfilename, lowRange, highRange, nEntries);
  
    // inspect the workspace if you wish
    // wspace.Print();
@@ -64,7 +67,6 @@ void sPlot(const char* meson, bool isMC, int nEntries = 1000000)  // "Jpsi" or "
    SaveData(wspace, file_name);
    MakePlots(wspace, fig_name);
 }
-
 
 
 void load_config(const char* meson, bool isMC,
@@ -179,7 +181,7 @@ void AddModelY(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highRan
    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.1, 0.01, 0.1, "GeV");
    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.1, 0.01, 0.1, "GeV");
    RooRealVar n1("n1", "n CB", 5, 1.5,10, "");
-   RooRealVar alpha("alpha", "Alpha  CB", 0.376, 0.001, 3, "");
+   RooRealVar alpha("alpha", "Alpha  CB", 0.376, 2, 3, "");
    RooCrystalBall CB1("CB1", "CB", Mm_mass, mu1, sigmaL, sigmaR, alpha,n1,alpha,n1);
    RooRealVar GaussFraction("GaussFraction", "Fraction of Gaussian", 0.459, 0, 1, "");
    RooAddPdf sig1("sig1", "Y mass model", RooArgList(Gaussian1, CB1), GaussFraction);
@@ -297,7 +299,7 @@ void AddModelYMC(RooWorkspace &ws, bool isMC,  Double_t lowRange, Double_t highR
 }
 
 
-void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Double_t highRange, int nEvents)
+void AddData(RooWorkspace &ws, const char* inputfilename,const char* meson, Double_t lowRange, Double_t highRange, int nEvents)
 {
    // make the toy data
    std::cout << "make data set and import to workspace" << std::endl;
@@ -310,6 +312,9 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    RooRealVar weights_prompt("weights_prompt", "weights_prompt", 0, 10);
    // RooRealVar vtx_BDT_Y_forest("vtx_BDT_Y_forest", "vtx_BDT_Y_forest", 0, 1);
 
+   RooRealVar Mm_gen_pdgId("Mm_gen_pdgId", "Mm_gen_pdgId", 0, 200554);
+   RooRealVar HLT_DoubleMu4_3_LowMass("HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu4_3_LowMass", 0, 1);
+   RooRealVar HLT_Dimuon10_Upsilon_y1p4("HLT_Dimuon10_Upsilon_y1p4", "HLT_Dimuon10_Upsilon_y1p4", 0, 1);
    RooRealVar Muon_softMva1("Muon_softMva1", "Muon_softMva1", -1, 1);
    RooRealVar Muon_softMva2("Muon_softMva2", "Muon_softMva2", -1, 1);
    RooRealVar Mm_kin_lxy("Mm_kin_lxy", "Mm_kin_lxy", 0, 100);
@@ -334,9 +339,17 @@ void AddData(RooWorkspace &ws, const char* inputfilename, Double_t lowRange, Dou
    RooRealVar Mm_otherVtxMaxProb1("Mm_otherVtxMaxProb1", "Mm_otherVtxMaxProb1", -1000000, 1000000);
    RooRealVar Mm_otherVtxMaxProb2("Mm_otherVtxMaxProb2", "Mm_otherVtxMaxProb2", -1000000, 1000000);
 
-   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass,forest_prompt_Jpsi_mva,weights_prompt,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
+   string cut_str; 
+   if (string(meson)==string("Jpsi"))  cut_str = string("HLT_DoubleMu4_3_LowMass==1") ;
+   else if (string(meson)==string("Y"))  cut_str = string("HLT_Dimuon10_Upsilon_y1p4==1") ;
+   else {
+      cout<<"Invalid meson";
+      return;
+   }
+
+   RooDataSet data_full("data_full", "data_full", RooArgSet(Mm_mass,forest_prompt_Jpsi_mva,weights_prompt,HLT_DoubleMu4_3_LowMass,HLT_Dimuon10_Upsilon_y1p4,Muon_softMva1,Muon_softMva2,Mm_kin_lxy,Mm_kin_eta,Mm_kin_l3d,Mm_kin_sl3d,Mm_kin_vtx_chi2dof,
       Mm_kin_vtx_prob,Mm_kin_alpha,Mm_kin_alphaBS,Mm_closetrk,Mm_closetrks1,Mm_closetrks2,Mm_kin_pvip,Mm_kin_spvip,Mm_kin_pvlip,Mm_kin_slxy,Mm_iso,Mm_otherVtxMaxProb,
-      Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree));
+      Mm_otherVtxMaxProb1,Mm_otherVtxMaxProb2), Import(*tree), Cut(cut_str.c_str())); // maybe need to add Mm_gen_pdgId just for MC Y 
 
    Int_t numEntries = data_full.numEntries();
    TBits outputBits = TBits(numEntries);
@@ -453,9 +466,9 @@ void tdrGrid(bool gridOn) {
 void fixOverlay() {
   gPad->RedrawAxis();
 }
-
 void setTDRStyle() {
-  tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
+  TStyle *tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
+
 // For the canvas:
   tdrStyle->SetCanvasBorderMode(0);
   tdrStyle->SetCanvasColor(kWhite);
@@ -595,8 +608,15 @@ void setTDRStyle() {
   tdrStyle->SetHatchesLineWidth(5);
   tdrStyle->SetHatchesSpacing(0.05);
 
+// tdrGrid: Turns the grid lines on (true) or off (false)
+    bool gridOn = false;
+  tdrStyle->SetPadGridX(gridOn);
+  tdrStyle->SetPadGridY(gridOn);
+
   tdrStyle->cd();
+
 }
+
  
 void MakePlots(RooWorkspace &ws, const char* fig_name)
 {
@@ -606,8 +626,8 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    setTDRStyle();
 
    // make our canvas
-   TCanvas *cdata = new TCanvas("sPlot", "sPlot demo", 2000, 1500);
-   // cdata->Divide(1, 3);
+   TCanvas *cdata = new TCanvas("sPlot", "sPlot demo", 800, 800);
+   cdata->Divide(1, 2);
  
    // get what we need out of the workspace
    RooAbsPdf *sigModel = ws.pdf("sigModel");
@@ -628,49 +648,91 @@ void MakePlots(RooWorkspace &ws, const char* fig_name)
    std::cout << "Print data";
    data.Print();
 
-   // cdata->cd(1);
+   cdata->cd(1);
    RooPlot *frame = Mm_mass->frame(Title("Fit of model to discriminating variable"));
-   data_mass.plotOn(frame);
-   massModel->plotOn(frame, Name("FullModel"));
-   massModel->plotOn(frame, Components(*sigModel), LineStyle(kDashed), LineColor(kRed), Name("SigModel"));
-   massModel->plotOn(frame, Components(*bkgModel), LineStyle(kDashed), LineColor(kGreen), Name("BkgModel"));
+   data_mass.plotOn(frame,XErrorSize(1), Name("data"), MarkerSize(1.), DrawOption("PZ"));
+   massModel->plotOn(frame, Name("Full model"));
+   massModel->plotOn(frame, Components(*sigModel), Name("Signal model"), DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
+   massModel->plotOn(frame, Components(*bkgModel), LineStyle(7), LineColor(2), Name("Bkg. model"));
    massModel->paramOn(frame);
  
-   TLegend leg(0.11, 0.5, 0.5, 0.8);
-   leg.AddEntry(frame->findObject("FullModel"), "Full model", "L");
-   leg.AddEntry(frame->findObject("SigModel"), "Signal model", "L");
-   leg.AddEntry(frame->findObject("BkgModel"), "Bkg model", "L");
+   gPad->SetLeftMargin(0.15);
+   gPad->SetBottomMargin(0.02);
+   gPad->SetPad(0.01,0.3,0.99,0.99);
+   frame->GetYaxis()->SetLabelSize(0.05);
+   frame->GetYaxis()->SetTitleSize(0.05);
+   frame->GetYaxis()->SetTitleOffset(1.4);
+   frame->GetXaxis()->SetLabelSize(0.);
+   frame->GetXaxis()->SetTitleSize(0.);
+
+   TLegend leg(0.8, 0.6, 0.9,0.85);
+   leg.AddEntry(frame->findObject("data"), "Data", "lep");
+   leg.AddEntry(frame->findObject("Full model"), "Full model", "L");
+   leg.AddEntry(frame->findObject("Signal model"), "Signal model", "L");
+   leg.AddEntry(frame->findObject("Bkg. model"), "Bkg. model", "L");
    leg.SetBorderSize(0);
    leg.SetFillStyle(0);
+   leg.SetTextSize(0.04);
+   leg.SetTextFont(42);
 
- 
+    //compute chisquare
+    RooAbsCollection *flparams = massModel->getParameters(data_mass)->selectByAttrib("Constant", kFALSE);
+    Int_t nflparams = flparams->getSize();
+    Double_t chisquare = -1;
+    chisquare = frame->chiSquare("Full model", "data", nflparams);
+
+    TPaveText label(0.25, 0.63, 0.34, 0.85, "NDC");
+    label.SetBorderSize(0);
+    label.SetFillColor(0);
+    label.SetTextSize(0.041);
+    label.SetTextFont(42);
+    gStyle->SetStripDecimals(kTRUE);
+    label.SetTextAlign(11);
+   //  TString sYield = to_string(int(round(n_signal_total.getValV())));
+   //  TString bYield = to_string(int(round(n_back.getValV())));
+    TString csquare = to_string(chisquare);
+   //  label.AddText(MuonID_str.c_str());
+   //  label.AddText("N_{sig} = " + sYield);
+   //  label.AddText("N_{bkg} = " + bYield);
+    label.AddText("#chi^{2} = " + csquare);
+   
    frame->Draw();
+   label.Draw();
    leg.DrawClone();
- 
-   // Plot isolation for Z component.
-   // Do this by plotting all events weighted by the sWeight for the Z component.
-   // The SPlot class adds a new variable that has the name of the corresponding
-   // yield + "_sw".
-   // cdata->cd(2);
- 
-   // RooPlot *frame2 = forest_prompt_Jpsi_mva->frame(Title("BDT distribution with s weights to project out signal"));
-   // // Since the data are weighted, we use SumW2 to compute the errors.
-   // dataw_sig.plotOn(frame2, DataError(RooAbsData::SumW2));
-   // // sigModel->plotOn(frame2, LineStyle(kDashed), LineColor(kRed));
- 
-   // frame2->Draw();
- 
-   // // Plot isolation for QCD component.
-   // // Eg. plot all events weighted by the sWeight for the QCD component.
-   // // The SPlot class adds a new variable that has the name of the corresponding
-   // // yield + "_sw".
-   // cdata->cd(3);
-   // RooPlot *frame3 = forest_prompt_Jpsi_mva->frame(Title("BDT distribution with s weights to project out bkg"));
-   // dataw_bkg.plotOn(frame3, DataError(RooAbsData::SumW2));
-   // // bkgModel->plotOn(frame3, LineStyle(kDashed), LineColor(kGreen));
- 
-   // frame3->Draw();
- 
+
+   cdata->cd(2);
+   RooHist *hpull = frame->pullHist("data", "Full model"); //massModel->GetName());
+   RooPlot *frame_pulls = Mm_mass->frame(Title("Pull"));
+   TLine* line = new TLine(Mm_mass->getMin(), 0, Mm_mass->getMax(), 0);
+   line->SetLineColor(kBlue);
+   frame_pulls->addObject(line);
+   frame_pulls->addPlotable(hpull, "P"); //,"E3")
+   frame_pulls->SetMarkerStyle(2);
+   frame_pulls->SetMarkerSize(0.01);
+
+   gPad->SetLeftMargin(0.15);
+   gPad->SetPad(0.01, 0.01, 0.99, 0.3);
+   gPad->SetTopMargin(0.01);
+   gPad->SetBottomMargin(0.5); 
+   frame_pulls->GetYaxis()->SetNdivisions(202);
+   frame_pulls->GetYaxis()->SetRangeUser(-4, 4);
+   frame_pulls->GetXaxis()->SetTitle("m_{#mu#mu} [GeV]");
+   frame_pulls->GetYaxis()->SetTitle("Pulls");
+   frame_pulls->GetXaxis()->SetTitleSize(0.1);
+   frame_pulls->GetYaxis()->SetTitleSize(0.1);
+   frame_pulls->GetXaxis()->SetLabelSize(0.1);
+   frame_pulls->GetYaxis()->SetLabelSize(0.1);
+   frame_pulls->GetXaxis()->SetLabelOffset(0.01);
+   frame_pulls->GetYaxis()->SetLabelOffset(0.01);
+   frame_pulls->GetXaxis()->SetTitleOffset(1.2);
+   frame_pulls->GetYaxis()->SetTitleOffset(0.3);
+   frame_pulls->GetXaxis()->SetTickLength(0.1);
+   gPad->SetFrameFillColor(0);
+   gPad->SetFrameBorderMode(0);
+   gPad->SetFrameFillColor(0);
+   gPad->SetFrameBorderMode(0);
+   frame_pulls->Draw();
+
    cdata->SaveAs(fig_name);
    cout<<"\n\n saving file as "<<fig_name<<"\n\n";
 }

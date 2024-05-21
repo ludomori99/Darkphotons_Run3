@@ -128,6 +128,7 @@ TTreeReaderValue<bool> l1_DoubleMu0er1p4_SQ_OS_dR_Max1p4(reader,"L1_DoubleMu0er1
     unsigned long long Event;
     unsigned int NMuonId;
 
+    bool HLT_Dimuon0_LowMass;
     bool HLT_DoubleMu4_3_LowMass;
     bool HLT_DoubleMu4_3_Jpsi;
     bool HLT_Dimuon10_Upsilon_y1p4;
@@ -239,6 +240,8 @@ bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
     outtree->Branch("Event", &Event);
     outtree->Branch("nMuonId", &NMuonId);
 
+
+    outtree->Branch("HLT_Dimuon0_LowMass",&HLT_Dimuon0_LowMass, 32000,0);
     outtree->Branch("HLT_DoubleMu4_3_LowMass", &HLT_DoubleMu4_3_LowMass);
     outtree->Branch("HLT_DoubleMu4_3_Jpsi", &HLT_DoubleMu4_3_Jpsi);
     outtree->Branch("HLT_Dimuon10_Upsilon_y1p4", &HLT_Dimuon10_Upsilon_y1p4);
