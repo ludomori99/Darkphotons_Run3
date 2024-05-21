@@ -5,55 +5,82 @@
 #include "src/change_bin.cpp"
 #include "src/make_hist.cpp"
 #include "src/McYield.cpp"
+#include <cstdlib>
 
-void compute_eff(bool, string, string, bool=false, bool=false);
-void full_study(string, string);
+#include <unordered_map>
+
+
+void compute_eff(unordered_map<string, const char*>, string,bool, string, string, bool=false, bool=false);
+void full_study(string, string, bool);
+
+
+
+// const char *MinBiasPath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/TP_samples_Jpsi.root";
+// const char *OfflinePath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/TP_samples_Jpsi.root";
+// const char *lmDYPath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/lmDY/Jpsi/TP_samples_Jpsi.root";
+
 
 void Efficiency(){
 
     string MuonId = "PassingProbeSoftId";
 
-    // compute_eff(true,"Probe_pt",MuonId);
-    // compute_eff(false,"Probe_pt",MuonId);
-    // compare_efficiency("Probe_pt", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_pt/Efficiency_MC.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_pt/Efficiency_Run3.root")).c_str(),
+    // compute_eff(true,"Probe_eta",MuonId);
+    // compute_eff(false,"Probe_eta",MuonId);
+    // compare_efficiency("Probe_eta", 
+    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/inBias.root")).c_str(), 
+    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/Efficiency_Run3.root")).c_str(),
+    //      MuonId);
+    
+    // compute_eff(true,"Probe_abs_eta",MuonId);
+    // compute_eff(false,"Probe_abs_eta",MuonId);
+    // compare_efficiency("Probe_abs_eta", 
+    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/inBias.root")).c_str(), 
+    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_Run3.root")).c_str(),
     //     MuonId);
 
-    compute_eff(true,"Probe_eta",MuonId);
-    compute_eff(false,"Probe_eta",MuonId);
-    compare_efficiency("Probe_eta", 
-        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/Efficiency_MC.root")).c_str(), 
-        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/Efficiency_Run3.root")).c_str(),
-         MuonId);
+
+    full_study("Probe_pt", MuonId, false);
+    full_study("Mm_dR", MuonId, false);
+    full_study("Probe_eta", MuonId, false);
+    full_study("Probe_abs_eta", MuonId, false);
+}
+
+void full_study(string quantity, string MuonId, bool barrelVsEndcap){
+
+    unordered_map<string, const char*> paths;
+    paths["Data_MinBias"] = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/TP_samples_Jpsi.root";
+    paths["Data_Offline"] = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/TP_samples_Jpsi.root";
+    // paths["lmDY"] = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/lmDY/Jpsi/TP_samples_Jpsi.root";
+    string eff_minbias_str = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_MinBias.root");
+    string eff_offline_str = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_Run3.root");
+    paths["Eff_MinBias"] = eff_minbias_str.c_str();
+    paths["Eff_Offline"] = eff_offline_str.c_str();
+
+
+    // compute_eff(paths, "MinBias",true,quantity,MuonId);
+    // compute_eff(paths, "Offline",false,quantity,MuonId);
+    // if (barrelVsEndcap){
+    //     compute_eff(paths, "MinBias",true,quantity,MuonId, true,false);
+    //     compute_eff(paths, "MinBias",true,quantity,MuonId, false,true);
+    //     compute_eff(paths, "Offline",false,quantity,MuonId, true,false);
+    //     compute_eff(paths, "Offline",false,quantity,MuonId,false, true);
+    //     compare_efficiency(quantity,paths["Eff_MinBias"],paths["Eff_Offline"],MuonId,true);
+    // }
     
-    compute_eff(true,"Probe_abs_eta",MuonId);
-    compute_eff(false,"Probe_abs_eta",MuonId);
-    compare_efficiency("Probe_abs_eta", 
-        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_MC.root")).c_str(), 
-        (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_Run3.root")).c_str(),
-        MuonId);
+    // compute_eff("lmDY",true,quantity,MuonId);
+    // compute_eff("lmDY",true,quantity,MuonId, true,false);
+    // compute_eff("lmDY",true,quantity,MuonId,false, true);
 
-
-    full_study("Probe_pt", MuonId);
-    full_study("Mm_dR", MuonId);
-}
-
-void full_study(string quantity, string MuonId){
-    compute_eff(true,quantity,MuonId);
-    compute_eff(true,quantity,MuonId, true,false);
-    compute_eff(true,quantity,MuonId, false,true);
-    compute_eff(false,quantity,MuonId);
-    compute_eff(false,quantity,MuonId, true,false);
-    compute_eff(false,quantity,MuonId,false, true);
-    string pathMC = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_MC.root");
-    string pathOffline = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/") + quantity + string("/Efficiency_Run3.root");
-    compare_efficiency(quantity,pathMC.c_str(),pathOffline.c_str(),MuonId,false); 
-    compare_efficiency(quantity,pathMC.c_str(),pathOffline.c_str(),MuonId,true); 
+    compare_efficiency(quantity,paths["Eff_MinBias"],paths["Eff_Offline"],MuonId,false); 
 }
 
 
-void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=false, bool isEndcap=false){
+void compute_eff(unordered_map<string, const char*> paths, string dataset, bool DataIsMC, string quantity, string MuonId, bool isBarrel=false, bool isEndcap=false){
+
+    if (dataset=="lmDY" && !DataIsMC){
+        cout<<"lmDYPath is only for MC\n";
+        return;
+    }
 
     vector<double> bins; 
     int bin_n;
@@ -85,7 +112,7 @@ void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=fa
     init_conditions[0] = 3.09809 ;
     init_conditions[1] = 0.05;
     /*------------------------------------------------------------------------------------------------------*/
-    
+
     
     string* conditions = get_conditions(bin_n, bins, quantity,isBarrel,isEndcap);
     double ** yields_n_errs = new double*[bin_n];
@@ -94,12 +121,12 @@ void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=fa
     {
         cout<<"Processing bin "<< conditions[i] << "\n";
         if (DataIsMC){
-            yields_n_errs[i] = McYield(conditions[i], MuonId, quantity,isBarrel,isEndcap);
+            yields_n_errs[i] = McYield(paths["Data_"+dataset], conditions[i], MuonId, quantity,isBarrel,isEndcap);
             // cout<<yields_n_errs[i][0]<<"\n";
         }
         else{
-            yields_n_errs[i] = doFit(conditions[i], MuonId, quantity, init_conditions, isBarrel,isEndcap);
-            cout<<yields_n_errs[i][0]<<"\n";
+            yields_n_errs[i] = doFit(paths["Data_"+dataset], conditions[i], MuonId, quantity, init_conditions, isBarrel,isEndcap);
+            // cout<<yields_n_errs[i][0]<<"\n";
             //doFit returns: [yield_all, yield_pass, err_all, err_pass]
         }
     }
@@ -107,7 +134,8 @@ void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=fa
     TH1F *yield_ALL  = make_hist("ALL" , yields_n_errs, 0, bin_n, bins.data(), DataIsMC,false);
     TH1F *yield_PASS = make_hist("PASS", yields_n_errs, 1, bin_n, bins.data(), DataIsMC,false);
 
-    cout<< "\n\n\n Made histograms, now add to Eff file \n\n\n";
+    cout<< "\n\n\n Made histograms, now check fit quality, then add to Eff file \n\n\n";
+
     //----------------------SAVING RESULTS TO Histograms.root--------------------//
     //useful if we require to change the fit on a specific set of bins
     // TFile* EfficiencyFile = TFile::Open("/work/submit/mori25/Darkphotons_ludo/tagnprobe/eff_Jpsi.root","RECREATE");
@@ -117,8 +145,8 @@ void compute_eff(bool DataIsMC, string quantity, string MuonId, bool isBarrel=fa
     //-----------------------------------------------------------------//
     
     //If all of the fits seem correct we can proceed to generate the efficiency
-    get_efficiency(yield_ALL, yield_PASS, quantity, MuonId, DataIsMC,isBarrel,isEndcap);
 
+    get_efficiency(paths["Eff_"+dataset], yield_ALL, yield_PASS, quantity, MuonId, DataIsMC,isBarrel,isEndcap);
 
     //In case you want to change the fit on a specific, comment the loop and "result saving" code and uncomment the following function
     //change_bin(/*bin number you want to redo*/, /*condition (you can copy the title from the generated fit .pdf)*/, MuonId, quantity, DataIsMC, init_conditions);

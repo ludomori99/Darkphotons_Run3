@@ -106,8 +106,8 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     //Legenda
     TLegend* tl = new TLegend(0.68,0.78,0.94,0.88);
     tl->SetTextSize(0.03);
-    tl->AddEntry(pEffMC, nameScheme[useScheme][0], "lep");
-    tl->AddEntry(pEffOffline, nameScheme[useScheme][1], "lep");
+    tl->AddEntry(pEffOffline, nameScheme[useScheme][0], "lep");
+    tl->AddEntry(pEffMC, nameScheme[useScheme][1], "lep");
     tl->Draw();
 
     //Label

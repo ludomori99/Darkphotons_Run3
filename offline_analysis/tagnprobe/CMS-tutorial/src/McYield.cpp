@@ -12,6 +12,7 @@ double* McYield(const char* data_filepath, string condition, string MuonID_str, 
     RooRealVar MuonID(MuonID_str.c_str(), MuonID_str.c_str(), 0, 1); //Muon_Id
     RooRealVar isBarrelMuon("isBarrelMuon","isBarrelMuon",0,1);
     RooRealVar Mm_mass("Mm_mass", "Mm_mass", _mmin, _mmax);
+    RooRealVar trigger("HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu4_3_LowMass", 0,1);
 
     double* limits = new double[2];
     if (quant == "Probe_pt") {
@@ -33,11 +34,11 @@ double* McYield(const char* data_filepath, string condition, string MuonID_str, 
 
     RooRealVar quantity((quant).c_str(), (quant).c_str(), limits[0], limits[1]);
     
-    RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), ((isBarrel||isEndcap) ? RooArgList(isBarrelMuon,quantity) : RooArgList(quantity)));
-    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + "&&" + MuonID_str + "==1").c_str() , ((isBarrel||isEndcap) ? RooArgList(isBarrelMuon,quantity,MuonID) : RooArgList(quantity,MuonID)));
+    RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), ((isBarrel||isEndcap) ? RooArgList(trigger, isBarrelMuon,quantity) : RooArgList(trigger, quantity)));
+    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + "&&" + MuonID_str + "==1").c_str() , ((isBarrel||isEndcap) ? RooArgList(trigger,isBarrelMuon,quantity,MuonID) : RooArgList(trigger,quantity,MuonID)));
 
-    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree, ((isBarrel||isEndcap) ? RooArgSet(isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(quantity,MuonID,Mm_mass)),*reduce);
-    RooDataSet *Data_PASSING = new RooDataSet("DATA_PASS", "DATA_PASS", DataTree, ((isBarrel||isEndcap) ? RooArgSet(isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(quantity,MuonID,Mm_mass)), *cutvar);//
+    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree, ((isBarrel||isEndcap) ? RooArgSet(trigger,isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(trigger,quantity,MuonID,Mm_mass)),*reduce);
+    RooDataSet *Data_PASSING = new RooDataSet("DATA_PASS", "DATA_PASS", DataTree, ((isBarrel||isEndcap) ? RooArgSet(trigger,isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(trigger,quantity,MuonID,Mm_mass)), *cutvar);//
     
     double* output = new double[2];
     output[0] = Data_ALL->sumEntries();

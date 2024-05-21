@@ -1,11 +1,13 @@
-#include "tdrstyle.C"
+#include "CMS.C"
 using namespace RooFit;
 
-double* doFit(const char* filepath, string condition, string MuonID_str, string quant, double* init_conditions, bool isBarrel, bool isEndcap, bool save = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
+double* doFit2D(const char* filepath, string condition, string MuonID_str, string quantx, string quanty,bool fix_l = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
 {
     TFile *file0    = TFile::Open(filepath);
     TTree *DataTree = (TTree*)file0->Get(("tree"));
 
+
+    
     double lowRange = 2.6;  double highRange = 3.56;
 
     RooRealVar MuonID(MuonID_str.c_str(), MuonID_str.c_str(), 0, 1); //Muon_Id
@@ -13,42 +15,22 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange);
     RooRealVar trigger("HLT_DoubleMu4_3_LowMass", "HLT_DoubleMu4_3_LowMass", 0,1);
 
-    double* limits = new double[2];
-    if (quant == "Probe_pt") {
-        limits[0] = 0;
-        limits[1] = 40;
-    }
-    if (quant == "Probe_abs_eta") {
-        limits[0] = 0;
-        limits[1] = 3;
-    }
-    if (quant == "Probe_eta") {
-        limits[0] = -3;
-        limits[1] = 3;
-    }   
-    if (quant == "Mm_dR") {
-        limits[0] = 0;
-        limits[1] = 2;
-    }
-
-    RooRealVar quantity(quant.c_str(), quant.c_str(), limits[0], limits[1]);
-
-
-    RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), ((isBarrel||isEndcap) ? RooArgList(trigger,isBarrelMuon,quantity) : RooArgList(trigger,quantity)));
-    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + "&&" + MuonID_str + "==1").c_str() , ((isBarrel||isEndcap) ? RooArgList(trigger,isBarrelMuon,quantity,MuonID) : RooArgList(trigger,quantity,MuonID)));
-
-    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree, ((isBarrel||isEndcap) ? RooArgSet(trigger,isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(trigger,quantity,MuonID,Mm_mass)),*reduce);
-    RooDataSet *Data_PASSING = new RooDataSet("DATA_PASS", "DATA_PASS", DataTree, ((isBarrel||isEndcap) ? RooArgSet(trigger,isBarrelMuon,quantity,MuonID,Mm_mass) : RooArgSet(trigger,quantity,MuonID,Mm_mass)), *cutvar);
-    
-    RooDataHist* dh_ALL     = Data_ALL->binnedClone();
-    RooDataHist* dh_PASSING = Data_PASSING->binnedClone();
+    RooRealVar xquantity((quantx).c_str(), (quantx).c_str(),0,100);
+    RooRealVar yquantity((quanty).c_str(), (quanty).c_str(),0,100);
+ 
+    RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), RooArgList(trigger, xquantity,yquantity));
+    RooFormulaVar* cutvar = new RooFormulaVar("PPTM", (condition + "&&" + MuonID_str + "==1").c_str() , RooArgList(trigger,xquantity,yquantity,MuonID));
+    RooDataSet *Data_ALL    = new RooDataSet("DATA", "DATA", DataTree,RooArgSet(trigger,xquantity,yquantity,MuonID,Mm_mass),*reduce);
+    RooDataSet *Data_PASSING = new RooDataSet("DATA_PASS", "DATA_PASS", DataTree, RooArgSet(trigger,xquantity,yquantity,MuonID,Mm_mass), *cutvar);
 
 
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-    RooRealVar sigma("sigma", "Width of Gaussian", 0.01, 0.005, 0.1, "GeV");
-    RooRealVar l("l", "Width of BW", 0.0378, 0.01, 10, "GeV");
+    RooRealVar sigma("sigma", "Width of Gaussian", 0.06, 0.01, 0.1, "GeV");
+    RooRealVar l("l", "Width of BW", 0.01, 0.01, 10, "GeV");
     RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+    
+    l.setConstant(kTRUE);
 
     RooRealVar sigmaL("sigmaL", "Width of left CB", 0.02, 0.01, 0.08, "GeV");
     RooRealVar sigmaR("sigmaR", "Width of right CB", 0.02, 0.01, 0.08, "GeV");
@@ -66,8 +48,8 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
     RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);
 
-    double n_signal_initial =(Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)<0.1",init_conditions[0])));
-    double n_back_initial = (Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)>0.3",init_conditions[0])));
+    double n_signal_initial =(Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)<0.1",3.09809)));
+    double n_back_initial = (Data_ALL->sumEntries(TString::Format("abs(Mm_mass-%g)>0.3",3.09809)));
 
     RooRealVar n_signal_total("n_signal_total","n_signal_total",n_signal_initial,0.,Data_ALL->sumEntries());
     RooRealVar n_signal_total_pass("n_signal_total_pass","n_signal_total_pass",n_signal_initial,0.,Data_PASSING->sumEntries());
@@ -79,12 +61,17 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     RooAddPdf* model_pass;
     model      = new RooAddPdf("model","model", RooArgList(sigModel, bkgModel),RooArgList(n_signal_total, n_back));
     model_pass = new RooAddPdf("model_pass", "model_pass", RooArgList(sigModel, bkgModel),RooArgList(n_signal_total_pass, n_back_pass));
-
     // SIMULTANEOUS FIT
     RooCategory sample("sample","sample") ;
     sample.defineType("All") ;
     sample.defineType("PASSING") ;
 
+    RooDataHist* dh_ALL     = new RooDataHist(Data_ALL->GetName(),    Data_ALL->GetTitle(),     RooArgSet(Mm_mass), *Data_ALL);
+	RooDataHist* dh_PASSING = new RooDataHist(Data_PASSING->GetName(),Data_PASSING->GetTitle(), RooArgSet(Mm_mass), *Data_PASSING);
+	
+    // RooDataHist* dh_ALL     = Data_ALL->binnedClone();
+    // RooDataHist* dh_PASSING = Data_PASSING->binnedClone();
+    
     RooDataHist combData("combData","combined data",Mm_mass,Index(sample),Import("ALL",*dh_ALL),Import("PASSING",*dh_PASSING));
 
     RooSimultaneous simPdf("simPdf","simultaneous pdf",sample) ;
@@ -93,13 +80,13 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     simPdf.addPdf(*model_pass,"PASSING");
 
     //Store logs
-    string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_output.log";
+    string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition + "_output.log";
     ofstream logFile((logpath).c_str());
     
     RooFitResult* fitres = new RooFitResult;
     fitres = simPdf.fitTo(combData, RooFit::Save(), RooFit::Strategy(2), RooFit::Minos());
     fitres->printMultiline(logFile,0,true);
-
+    cout<<"fit done \n";
     // OUTPUT ARRAY
     double* output = new double[4];
 
@@ -114,8 +101,10 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
 
     TCanvas* c_all  = new TCanvas("ALL","ALL",800,800);
     TCanvas* c_pass = new TCanvas("PASS","PASS",800,800);
-
+    
     setTDRStyle();
+    CMS(c_all);
+    CMS(c_pass);
 
     c_all->Divide(1,2);
     c_all->cd(1);
@@ -167,7 +156,7 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     label_2.AddText(MuonID_str.c_str());
     label_2.AddText("N_{sig} = " + sYield);
     label_2.AddText("N_{bkg} = " + bYield);
-    label_2.AddText("#chi^{2} = " + csquare);
+    label_2.AddText("#chi^{2}_{red} = " + csquare);
     logFile << "\nchisquare=" << chisquare<<"\n";
 
     frame->Draw();
@@ -299,19 +288,13 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     gPad->SetFrameBorderMode(0);
     frame_pulls_pass->Draw();
 
-
-    if(save)
-    {
-        c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_PASS.png").c_str());
-        c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/"  + MuonID_str + "/" + quant + "/" + condition + "_ALL.png").c_str());
-    }
+    c_pass->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition + "_PASS.png").c_str());
+    c_all->SaveAs(("/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/"  + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition + "_ALL.png").c_str());
+    
 
     logFile.close();
 
     // DELETING ALLOCATED MEMORY
-    delete[] limits;
-    //
-    delete file0;
     //
     delete Data_ALL;
     delete Data_PASSING;
