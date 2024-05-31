@@ -40,22 +40,14 @@ void multi_fit(int event_frac = 15)
     RooRealVar mu_Psi2("mu_Psi2", "Psi2 Mass", 3.686, 3.58, 3.75);
 
     // RooRealVar sigma("sigma", "Width of G Jpsi", 0.05, 0.01, 0.1, "GeV");
-    RooRealVar reso_l("reso_l", "Width of BW", 0.05, 0.01, 0.1, "");
-    RooRealVar reso("reso", "peak resolution", 0.01, 0.005, 0.05, "");
+    RooRealVar reso("reso", "peak resolution", 0.05, 0.01, 0.05, "");
 
-    RooRealVar q_Phi("q_Phi", "Scale of Voigtian sigma and l phi", 1, 0.1, 5, "");
-    RooRealVar q_Psi2("q_Psi2", "Scale of Voigtian sigma and l Psi2", 1, 0.1, 5, "");
+    RooRealVar q_Phi("q_Phi", "Scale of Voigtian/Gaussian sigma and l phi", 1, 0.1, 5, "");
+    RooRealVar q_Psi2("q_Psi2", "Scale of Voigtian/Gaussian sigma and l Psi2", 1, 0.1, 5, "");
 
-    RooFormulaVar sigma_V_Phi("sigma_V_Phi", "reso*mu_Phi*q_Phi", RooArgList(reso, mu_Phi, q_Phi));
-    RooFormulaVar l_Phi("l_Phi", "reso_l*mu_Phi*q_Phi", RooArgList(reso_l, mu_Phi, q_Phi));
+    RooFormulaVar sigma_V_Phi("sigma_V_Phi", "reso*mu_Phi*q_Phi", RooArgList(reso, mu_Phi,q_Phi)); 
     RooFormulaVar sigma_V_Jpsi("sigma_V_Jpsi", "reso*mu_Jpsi", RooArgList(reso, mu_Jpsi));
-    RooFormulaVar l_Jpsi("l_Jpsi", "reso_l*mu_Jpsi", RooArgList(reso_l, mu_Jpsi));
     RooFormulaVar sigma_V_Psi2("sigma_V_Psi2", "reso*mu_Psi2*q_Psi2", RooArgList(reso, mu_Psi2, q_Psi2));
-    RooFormulaVar l_Psi2("l_Psi2", "reso_l*mu_Psi2*q_Psi2", RooArgList(reso_l, mu_Psi2, q_Psi2));
-
-    RooVoigtian Voigtian_Phi("Voigtian_Phi", "Voigtian_Phi", Mm_mass_Phi, mu_Phi, sigma_V_Phi,l_Phi);
-    RooVoigtian Voigtian_Jpsi("Voigtian_Jpsi", "Voigtian_Jpsi", Mm_mass_Jpsi, mu_Jpsi, sigma_V_Jpsi,l_Jpsi);
-    RooVoigtian Voigtian_Psi2("Voigtian_Psi2", "Voigtian_Psi2", Mm_mass_Psi2, mu_Psi2, sigma_V_Psi2,l_Psi2);
 
     RooRealVar ql_Phi("ql_Phi", "Scale of sigma of left CB ql_Phi", 1, 0.1, 5, "");
     RooRealVar qr_Phi("qr_Phi", "Scale of sigma of right CB qr_Phi", 1, 0.1, 5, "");
@@ -64,9 +56,9 @@ void multi_fit(int event_frac = 15)
     RooRealVar ql_Psi2("ql_Psi2", "Scale of sigma of left CB ql_Psi2", 1, 0.1, 5, "");
     RooRealVar qr_Psi2("qr_Psi2", "Scale of sigma of right CB qr_Psi2", 1, 0.1, 5, "");
 
-    RooRealVar nL("nL", "nL CB", 5, 1.5,15, "");
+    RooRealVar nL("nL", "nL CB", 15, 3,15, "");
     RooRealVar alphaL("alphaR", "Alpha right CB", 5, 2, 5, "");
-    RooRealVar nR("nR", "nR CB", 5, 1.5,15, "");
+    RooRealVar nR("nR", "nR CB", 15, 3,15, "");
     RooRealVar alphaR("alphaL", "Alpha left CB", 5, 2, 5, "");
 
     RooFormulaVar sigmaL_Phi("sigmaL_Phi", "reso*mu_Phi*ql_Phi", RooArgList(reso,mu_Phi, ql_Phi));
@@ -82,9 +74,34 @@ void multi_fit(int event_frac = 15)
 
     RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.55, 0, 0.8, "");
 
-    RooAddPdf sigModel_Phi("sigModel_Phi", "Phi mass model", RooArgList(Voigtian_Phi, CB_Phi), GaussFraction);
-    RooAddPdf sigModel_Jpsi("sigModel_Jpsi", "J/psi mass model", RooArgList(Voigtian_Jpsi, CB_Jpsi), GaussFraction);
-    RooAddPdf sigModel_Psi2("sigModel_Psi2", "psi2 mass model", RooArgList(Voigtian_Psi2, CB_Psi2), GaussFraction);
+
+    //Choice to make: Gassian or Voigtian? 
+
+    //Gaussian
+
+    RooGaussian Gaussian_Phi("Gaussian_Phi", "Gaussian_Phi", Mm_mass_Phi, mu_Phi, sigma_V_Phi);
+    RooGaussian Gaussian_Jpsi("Gaussian_Jpsi", "Gaussian_Jpsi", Mm_mass_Jpsi, mu_Jpsi, sigma_V_Jpsi);
+    RooGaussian Gaussian_Psi2("Gaussian_Psi2", "Gaussian_Psi2", Mm_mass_Psi2, mu_Psi2, sigma_V_Psi2);
+
+    RooAddPdf sigModel_Phi("sigModel_Phi", "Phi mass model", RooArgList(Gaussian_Phi, CB_Phi), GaussFraction);
+    RooAddPdf sigModel_Jpsi("sigModel_Jpsi", "J/psi mass model", RooArgList(Gaussian_Jpsi, CB_Jpsi), GaussFraction);
+    RooAddPdf sigModel_Psi2("sigModel_Psi2", "psi2 mass model", RooArgList(Gaussian_Psi2, CB_Psi2), GaussFraction);
+
+    //Voigtian
+
+    // RooRealVar reso_l("reso_l", "Width of BW", 0.001, 0.001, 0.1, "");
+    // reso_l.setConstant(kTRUE);
+
+    // RooFormulaVar l_Phi("l_Phi", "reso_l*mu_Phi*q_Phi", RooArgList(reso_l, mu_Phi, q_Phi));
+    // RooFormulaVar l_Jpsi("l_Jpsi", "reso_l*mu_Jpsi", RooArgList(reso_l, mu_Jpsi));
+    // RooFormulaVar l_Psi2("l_Psi2", "reso_l*mu_Psi2*q_Psi2", RooArgList(reso_l, mu_Psi2, q_Psi2));
+    // RooVoigtian Voigtian_Phi("Voigtian_Phi", "Voigtian_Phi", Mm_mass_Phi, mu_Phi, sigma_V_Phi,l_Phi);
+    // RooVoigtian Voigtian_Jpsi("Voigtian_Jpsi", "Voigtian_Jpsi", Mm_mass_Jpsi, mu_Jpsi, sigma_V_Jpsi,l_Jpsi);
+    // RooVoigtian Voigtian_Psi2("Voigtian_Psi2", "Voigtian_Psi2", Mm_mass_Psi2, mu_Psi2, sigma_V_Psi2,l_Psi2);
+
+    // RooAddPdf sigModel_Phi("sigModel_Phi", "Phi mass model", RooArgList(Voigtian_Phi, CB_Phi), GaussFraction);
+    // RooAddPdf sigModel_Jpsi("sigModel_Jpsi", "J/psi mass model", RooArgList(Voigtian_Jpsi, CB_Jpsi), GaussFraction);
+    // RooAddPdf sigModel_Psi2("sigModel_Psi2", "psi2 mass model", RooArgList(Voigtian_Psi2, CB_Psi2), GaussFraction);
     // --------------------------------------
 
     // Make three separate bkg models 
@@ -144,7 +161,7 @@ void multi_fit(int event_frac = 15)
     simPdf.addPdf(*model_Psi2,"Psi2");
 
     //Store logs
-    string logpath =  string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/")+string("Multi_fit_output.log");
+    string logpath =  string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/")+string("Multi_fit_output_GdCB.log");
     ofstream logFile((logpath).c_str());
     
     RooFitResult* fitres = new RooFitResult;
@@ -155,13 +172,10 @@ void multi_fit(int event_frac = 15)
     // RooRealVar* yield_PASS = (RooRealVar*) fitres->floatParsFinal().find("n_signal_total_pass");
 
     plot("Phi", Mm_mass_Phi, Data_Phi, model_Phi, n_signal_Phi, n_bkg_Phi, logFile);
-    cout<<"check 1";
     plot("Jpsi", Mm_mass_Jpsi, Data_Jpsi, model_Jpsi, n_signal_Jpsi, n_bkg_Jpsi, logFile);
-    cout<<"\ncheck 2";
     plot("Psi2", Mm_mass_Psi2, Data_Psi2, model_Psi2, n_signal_Psi2, n_bkg_Psi2, logFile);
 
     logFile.close();
-    cout<<"\ncheck3";
     // DELETING ALLOCATED MEMORY
     // delete File_Phi;
     // delete File_Jpsi;
@@ -193,11 +207,10 @@ void multi_fit(int event_frac = 15)
 void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* model, RooRealVar n_signal, RooRealVar n_back, ofstream& logFile, bool save=true){
     TCanvas* canvas  = new TCanvas(name,name,800,800);
     setTDRStyle();
-    CMS(canvas);
-
 
     canvas->Divide(1,2);
     canvas->cd(1);
+
     RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
 
     frame->SetTitle(name);
@@ -208,12 +221,13 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     model->plotOn(frame,Components(("sigModel_"+string(name)).c_str()),Name("Signal model"),DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
     model->plotOn(frame,Components(("bkgModel_"+string(name)).c_str()),Name("Background model"),LineStyle(7), LineColor(2));
 
+    gPad->SetTopMargin(0.08);
     gPad->SetLeftMargin(0.15);
     gPad->SetBottomMargin(0.02);
     gPad->SetPad(0.01,0.3,0.99,0.99);
     frame->GetYaxis()->SetLabelSize(0.05);
     frame->GetYaxis()->SetTitleSize(0.058);
-    frame->GetYaxis()->SetTitleOffset(1.15);
+    frame->GetYaxis()->SetTitleOffset(1.1);
     frame->GetXaxis()->SetLabelSize(0.);
     frame->GetXaxis()->SetTitleSize(0.);
 
@@ -252,6 +266,7 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     label_2.Draw();     
     leg.Draw();
 
+    CMS(canvas);
 
     canvas->cd(2);
     RooHist *hpull = frame->pullHist("data", "Full model"); //massModel->GetName());
@@ -288,7 +303,7 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
 
     if(save)
     {
-        canvas->SaveAs(("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/multi_fit_"+string(name)+"_V_dG.png").c_str());
+        canvas->SaveAs(("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/multi_fit_"+string(name)+"_G_dG_.png").c_str());
         // canvas->SaveAs(("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/multi_fit_"+string(name)+"_V_dG.C").c_str());
     }
     // delete canvas;

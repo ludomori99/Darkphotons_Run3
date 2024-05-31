@@ -103,11 +103,9 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     TCanvas* c_pass = new TCanvas("PASS","PASS",800,800);
     
     setTDRStyle();
-    CMS(c_all);
-    CMS(c_pass);
-
     c_all->Divide(1,2);
     c_all->cd(1);
+
     RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
 
     frame->SetTitle((MuonID_str + string("; ALL")).c_str());
@@ -163,6 +161,7 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     label_2.Draw();     
     leg.Draw();
 
+    CMS(c_all);
 
     c_all->cd(2);
     RooHist *hpull = frame->pullHist("data", "Full model"); //massModel->GetName());
@@ -254,6 +253,9 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     frame_pass->Draw();
     leg_pass.Draw();
     label_pass.Draw();     
+
+    CMS(c_pass);
+
 
     c_pass->cd(2);
     RooHist *hpull_pass = frame_pass->pullHist("data", "Full model"); //massModel->GetName());

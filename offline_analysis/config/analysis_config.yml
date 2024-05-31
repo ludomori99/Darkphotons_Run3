@@ -130,7 +130,7 @@ working_points:
 
 com: 13.6
 lumi:
-  offline: 34.3
+  offline: 62.4 #34.3
 
 signal_regions:
   Phi:

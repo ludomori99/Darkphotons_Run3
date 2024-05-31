@@ -4,7 +4,7 @@ using namespace std;
 double compute_mva_sf(double mass) {
 
     double SF_Jpsi = 0.8074369567547631/0.8662678497350005; //data/MC
-    double SF_Y = 0.9505318832561752/0.9629901286637865
+    double SF_Y = 0.9505318832561752/0.9629901286637865;
 
     double mass_Jpsi = 3.0943;
 

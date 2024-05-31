@@ -23,15 +23,15 @@ void Efficiency2D(){
 
 	// Bins to study
 	// double xbins[] = {4, 4.2, 4.4, 4.7, 4.9, 5.2, 5.5, 5.8, 6.2, 6.6, 7.3, 9.5, 13.0, 17.0, 25, 40};
-	double* xbins_Probe_pt = new double[9]{4, 4.8, 6, 7.5, 9.5, 12.5, 17.0, 25, 40};
+	double* xbins_Probe_pt = new double[9]{4, 5, 7, 10, 14, 20.0, 40};
 	double* ybins_Probe_abs_eta = new double[10]{0., 0.2, 0.4, 0.6,0.8, 1., 1.2,  1.4, 1.6, 1.8};
-	double* ybins_Mm_dR = new double[9]{0., 0.1, 0.2, 0.3,0.4,0.5,0.6,0.7,0.8 };
+	double* ybins_Mm_dR = new double[7]{0., 0.1, 0.2, 0.3,0.4,0.6,0.8 };
 
-	compute2d("Offline",false, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 9,10,MuonId);
-	compute2d("MinBias",true, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 9,10,MuonId);
+	compute2d("Offline",false, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
+	compute2d("MinBias",true, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
 
-	compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,9,9, MuonId);
-	compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,9,9, MuonId);
+	compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
+	compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
 }
 
 
@@ -202,7 +202,7 @@ void compute2d(string dataset, bool DataIsMC, string xquantity, string yquantity
 	}
 
 	generatedFile->cd("/");
-	get_efficiency_TH2D(hist_all_nominal,    hist_pass_nominal,    xquantity, yquantity, MuonId, "Nominal"   );
+	get_efficiency_TH2D(hist_all_nominal,    hist_pass_nominal, DataIsMC,   xquantity, yquantity, MuonId, "Nominal"   );
 	// get_efficiency_TH2D(hist_all_2gauss,     hist_pass_2gauss,     xquantity, yquantity, MuonId, "2xGauss"   );
 	// get_efficiency_TH2D(hist_all_massup,     hist_pass_massup,     xquantity, yquantity, MuonId, "MassUp"    );
 	// get_efficiency_TH2D(hist_all_massdown,   hist_pass_massdown,   xquantity, yquantity, MuonId, "MassDown"  );

@@ -107,7 +107,7 @@ void Compute_Factor(string quantity_str,bool isBarrel=false, bool isEndcap=false
         RooDataSet *Data_bin  = new RooDataSet("DATA", "DATA", tree, ((isBarrel||isEndcap) ? RooArgSet(trigger,Mm_mass,isBarrelMuon,quantity) : RooArgSet(trigger,Mm_mass,quantity)),*reduce);
         double bin_entries = Data_bin->sumEntries();
         double scale_factor = eff_off->GetEfficiency(i+1)/eff_MinBias->GetEfficiency(i+1);
-        double scale_factor_unc = abs(eff_off->GetEfficiency(i+1)-eff_MinBias->GetEfficiency(i+1));
+        // double scale_factor_unc = abs(eff_off->GetEfficiency(i+1)-eff_MinBias->GetEfficiency(i+1));
         // cout<< i <<" scale factor : "<< scale_factor<< "+/-" << scale_factor_unc << "% \n" << "bin entries : "<<bin_entries<<"\n";
         kin_integral_sf += bin_entries * scale_factor;
         kin_integral_sf_unc += bin_entries * scale_factor_unc;

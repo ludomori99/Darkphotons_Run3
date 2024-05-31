@@ -41,7 +41,6 @@ test_or_depl='depl'
 # python3 $DPUSER/pull_data/MC_lmDY/slurm_submit_lmDY.py
 
 
-
 ### Extract with slurm the Inclusive Min Bias dilepton inclusive 
 # bash $DPUSER/pull_data/MC_InclusiveMinBias/run_try.sh # for testing the script
 
@@ -56,7 +55,6 @@ test_or_depl='depl'
 # bash $DPUSER/utils/scan_logs.sh "MC_InclusiveMinBias/logs"
 # bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
 
-
 # need to wait until extraction is completed
 # bash $DPUSER/pull_data/MC_InclusiveMinBias/merge_final.sh
 
@@ -65,8 +63,8 @@ test_or_depl='depl'
 ########### END OF EXTRACTION ##################### 
 
 
-######### SKIM DATA FOR BDT #######################
-python3 $DPUSER/utils/skim_mass.py $test_or_depl
+######## SKIM DATA FOR BDT #######################
+# python3 $DPUSER/utils/skim_mass.py $test_or_depl
 
 
 ############## EXECUTE TRAINING ON SKIMMED DATA #################
@@ -77,29 +75,37 @@ python3 $DPUSER/utils/skim_mass.py $test_or_depl
 # jupyter nbconvert --to notebook --execute $DPUSER/BDT/view_training.ipynb --output view_training_compiled.ipynb
 
 
-############# STORE BDT SCORE IN DATA FILE ########################
+########### STORE BDT SCORE IN DATA FILE (merged_A scheme) ########################
 # python3 $DPUSER/BDT/evaluate_BDT.py
 
 
 ############# PERFORM SPLOT ###############
+# splot on MC is not used anymore in practice but we keep the structure. will be changed
 
 # root -l -b -q ${DPUSER}utils/sPlot.C\(\"Y\"\,1\)
-# root -l -b -q ${DPUSER}utils/sPlot.C\(\"Y\"\,0\)
 # root -l -b -q ${DPUSER}utils/sPlot.C\(\"Jpsi\"\,1\)
 # root -l -b -q ${DPUSER}utils/sPlot.C\(\"Jpsi\"\,0\)
+# root -l -b -q ${DPUSER}utils/sPlot.C\(\"Y\"\,0\)
 
 ######## LOOK AT SIGNAL MODEL #############
 
 
-# root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\)
+# root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\,500000\)
 # root -l -b -q ${DPUSER}fits/plot_fit.C\(\)
+# root -l -b -q ${DPUSER}fits/multi_fit.C\(\)
 # root -l -b -q ${DPUSER}fits/sandbox.C\(\)
 
 
 ########## Tag and probe #################
 
-# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C
+root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C 
+root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency2D.C
+# source ${DPUSER}tagnprobe/CMS-tutorial/src/scan_fits.sh
 
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Compute_Factor.C\(\"Probe_pt\"\)
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Compute_Factor.C\(\"Probe_abs_eta\"\)
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Compute_Factor.C\(\"Probe_eta\"\)
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Compute_Factor.C\(\"Mm_dR\"\)
 
 #####################################
 #####  Now look to select the actual data ########
@@ -107,30 +113,33 @@ python3 $DPUSER/utils/skim_mass.py $test_or_depl
 
 ####Evaluate the BDT on the offline data dump
 # python3 $DPUSER/BDT/evaluate_dump/slurm_evaluate_dump.py
+# bash $DPUSER/utils/scan_logs.sh "offline/logs/eval_BDT"
 
 
-####Evaluate the BDT on the MC data dump
-# python3 $DPUSER/BDT/evaluate_dump/slurm_evaluate_dump_MC.py
-
-
-# cd ${DPUSER}CMSSW_12_6_5/src
-# cmsenv
-# cd ${DPUSER}
-
+# Obsolete
 #Compute global efficiencies (for now, could also do in different phase space slices)
 # root -l -b -q ${DPUSER}utils/compute_total_efficiencies.C
 
+
+
+####### LIMITS ############
 # ##### create mass histogramm
-# root -l -b -q ${DPUSER}utils/make_hist.C
+# root -l -b -q ${DPUSER}limits/make_hist.C
 
 
+# next block need to execute within cmssw-el7 
+#go into default cmssenv (CMSSW_13); activate the image with cmssw-el7 ; go into CMSSW_12 ;  run makecards, limitprocessing;  source /work/submit/mori25/Darkphotons_ludo/pipelines/lowmass_offline_pipeline.sh
+# cd ${DPUSERBASE}CMSSW_12_6_5/src; 
+# cmsenv; 
+# cd ${DPUSERBASE};
 # # ##### make cards out of histogram (edit the systematics manually)
-# root -l -b -q ${DPUSER}utils/makeCardsAndWS.C
+# root -l -b -q ${DPUSER}limits/makeCardsAndWS.C
 
 
-# #### run combine (need to install it. see https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/)
-# python3 ${DPUSER}utils/limitprocessing.py
-# mv higgsCombinea* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/30_11/
+# # #### run combine (need to install it. see https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/)
+# python3 ${DPUSER}limits/limitprocessing.py
+# mv higgsCombinea* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/22_5/output_expected
+# mv roostats* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/22_5/stats/
 
-# ### plot limits
-# python3 ${DPUSER}utils/plot_limits.py
+# # ### plot limits
+# python3 ${DPUSER}limits/plot_limits.py

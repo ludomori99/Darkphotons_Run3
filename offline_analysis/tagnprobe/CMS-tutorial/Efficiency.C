@@ -1,3 +1,4 @@
+#include "src/CMS.C"
 #include "src/compare_efficiency.C"
 #include "src/DoFit.cpp"
 #include "src/get_conditions.cpp"
@@ -24,21 +25,6 @@ void Efficiency(){
 
     string MuonId = "PassingProbeSoftId";
 
-    // compute_eff(true,"Probe_eta",MuonId);
-    // compute_eff(false,"Probe_eta",MuonId);
-    // compare_efficiency("Probe_eta", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/inBias.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_eta/Efficiency_Run3.root")).c_str(),
-    //      MuonId);
-    
-    // compute_eff(true,"Probe_abs_eta",MuonId);
-    // compute_eff(false,"Probe_abs_eta",MuonId);
-    // compare_efficiency("Probe_abs_eta", 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/inBias.root")).c_str(), 
-    //     (string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/Probe_abs_eta/Efficiency_Run3.root")).c_str(),
-    //     MuonId);
-
-
     full_study("Probe_pt", MuonId, false);
     full_study("Mm_dR", MuonId, false);
     full_study("Probe_eta", MuonId, false);
@@ -57,8 +43,8 @@ void full_study(string quantity, string MuonId, bool barrelVsEndcap){
     paths["Eff_Offline"] = eff_offline_str.c_str();
 
 
-    // compute_eff(paths, "MinBias",true,quantity,MuonId);
-    // compute_eff(paths, "Offline",false,quantity,MuonId);
+    compute_eff(paths, "MinBias",true,quantity,MuonId);
+    compute_eff(paths, "Offline",false,quantity,MuonId);
     // if (barrelVsEndcap){
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, true,false);
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, false,true);

@@ -1,5 +1,5 @@
 
-TH2D* get_efficiency_TH2D(TH2D* hall, TH2D* hpass, string xquantity, string yquantity, string MuonId, string prefix_name = "")
+TH2D* get_efficiency_TH2D(TH2D* hall, TH2D* hpass, bool DataIsMC, string xquantity, string yquantity, string MuonId, string prefix_name = "")
 {
 	TH2D* heff  = (TH2D*)hall ->Clone();
 
@@ -14,8 +14,13 @@ TH2D* get_efficiency_TH2D(TH2D* hall, TH2D* hpass, string xquantity, string yqua
 			double unc_pass = hpass->GetBinError(i,j);
 
 			double value     = val_pass/val_all;
-			double uncertain = fabs(value)*sqrt(pow(unc_pass/val_pass, 2) + pow(unc_all/val_all, 2));
-
+			double uncertain;
+			
+			if (DataIsMC) uncertain = sqrt(value*(1-value)/val_all);
+			else {
+				double u_par = fabs(value)*sqrt(pow(unc_pass/val_pass, 2) + pow(unc_all/val_all, 2)); //unc due to fit quality
+				uncertain = sqrt(u_par*u_par + value(1-value)/val_all); //sum in quadrature of fit and normal binomial
+			}
 			heff->SetBinContent(i,j, value);
 			heff->SetBinError(i,j, uncertain);
 		}

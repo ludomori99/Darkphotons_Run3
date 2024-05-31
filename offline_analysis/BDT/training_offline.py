@@ -102,6 +102,8 @@ class Trainer:
         sig = pd.DataFrame(self.full_mass_range[sig_cut]).reset_index(drop=True)
         bkg = pd.DataFrame(self.full_mass_range[bkg_cut]).reset_index(drop=True)
 
+        # train_flag_bkg =  bkg_cut 
+        # train_flag_sig =  sig_cut #len is full_mass_range
 
         #Define data and compute weights
         if prompt_reweight:
@@ -110,6 +112,8 @@ class Trainer:
             nbins_corrections = self.particle_config["models"][self.modelname]["reweighing"]["nbins_corrections"]
 
             sig = sig[sig["Mm_kin_lxy"]<lxy_cutoff].reset_index(drop=True)
+            # train_flag_sig = train_flag_sig[sig["Mm_kin_lxy"]<lxy_cutoff]
+
             sig_prompt_w = self.compute_reweight(sig,'Mm_kin_lxy', nonPrompt_tail,nbins_fit=nbins_fit,nbins_corrections=nbins_corrections,fit_range=(0.1,0.5),fitting_limits=[(0,1)],plot_reweight=plot_reweight,**kwargs)
 
 
@@ -131,6 +135,11 @@ class Trainer:
             bkg = slice_df(bkg,len(sig))
 
         sampled_indices = sig.index
+
+        # train_flag_sig = train_flag_sig[sig.index]
+        # train_flag_bkg = train_flag_bkg[bkg.index]
+
+
 
         self.sig=sig #added these two lines in second moment just to look at masses, maybe will remove
         self.bkg=bkg
@@ -225,7 +234,7 @@ class Trainer:
         if apply_weights:
             weights = [self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + plot_training*[self.weights[self.X_train.index[self.y_train==0]],self.weights[self.X_train.index[self.y_train==1]]]
             if plot_MC: 
-                weights+=[self.MC_full_mass_range["weights_prompt"]]
+                weights+=[self.MC_full_mass_range["weights_prompt"].to_numpy()]
 
         if compute_optimal_cut:
             if apply_weights:
@@ -263,23 +272,25 @@ class Trainer:
         
         if compute_optimal_cut and apply_weights: return ROC_score, sig_eff, bkg_rej
 
-    def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
-        if plot_MC and 'MC_full_mass_range' not in dir(self):
-            print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
-            return
+    # def plot_mass(self,plot_training=False,plot_MC=False,apply_weights=False,density=True,**kwargs):
+    #     #deprecated: messy and doesnt work. Script directly in notebook
+    #     if plot_MC and 'MC_full_mass_range' not in dir(self):
+    #         print("requested to plot MC but have not loaded it before. please include flag include_MC=True in load_data or complete_load.")
+    #         return
  
-        data_to_plot = [self.bkg,self.sig]+plot_MC*[self.MC_mass]
-        labels = ["Bkg.","Sig."]+plot_MC*["MC sig."]
-        weights=None
-        if apply_weights:
-            weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
-                        plot_MC*[self.MC_full_mass_range["weights_prompt"]])
+    #     data_to_plot = [self.bkg["Mm_mass"],self.sig["Mm_mass"]]+plot_MC*[self.MC_mass]
+    #     labels = ["Bkg.","Sig."]+plot_MC*["MC sig."]
+    #     weights=None
+    #     print(np.shape(self.bkg["Mm_mass"]), np.shape(self.weights[self.X_val.index[self.y_val==0]]))
+    #     if apply_weights:
+    #         weights = ([self.weights[self.X_val.index[self.y_val==0]],self.weights[self.X_val.index[self.y_val==1]]] + 
+    #                     plot_MC*[self.MC_full_mass_range["weights_prompt"].to_numpy()])
 
-        self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="masses",**kwargs)
+    #     self.plot_hist(data_to_plot,labels,weights = weights,density=density, xlabel="masses",**kwargs)
        
 
     @staticmethod
-    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot_reweight=False,saveas=None, nonnegative=True, xrange=(0,0.5), plot_logscale=False):
+    def compute_reweight(data,variable,fitting_func, nbins_fit = 100, nbins_corrections=100, fit_range = None, fitting_limits=None, plot_reweight=False,saveas=None, nonnegative=True, xrange=(0,0.5), ylim=None, plot_logscale=False):
         """
         data: ak array, dic-like, containing all events
         variable: string, name of var to compute the reweighing. e.g.: Mm_kin_lxy
@@ -326,28 +337,38 @@ class Trainer:
                 Fitted prompt: {prompt}\n
                 Sum of weights>0 {np.sum(weights[weights>=0])}\n\n""")
 
+        #Bonus to make plot nicer: 
+        pathMClmDY = os.path.join(config["locations"]["MC_lmDY"]["inclusive"],"merged_A.root:tree")
+        treelmDY = up.open(pathMClmDY)
+        lxylmDY=treelmDY["Mm_kin_lxy"].array()
+        lxycut = lxylmDY<0.5
+        dimuonTriggerCut = treelmDY["HLT_DoubleMu4_3_LowMass"].array()==1
+
         if plot_reweight:
             hep.style.use("CMS")
             fig, ax = plt.subplots(figsize=(10,8))
+            hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
             x = np.linspace(0,xe_corr[-1], 1000)
             ax.plot(x,fitting_func(x,*mData.values), label = "Nonprompt tail fit")
             # ax.errorbar(0.5*(xe_corr[:-1] + xe_corr[1:]),histSlxy-fitting_func(0.5*(xe_corr[:-1] + xe_corr[1:]),*mData.values)/dx_fit*dx_corr,xerr = dx_corr/2, label="$J/\psi$ prompt data", color = "green", zorder=0,marker = '.')
             ax.hist(data["Mm_kin_lxy"], nbins_corrections,   label="$J/\psi$ data", color = "orange", zorder=0, histtype='step', linewidth = 1.8)
             ax.hist(data["Mm_kin_lxy"], nbins_corrections,  weights=weights, label="$J/\psi$ data reweighed", color = "brown", zorder=0, histtype='step', linewidth = 1.8)
+            ax.hist(lxylmDY[dimuonTriggerCut&lxycut], nbins_corrections,  weights=None, label="Low-mass DY samples (w/ dimuon trigger)", color = "purple", zorder=0, histtype='step', linewidth = 1.8)
             # ax.hist(data["Mm_kin_lxy"], nbins_corrections,  weights = (data["Mm_kin_lxy"]>fit_range[0]), color = "purple", zorder=0, histtype='bar', linewidth = 1.8, alpha = .2)
             # ax.text(0.2,0.9, f"J/$\psi$ data, sPlot-unfolded $l_{{xy}}$ distribution \nShaded area is nonprompt tail", fontsize = 12, transform=ax.transAxes)
             ax.grid()
-            ax.legend(fontsize=13,frameon=True,edgecolor='black',fancybox=False)    
+            ax.legend()#(fancybox=False)    
             if xrange is not None: ax.set_xlim(xrange)
             # ax.set_ylim(1e-2,1e6)
             ax.set_xlabel("$l_{xy}$")
-            # ax.set_ylim(0,20000)
+            if ylim is not None: ax.set_ylim(ylim)
             if plot_logscale: ax.set_yscale('log')
             ax.set_ylabel("Frequency")    
             plt.show()
-            if saveas is not None: 
-                plt.savefig(saveas)
-                print(f"saved {saveas}")
+            # if saveas is not None: 
+            saveas = "/home/submit/mori25/public_html/figures_thesis/Jpsi_lxy.png"
+            plt.savefig(saveas)
+            print(f"saved {saveas}")
         
         return weights
     
@@ -371,9 +392,10 @@ class Trainer:
         hep.style.use("CMS")
         colors = plt.cm.tab10.colors
         fig, ax = plt.subplots(figsize=(12,9))
-        hep.cms.text("Preliminary")
+        hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
         if weights is not None:
             for d,w,name,c in zip(data,weights,names,colors[:len(data)]):
+                # print(d,w,name) 
                 ax.hist(d, bins = nbins, weights=w, range = xlim, label=name, color=c, density = density, log=log, histtype='step', linewidth=2)
                 # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
         else: 
@@ -385,8 +407,8 @@ class Trainer:
         if int_xticks: ax.xaxis.get_major_locator().set_params(integer=True)
         ax.set_ylabel('Normalized frequency')
         ax.set_xlim(xlim)
-        ax.legend(fontsize=13,frameon=True,edgecolor='black',fancybox=False)
-        ax.grid(True)
+        ax.legend()#(fontsize=13,frameon=True,edgecolor='black',fancybox=False)
+        # ax.grid(True)
         if saveas: 
             plt.savefig(saveas)
             print(f"saved figure as {saveas}")
@@ -407,7 +429,7 @@ class Trainer:
         if int_xticks: ax.xaxis.get_major_locator().set_params(integer=True)
         ax.set_xlim(xlim)
         ax.legend(fontsize=13,frameon=True,edgecolor='black',fancybox=False)
-        ax.grid(True)
+        # ax.grid(True)
         if saveas: 
             plt.savefig(saveas)
             print(f"saved figure as {saveas}")
@@ -468,11 +490,11 @@ def plot_ROC_train_test(trainers,labels, tmva=None, log = False,n_points=20):
     plt.show()
     return 
 
-def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
+def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, text= "",textpos=(0.02,0.6),textsize=14, log = False):
     hep.style.use("CMS")
     colors = plt.cm.tab10.colors
     fig, ax = plt.subplots(figsize=(9,9))
-    hep.cms.text("Preliminary")
+    hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
 
     dis = np.linspace(0.001,0.999,n_points)
 
@@ -498,10 +520,11 @@ def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
         sig_eff_test,bkg_rej_test = np.vectorize(compute_ROC_point)(dis)        
         ax.scatter(sig_eff_test, bkg_rej_test, color =c1, zorder=0, label = l)
         ax.plot(sig_eff_test, bkg_rej_test, lw=1.3, color = c1)
-    
+
+    ax.text(*textpos, text, fontsize=textsize, transform=ax.transAxes) 
     ax.set_xlabel('Signal efficiency')
     ax.set_ylabel('Background rejection')
-    ax.grid(True)
+    # ax.grid(True)
 
     if tmva: 
         ax.scatter(tmva["sig_eff_test_tmva"], tmva["bkg_rej_test_tmva"], color = "blue", zorder=0, label = "TMVA test")
@@ -509,7 +532,7 @@ def plot_ROC(trainers,labels,evals, n_points = 50, tmva=None, log = False):
         ax.scatter(tmva["sig_eff_train_tmva"], tmva["bkg_rej_train_tmva"], color ="red", zorder=0, label = "TMVA train")
         ax.plot(tmva["sig_eff_train_tmva"], tmva["bkg_rej_train_tmva"], lw=1.3, color = "red")
     
-    ax.legend(fontsize=13,frameon=True,edgecolor='black',fancybox=False)
+    ax.legend()#(fontsize=13,frameon=True,edgecolor='black',fancybox=False)
     plt.show()
     return 
 
@@ -615,8 +638,8 @@ def add_branch_weights_prompt():
 if __name__ == "__main__":
     # train_prompt_Jpsi()
     
-    save_Jpsi_weights()
-    add_branch_weights_prompt()
+    # save_Jpsi_weights()
+    # add_branch_weights_prompt()
 
     # Y_trainer = Trainer("Y", 'forest_ID')
     # Y_trainer.complete_load(signal_indices=[1],include_MC=True)
@@ -661,4 +684,10 @@ if __name__ == "__main__":
     # Jpsi_trainer = Trainer("Jpsi",'forest_prompt_noPromptCut')
     # Jpsi_trainer.complete_train(prompt_reweight=True, w_frac_bkg=0.325,include_MC=True)
     # Jpsi_trainer.plot_model(plot_MC=True, saveas=config["locations"]["public_html"]+"BDTs/Jpsi/Jpsi_forest_prompt_noPromptCut.png",apply_weights=True,compute_optimal_cut=True)
-    
+
+    modelname = "forest_standard"
+    Y_forest_on_Jpsi_corr = Trainer("Y", modelname)
+    Y_forest_on_Jpsi_corr.load_data("Jpsi", include_MC=True)
+    Y_forest_on_Jpsi_corr.prepare_training_set(data_particle="Jpsi",prompt_reweight=True,plot_reweight=True, plot_logscale=True,ylim= [1e2,1e6])
+    Y_forest_on_Jpsi_corr.load_model()
+    # Y_forest_on_Jpsi_corr.plot_model(apply_weights=True,density=True, plot_MC=True)

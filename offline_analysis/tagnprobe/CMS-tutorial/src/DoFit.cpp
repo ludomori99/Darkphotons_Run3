@@ -1,4 +1,3 @@
-#include "tdrstyle.C"
 using namespace RooFit;
 
 double* doFit(const char* filepath, string condition, string MuonID_str, string quant, double* init_conditions, bool isBarrel, bool isEndcap, bool save = true) // RETURNS ARRAY WITH [yield_all, yield_pass, err_all, err_pass]    ->   OUTPUT ARRAY
@@ -119,6 +118,7 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
 
     c_all->Divide(1,2);
     c_all->cd(1);
+
     RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
 
     frame->SetTitle((MuonID_str + string("; ALL")).c_str());
@@ -174,7 +174,9 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     label_2.Draw();     
     leg.Draw();
 
+    CMS(c_all);
 
+    
     c_all->cd(2);
     RooHist *hpull = frame->pullHist("data", "Full model"); //massModel->GetName());
     RooPlot *frame_pulls = Mm_mass.frame(Title("Pull"));
@@ -265,6 +267,8 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     frame_pass->Draw();
     leg_pass.Draw();
     label_pass.Draw();     
+
+    CMS(c_pass);
 
     c_pass->cd(2);
     RooHist *hpull_pass = frame_pass->pullHist("data", "Full model"); //massModel->GetName());

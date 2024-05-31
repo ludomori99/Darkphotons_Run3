@@ -220,7 +220,7 @@ class Systematics:
         hep.style.use("CMS")
         colors = ["orange","red","blue","green"]
         fig, ax = plt.subplots(figsize=(9,9))
-        hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"])
+        hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"],com=config["com"])
 
         dis = np.linspace(0.001,0.999,n_points)
         bkg = {"data":self.scoreData, "name":"bkg", "weights":self.normalized_sweights_data_bkg}
@@ -281,17 +281,37 @@ class Systematics:
         max_cut = BDT_vals[max_idx]
         max_significance = significance_vals[0][max_idx]
         sig_eff = significance_vals[1][max_idx]/stot
-        bkg_rej = 1 - significance_vals[2][max_idx]/btot
-        text = f"max cut={round(max_cut,3)}\nsig. eff.={round(sig_eff,3)}\nbkg. rej.={round(bkg_rej,3)}"
-
-
+        bkg_eff = 1 - significance_vals[2][max_idx]/btot
+        text = rf"""W.p. = {round(max_cut,3)}
+$\varepsilon_{{sig}}$ = {round(sig_eff,3)}
+$\varepsilon_{{bkg}}$ = {round(bkg_eff,3)}"""
+        
+        text_id_ar = fr"""$\varepsilon_{{sig}}^*$ = {round(sig_eff,3)}
+$\varepsilon_{{bkg}}^*$ = {round(bkg_eff,3)}"""
+        
+        if mva_or_ID == 'ID' :
+            alt_cut = 0.4
+            alt_significance = significance_vals[0][np.argmin(np.abs(BDT_vals-alt_cut))]
+            sig_eff_alt = significance_vals[1][np.argmin(np.abs(BDT_vals-alt_cut))]/stot
+            bkg_eff_alt = 1 - significance_vals[2][np.argmin(np.abs(BDT_vals-alt_cut))]/btot
+            # text_tuned = fr"Cut point (tuned) = {round(alt_cut,3)}\n $\varepsilon_{{sig}}^{{t}}$ = {round(sig_eff_alt,3)}\n$\varepsilon_{{bkg}}^{{t}}$ = {round(bkg_eff_alt,3)}"
+            text_tuned=fr"""$\varepsilon_{{sig}}^{{ar.}}$ = {round(sig_eff_alt,3)}
+$\varepsilon_{{bkg}}^{{ar.}}$ = {round(bkg_eff_alt,3)}"""
         hep.style.use("CMS")
         plt.figure(figsize=(10, 8))
+        hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
         plt.plot(BDT_vals, significance_vals[0],label="Significance")
-        plt.scatter([max_cut],[max_significance],label="Optimal point",c='red')
-        plt.xlabel('Prompt Jpsi BDT cut' if mva_or_ID=="mva" else 'ID cut')
+        plt.scatter([max_cut],[max_significance],label="Arithmetic w.p.",c='red')
+        ax = plt.gca()
+        if mva_or_ID == "ID":
+            plt.scatter([alt_cut],[alt_significance],label="Used w.p.",c='green')
+            # plt.text(0.1,0.45,text_tuned, fontsize=14, bbox=dict(facecolor='white', edgecolor='black'),transform=ax.transAxes) 
+            plt.text(0.38,0.85,text_id_ar, fontsize=14) 
+            plt.text(0.31,0.85,text_tuned, fontsize=14) 
+        else:
+            plt.text(0.1,0.76,text, fontsize=14, bbox=dict(facecolor='white'),transform=ax.transAxes) 
+        print("working point : ",  max_cut)
+        plt.xlabel('Prompt Jpsi BDT cut' if mva_or_ID=="mva" else 'Muon Soft MVA cut')
         plt.ylabel('Significance $s/\sqrt{b}$')
         plt.legend()
-        ax = plt.gca()
-        plt.text(0.1,0.6,text, fontsize=14, bbox=dict(facecolor='white'),transform=ax.transAxes) 
         plt.show()

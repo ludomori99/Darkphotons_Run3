@@ -69,7 +69,7 @@ void makeCardsAndWS(){
 	//LUMINOSITY
 	double luminosity = 34291.449027853321075;//pb-1
 
-	int num_mass_regions = 278;
+	int num_mass_regions = 3; //278;
     float growth_factor = 0.005;
 
 	//WORKING POINTS
@@ -243,8 +243,8 @@ void makeCardsAndWS(){
 		RooWorkspace dpworkspace("dpworkspace", "");
 		dpworkspace.import(data_obs_CatA);
 		dpworkspace.import(signalModel_CatA);
-		// dpworkspace.import(bkg_model_2022);
-		dpworkspace.import(bkg_model_bern4_2022);
+		dpworkspace.import(bkg_model_2022);
+		// dpworkspace.import(bkg_model_bern4_2022);
 		dpworkspace.writeToFile(Form("/data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit/dpWorkspace"+year+suff+"_%d.root",i));
 
 		//write the datacard
@@ -268,6 +268,7 @@ void makeCardsAndWS(){
 		newcardShape << Form("eff_mu_2022 lnN	1.071 	-\n");
 		newcardShape << Form("sig_model_unc lnN	1.045 	-\n");
 		newcardShape << Form("id_eff_mva_2022 lnN	%f 	-\n", ID_eff_unc);
+		newcardShape << Form("pdf_index_2022 discrete");
 		//newcardShape << Form("bkg_norm_cata rateParam CatA bkg_mass %f\n",catA->Integral());
 		//newcardShape << Form("resA param %f %f\n",resA.getValV(),resA.getValV()*0.1);
 		newcardShape.close();

@@ -11,9 +11,8 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
 
     const char* nameScheme[][2] = {
         {"#Upsilon data", "J/#psi data"},
-        {"Real data",     "Simulated data"},
-        {"Real data",     "Simulated data"}
-    };
+        {"Offline data",     "Inclusive MinBias"}
+};
 
     int useScheme = 1;
     //Upsilon vs Jpsi
@@ -35,8 +34,9 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     //Create canvas
     TCanvas* c1 = new TCanvas("Comparison","Comparison",1200,800);
     //gStyle->SetOptTitle(0);
+    setTDRStyle();
+    CMS(c1);
     c1->SetMargin(0.10, 0.03, 0.11, 0.07);
-
 
     //Plot
     pEffMC->SetMarkerColor(colorScheme[useScheme][0]);
@@ -48,25 +48,21 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     
     if (quantity == "Probe_pt")
     {
-        pEffMC->SetTitle("Efficiency of Tracker Probe Muon;p_{T} [GeV/c];Efficiency");
+        pEffMC->SetTitle(";p_{T} [GeV/c];Efficiency");
     }
     if (quantity == "Probe_eta")
     {
-        pEffMC->SetTitle("Efficiency of Tracker Probe Muon;#eta;Efficiency");
+        pEffMC->SetTitle(";#eta;Efficiency");
     }
     if (quantity == "Probe_abs_eta")
     {
-        pEffMC->SetTitle("Efficiency of Tracker Probe Muon;|#eta|;Efficiency");
+        pEffMC->SetTitle(";|#eta|;Efficiency");
     }
     if (quantity == "Mm_dR")
     {
-        pEffMC->SetTitle("Efficiency of Tracker Probe Muon;dR;Efficiency");
+        pEffMC->SetTitle(";#Delta R;Efficiency");
     }
 
-    pEffOffline->SetMarkerColor(colorScheme[useScheme][1]);
-    pEffOffline->SetLineColor(colorScheme[useScheme][1]);
-    pEffOffline->SetMarkerStyle(21);
-    pEffOffline->Draw("same");
 
     //Set range in y axis
     gPad->Update();
@@ -103,6 +99,11 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
         graph->SetMaximum(1.05);
     }
 
+    pEffOffline->SetMarkerColor(colorScheme[useScheme][1]);
+    pEffOffline->SetLineColor(colorScheme[useScheme][1]);
+    pEffOffline->SetMarkerStyle(21);
+    pEffOffline->Draw("same");
+
     //Legenda
     TLegend* tl = new TLegend(0.68,0.78,0.94,0.88);
     tl->SetTextSize(0.03);
@@ -123,13 +124,13 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     label.Draw();     
     
 
-    //CMS Open Data
-    TLatex* txCOD = new TLatex();
-    txCOD->SetTextSize(0.04);
-    txCOD->SetTextAlign(12);
-    txCOD->SetTextFont(42);
-    txCOD->SetNDC(kTRUE);
-    txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
+    // //CMS Open Data
+    // TLatex* txCOD = new TLatex();
+    // txCOD->SetTextSize(0.04);
+    // txCOD->SetTextAlign(12);
+    // txCOD->SetTextFont(42);
+    // txCOD->SetNDC(kTRUE);
+    // txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
 
     //Results stored in...
     string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/")  + quantity + string("/");
@@ -173,7 +174,7 @@ void compare_plot_BarrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
 
     const char* nameScheme[][4] = {
         {"#Upsilon data", "J/#psi data", " ", " "},
-        {"Offline trigger barrel", "Offline trigger endcap",  "Inclusive MinBias barrel", "Inclusive MinBias endcap"}
+        {"Offline data barrel", "Offline data endcap",  "Inclusive MinBias barrel", "Inclusive MinBias endcap"}
     };
 
     int useScheme = 1;
@@ -191,6 +192,7 @@ void compare_plot_BarrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     //Create canvas
     TCanvas* c1 = new TCanvas("Comparison","Comparison",1200,800);
     //gStyle->SetOptTitle(0);
+
     c1->SetMargin(0.10, 0.03, 0.11, 0.07);
 
     //Plot
@@ -203,19 +205,19 @@ void compare_plot_BarrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     
     if (quantity == "Probe_pt")
     {
-        pEffMCBarrel->SetTitle("Efficiency of Tracker Probe Muon;p_{T} [GeV/c];Efficiency");
+        pEffMCBarrel->SetTitle(";p_{T} [GeV/c];Efficiency");
     }
     if (quantity == "Probe_eta")
     {
-        pEffMCBarrel->SetTitle("Efficiency of Tracker Probe Muon;#eta;Efficiency");
+        pEffMCBarrel->SetTitle(";#eta;Efficiency");
     }
     if (quantity == "Probe_abs_eta")
     {
-        pEffMCBarrel->SetTitle("Efficiency of Tracker Probe Muon;|#eta|;Efficiency");
+        pEffMCBarrel->SetTitle(";|#eta|;Efficiency");
     }
     if (quantity == "Mm_dR")
     {
-        pEffMCBarrel->SetTitle("Efficiency of Tracker Probe Muon;dR;Efficiency");
+        pEffMCBarrel->SetTitle(";#Delta R;Efficiency");
     }
 
     //Set range in y axis

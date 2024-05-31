@@ -44,6 +44,9 @@ double* McYield(const char* data_filepath, string condition, string MuonID_str, 
     output[0] = Data_ALL->sumEntries();
     output[1] = Data_PASSING->sumEntries();
 
+    double eps = output[0]/output[1];
+    output[2] = sqrt(eps*(1-eps)/output[0]);
+
     cout<<condition<<":\n"<<"all: "<<output[0]<<"\npass: "<<output[1];
     return output;
 }

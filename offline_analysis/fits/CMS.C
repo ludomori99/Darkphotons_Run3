@@ -162,10 +162,10 @@ void CMS(TPad* pad){
     float t = pad->GetTopMargin();
     float r = pad->GetRightMargin();
     float b = pad->GetBottomMargin();
-    float e = 0.055;
+    float e = 0.06;
 
     float relPosX    = 0.045;
-    float relPosY    = 0.035;
+    float relPosY    = 0.045;
     float relExtraDY = 1.2;
 
     float posX_ =   l + relPosX*(1-l-r);
@@ -183,11 +183,11 @@ void CMS(TPad* pad){
     TString extraText   = "Preliminary";
     float extraTextFont = 52;  // default is helvetica-italics
     
-    TString lumiText = "34.3 fb^{-1} (13 TeV)";
+    TString lumiText = "62.4 fb^{-1} (13.6 TeV)";
 
-    float lumiTextSize     = 0.6;
-    float lumiTextOffset   = 0.2;
-    float cmsTextSize      = 0.75;
+    float lumiTextSize     = 1.15;
+    float lumiTextOffset   = - 0.15;
+    float cmsTextSize      = 1.35;
     float cmsTextOffset    = 0.1;  
 
     TLatex latex;

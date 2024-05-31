@@ -396,6 +396,9 @@ bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
                     break;
                 }
             }
+            //muons in nMuon : 
+            // (pt > 2 || (pt > 2 && (passed('CutBasedIdLoose') || passed('SoftCutBasedId') || passed('SoftMvaId') || passed('CutBasedIdGlobalHighPt') || passed('CutBasedIdTrkHighPt'))))
+            // equivalent to just pt>2
             if (i_is_dimuon) goodmuons.push_back(i);
         }
         
