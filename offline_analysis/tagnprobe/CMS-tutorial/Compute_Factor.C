@@ -107,16 +107,26 @@ void Compute_Factor(string quantity_str,bool isBarrel=false, bool isEndcap=false
         RooDataSet *Data_bin  = new RooDataSet("DATA", "DATA", tree, ((isBarrel||isEndcap) ? RooArgSet(trigger,Mm_mass,isBarrelMuon,quantity) : RooArgSet(trigger,Mm_mass,quantity)),*reduce);
         double bin_entries = Data_bin->sumEntries();
         double scale_factor = eff_off->GetEfficiency(i+1)/eff_MinBias->GetEfficiency(i+1);
-        // double scale_factor_unc = abs(eff_off->GetEfficiency(i+1)-eff_MinBias->GetEfficiency(i+1));
+        double scale_factor_unc_A = abs(eff_off->GetEfficiency(i+1)-eff_MinBias->GetEfficiency(i+1)); // just efficiency difference
+        double scale_factor_unc_B_up = scale_factor*sqrt(pow(eff_off->GetEfficiencyErrorUp(i+1)/eff_off->GetEfficiency(i+1),2) + pow(eff_MinBias->GetEfficiencyErrorUp(i+1)/eff_MinBias->GetEfficiency(i+1),2)); // integrated CP intervals (asymm.) 
+        double scale_factor_unc_B_low = scale_factor*sqrt(pow(eff_off->GetEfficiencyErrorLow(i+1)/eff_off->GetEfficiency(i+1),2) + pow(eff_MinBias->GetEfficiencyErrorLow(i+1)/eff_MinBias->GetEfficiency(i+1),2));
+
+        double eff_rel_unc_off = (1-eff_off->GetEfficiency(i+1))/eff_off->GetTotalHistogram()->GetBinContent(i+1)/eff_off->GetEfficiency(i+1); //squared relative unc.
+        double eff_rel_unc_MinBias = (1-eff_MinBias->GetEfficiency(i+1))/eff_MinBias->GetTotalHistogram()->GetBinContent(i+1)/eff_MinBias->GetEfficiency(i+1);
+        double scale_factor_unc_C = scale_factor*sqrt(eff_rel_unc_off + eff_rel_unc_MinBias); // binomial error
         // cout<< i <<" scale factor : "<< scale_factor<< "+/-" << scale_factor_unc << "% \n" << "bin entries : "<<bin_entries<<"\n";
         kin_integral_sf += bin_entries * scale_factor;
-        kin_integral_sf_unc += bin_entries * scale_factor_unc;
+        kin_integral_sf_unc_A += bin_entries * scale_factor_unc_A;
+        kin_integral_sf_unc_B_up += bin_entries * scale_factor_unc_B_up;
+        kin_integral_sf_unc_B_low += bin_entries * scale_factor_unc_B_low;
+        kin_integral_sf_unc_C += bin_entries * scale_factor_unc_C;
         total_events += bin_entries;
     }
 
-
     // Use the sum for further calculations or output
-    cout << "total events : " << total_events<< "\nFinal SF: " << kin_integral_sf/total_events << "+/-" << kin_integral_sf_unc/total_events << endl;
+    cout << "total events : " << total_events<< "\nFinal SF: " << kin_integral_sf/total_events << "\nErrors:\nSimple efficiency difference: " << kin_integral_sf_unc_A/total_events ; 
+    cout << "\nClopper-Pearson, upper: " << kin_integral_sf_unc_B_up/total_events << "\nClopper-Pearson, lower: " << kin_integral_sf_unc_B_low/total_events;
+    cout << "\nNormal binomial " <<  kin_integral_sf_unc_C/total_events <<  endl;
 
     return;
 }

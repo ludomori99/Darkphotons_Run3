@@ -18,8 +18,8 @@ TH2D* get_efficiency_TH2D(TH2D* hall, TH2D* hpass, bool DataIsMC, string xquanti
 			
 			if (DataIsMC) uncertain = sqrt(value*(1-value)/val_all);
 			else {
-				double u_par = fabs(value)*sqrt(pow(unc_pass/val_pass, 2) + pow(unc_all/val_all, 2)); //unc due to fit quality
-				uncertain = sqrt(u_par*u_par + value(1-value)/val_all); //sum in quadrature of fit and normal binomial
+				double unc_fit_rel = sqrt(pow(unc_pass/val_pass, 2) + pow(unc_all/val_all, 2)); //unc due to fit quality
+				uncertain = value*sqrt(unc_fit_rel*unc_fit_rel + (1-value)/val_all/value); //sum in quadrature of fit and normal binomial (relative errors)
 			}
 			heff->SetBinContent(i,j, value);
 			heff->SetBinError(i,j, uncertain);

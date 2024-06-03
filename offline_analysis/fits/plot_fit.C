@@ -74,7 +74,6 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
 {
    setTDRStyle();
 
-   TCanvas *cdata = new TCanvas("fit", "fit demo", 2000, 1500);
    RooAbsPdf *sigModel = ws->pdf("sigModel");
    RooAbsPdf *bkgModel = ws->pdf("bkgModel");
    RooAbsPdf *massModel = ws->pdf(modelName);
@@ -82,6 +81,11 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    RooRealVar *Mm_mass = ws->var("Mm_mass");
    RooRealVar *sigYield = ws->var("sigYield");
    RooRealVar *bkgYield = ws->var("bkgYield");
+   auto& data = static_cast<RooDataSet&>(*ws->data("data"));
+
+   //Store logs
+   string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quant + "/" + condition + "_output.log";
+   ofstream logFile((logpath).c_str());
 
    // RooRealVar a("mu", "J/Psi Mass", 3.09809, 0, 1);
    // RooRealVar b("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
@@ -91,8 +95,9 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
 
     massModel->Print("v");
 
+   plot("", Mm_mass, data, massModel, sigYield, bkgYield, logFile, path+"_ALL.png");
 
-   auto& data = static_cast<RooDataSet&>(*ws->data("data"));
+   TCanvas *cdata = new TCanvas("fit", "fit demo", 800, 800);
    cdata->Divide(1, 2);
 
    cdata->cd(1);
@@ -102,15 +107,14 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    massModel->plotOn(frame, Components(*sigModel), Name("SigModel"),DrawOption("F"),FillColor(3), FillStyle(3001), LineColor(0));
    massModel->plotOn(frame, Components(*bkgModel), LineStyle(7), LineColor(2), Name("BkgModel"));
 
-   gPad->SetLeftMargin(0.99) ;
-   gPad->SetBottomMargin(0.02);
-   gPad->SetPad(0.01,0.3,0.99,0.99);
+   gPad->SetLeftMargin(0.15) ;
+   gPad->SetBottomMargin(0.075);
+   gPad->SetPad(0.01,0.25,0.99,0.99);
    frame->GetYaxis()->SetLabelSize(0.05);
    frame->GetYaxis()->SetTitleSize(0.05);
-   frame->GetYaxis()->SetTitleOffset(0.8);
+   frame->GetYaxis()->SetTitleOffset(1.5);
    frame->GetXaxis()->SetLabelSize(0.);
    frame->GetXaxis()->SetTitleSize(0.);
-   frame->Draw();
    
    //compute chisquare
    RooAbsCollection *flparams = massModel->getParameters(data)->selectByAttrib("Constant", kFALSE);
@@ -120,8 +124,8 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    chisquare = frame->chiSquare(modelName, "data", nflparams);
    // cout<<massModel->GetName()<<"\n"<<chisquare;
  
-   TLegend leg(0.8, 0.6, 0.9,0.85);
-   leg.AddEntry(frame->findObject("data"), "Data", "E2");
+   TLegend leg(0.7, 0.6, 0.9,0.85);
+   leg.AddEntry(frame->findObject("data"), "Data", "lep");
    leg.AddEntry(frame->findObject(modelName), "Full model", "l");
    leg.AddEntry(frame->findObject("SigModel"), "Signal model", "f");
    leg.AddEntry(frame->findObject("BkgModel"), "Bkg model", "l");
@@ -129,7 +133,6 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    leg.SetFillStyle(0);
    leg.SetTextSize(0.04);
    leg.SetTextFont(42);
-   leg.Draw();
 
 
    TPaveText *label_2 = new TPaveText(0.25, 0.63, 0.34, 0.78, "NDC");
@@ -141,29 +144,18 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    label_2->SetTextAlign(11);
    TString sYield = to_string(int(round(sigYield->getValV())));
    TString bYield = to_string(int(round(bkgYield->getValV())));
-   TString csquare = to_string(chisquare);
+   TString csquare = to_string(0.01*float(int(round(100*chisquare)))).substr(0,4);
+
    label_2->AddText("N_{sig} = " + sYield);
    label_2->AddText("N_{bkg} = " + bYield);
-   label_2->AddText("#chi^{2} = " + csquare);
+   label_2->AddText("#chi^{2}_{red} = " + csquare);
+
+   frame->Draw();
    label_2->Draw();
+   leg.Draw();
 
-
-   // TPaveText *cms = new TPaveText(0.14, 0.972, 0.3, 0.98, "NDC");
-   // cms->AddText("CMS preliminary");
-   // cms->SetBorderSize(0);
-   // cms->SetFillColor(0);
-   // cms->SetTextSize(0.04);
-   // cms->SetTextFont(42);
-   // cms->Draw();
-
-    //CMS Open Data
-    TLatex* txCOD = new TLatex();
-    txCOD->SetTextSize(0.04);
-    txCOD->SetTextAlign(12);
-    txCOD->SetTextFont(42);
-    txCOD->SetNDC(kTRUE);
-    txCOD->DrawLatex(0.14,0.85,Form("#bf{CMS Preliminary}"));
-   
+   CMS(cdata);
+  
 
    //plot pulls
    cdata->cd(2);
@@ -177,20 +169,20 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    frame2->SetMarkerSize(0.01);
 
    gPad->SetLeftMargin(0.15);
-   gPad->SetPad(0.01, 0.01, 0.99, 0.3);
    gPad->SetTopMargin(0.01);
-   gPad->SetBottomMargin(0.5); 
+   gPad->SetBottomMargin(0.4); 
+   gPad->SetPad(0.01, 0.01, 0.99, 0.25);
    frame2->GetYaxis()->SetNdivisions(202);
    frame2->GetYaxis()->SetRangeUser(-4, 4);
    frame2->GetXaxis()->SetTitle("m_{#mu#mu} [GeV]");
    frame2->GetYaxis()->SetTitle("Pulls");
-   frame2->GetXaxis()->SetTitleSize(0.1);
-   frame2->GetYaxis()->SetTitleSize(0.1);
-   frame2->GetXaxis()->SetLabelSize(0.08);
-   frame2->GetYaxis()->SetLabelSize(0.08);
+   frame2->GetXaxis()->SetTitleSize(0.16);
+   frame2->GetYaxis()->SetTitleSize(0.16);
+   frame2->GetXaxis()->SetLabelSize(0.14);
+   frame2->GetYaxis()->SetLabelSize(0.14);
    frame2->GetXaxis()->SetLabelOffset(0.01);
    frame2->GetYaxis()->SetLabelOffset(0.01);
-   frame2->GetYaxis()->SetTitleOffset(0.1);
+   frame2->GetYaxis()->SetTitleOffset(1.1);
    frame2->GetXaxis()->SetTickLength(0.1);
    gPad->SetFrameFillColor(0);
    gPad->SetFrameBorderMode(0);
@@ -200,14 +192,8 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
 
 
 
-   string s = string(fig_name) + string("_pulls.png");
-   // string* figure_name_str = new string(s);
-   // const char* figure_name = figure_name_str->c_str();
-
+   string s = string(fig_name) + string("_pulls.png")
    vector<double> pulls_fit=pulls(hpull,s);
-
-
-   // CMS_lumi(cdata,4,0);
 
    cdata->Update();
    cdata->SaveAs((string(fig_name)+".png").c_str());
@@ -229,6 +215,7 @@ vector<double> pulls(RooHist* hpull, string outfilename){
             hpull->GetPoint(i,x,point);
             hist_pull->Fill(point);
    }
+   
    hist_pull->Rebin(4);
    //hist_pull->SetMarkerStyle(4);
    //hist_pull->SetMarkerSize(2);
@@ -254,15 +241,15 @@ vector<double> pulls(RooHist* hpull, string outfilename){
    gStyle->SetOptFit(2);
    // cout<< fgauss->GetChisquare() / fgauss->GetNDF()<<"\n"<<fgauss->GetParameter(1)<<"\n"<<fgauss->GetParameter(2) ;
 
-   TPaveText* cms1 = new TPaveText(0.14,0.972,0.3,0.98, "NDC");
-   cms1->AddText("CMS preliminary");
-   cms1->SetBorderSize(0);
-   cms1->SetFillColor(0);
-   cms1->SetTextSize(0.04);
-   cms1->SetTextFont(42);
-   cms1->SetTextAlign(11);
-   //cms->SetTextStyle(2);
-   cms1->Draw();
+   // TPaveText* cms1 = new TPaveText(0.14,0.972,0.3,0.98, "NDC");
+   // cms1->AddText("CMS preliminary");
+   // cms1->SetBorderSize(0);
+   // cms1->SetFillColor(0);
+   // cms1->SetTextSize(0.04);
+   // cms1->SetTextFont(42);
+   // cms1->SetTextAlign(11);
+   // //cms->SetTextStyle(2);
+   // cms1->Draw();
 
    TLegend* leg3 = new TLegend(0.65, 0.7, 0.9,0.85);
    leg3->AddEntry("hist_pull", "Entries", "l");

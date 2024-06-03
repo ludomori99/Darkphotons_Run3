@@ -1,55 +1,10 @@
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "RooBernstein.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "RooAddition.h"
-#include "RooProduct.h"
-#include "RooAbsPdf.h"
-#include "RooFitResult.h"
-#include "RooWorkspace.h"
-#include "RooConstVar.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include <iomanip>
-#include "CMS.C"
-#include "TH1.h"
-#include "TH1F.h"
 
-using namespace RooFit;
-using namespace RooStats;
-using namespace std;
 
-void plot(bool save=true);
-void scatter(map<string, vector<double>>*, const char* );
 
-void sandbox(){
+void fits(){
 
-   plot();
-   //  map<string, vector<double>>* data = new map<string, vector<double>>;
-   //  (*data)["hi"]=vector{1.2,2.0,3.};
-   //  scatter(data,"hi.png");
-
-   // vector<double> bins; 
-   //  int bin_n;
-
-   //  if (true){
-   //      double bins_tmp[] =  {2, 4, 4.2, 4.4, 4.7, 5.0, 5.1, 5.2, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 6.2, 6.4, 6.6, 6.8, 7.3, 9.5, 13.0, 17.0, 40}; // pt
-   //      bin_n = 22;
-   //      bins.assign(bins_tmp, bins_tmp + bin_n + 1);
-   //  }
-
-   //  cout<<bins[12]<<"\n";
-   //  cout<<bins[22];
-}
-void plot(bool save=true){
    TCanvas* canvas  = new TCanvas("42","42",800,800);
     setTDRStyle();
-
     canvas->Divide(1,2);
     canvas->cd(1);
     RooRealVar Mm_mass("Mm_mass", "Mm_mass", 2.6, 3.56);
@@ -57,16 +12,10 @@ void plot(bool save=true){
     RooPlot *frame = Mm_mass.frame(RooFit::Title("Invariant Mass"));
 
     frame->SetTitle("42");
-   //  frame->SetXTitle("#mu^{+}#mu^{-} invariant mass [GeV/c^{2}]");
-
-   //  Data->plotOn(frame,XErrorSize(1), Name("data"), MarkerSize(1.), DrawOption("PZ"));
-
-
     gPad->SetLeftMargin(0.15);
     gPad->SetBottomMargin(0.02);
 
     gPad->SetTopMargin(0.09);
-    
     
     gPad->SetPad(0.01,0.3,0.99,0.99);
     frame->GetYaxis()->SetLabelSize(0.05);
@@ -105,7 +54,7 @@ void plot(bool save=true){
 
    
     canvas->cd(2);
-    RooPlot *frame_pulls = Mm_mass.frame(Title("Pull"));
+    RooPlot *frame_pulls = Mm_mass.frame(RooFit::Title("Pull"));
     TLine* line = new TLine(Mm_mass.getMin(), 0, Mm_mass.getMax(), 0);
     line->SetLineColor(kBlue);
     frame_pulls->addObject(line);
@@ -134,12 +83,50 @@ void plot(bool save=true){
     gPad->SetFrameFillColor(0);
     gPad->SetFrameBorderMode(0);
     frame_pulls->Draw();
-
+   bool save=true;
     if(save)
     {
         canvas->SaveAs("/work/submit/mori25/Darkphotons_ludo/offline_analysis/sandbox.png");
-        // canvas->SaveAs(("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/multi_fit_"+string(name)+"_V_dG.C").c_str());
     }
+}
+
+void effs(){
+
+   TCanvas* c1 = new TCanvas("Comparison","Comparison",1200,900);
+   setTDRStyle();
+   c1->SetMargin(0.15, 0.03, 0.14, 0.9);
+
+   gPad->Update();
+   double y[6] = {3, 8, 1, 10, 5, 7};
+   auto graph = new TGraph(6,y);
+   graph->SetMinimum(0.0);
+   graph->GetYaxis()->SetTitleOffset(0.85);
+   graph->SetMaximum(1.2);
+   gPad->Update();
+
+   graph->GetHistogram()->GetXaxis()->SetRangeUser(0.,80.);
+   graph->SetMinimum(0.86);
+   graph->SetMaximum(1.02);
+
+
+   //Label
+   TPaveText label(0.68, 0.7, 0.94, 0.75, "NDC");
+   label.SetBorderSize(0);
+   label.SetFillColor(0);
+   label.SetTextSize(0.031);
+   label.SetTextFont(42);
+   gStyle->SetStripDecimals(kTRUE);
+   label.SetTextAlign(11);
+   label.AddText("Probe");
+   label.Draw();     
+
+   CMS_single(c1,string("62.4"),string("13.6"));
+
+   bool save=true;
+   if(save)
+   {
+      c1->SaveAs("/work/submit/mori25/Darkphotons_ludo/offline_analysis/sandbox.png");
+   }
 }
 
 void scatter(map<string, vector<double>>* data, const char* outfilename) {
@@ -193,4 +180,8 @@ void scatter(map<string, vector<double>>* data, const char* outfilename) {
    canvas.Update();
    canvas.SaveAs(outfilename);
 
+}
+
+void sandbox(){
+   effs();
 }

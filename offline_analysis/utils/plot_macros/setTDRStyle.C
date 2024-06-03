@@ -1,4 +1,3 @@
-#include "TStyle.h"
 
 void fixOverlay() {
   gPad->RedrawAxis();
@@ -153,65 +152,4 @@ void setTDRStyle() {
 
   tdrStyle->cd();
   
-}
-
-void CMS(TPad* pad){
-    float H = pad->GetWh();
-    float W = pad->GetWw();
-    float l = pad->GetLeftMargin();
-    float t = pad->GetTopMargin();
-    float r = pad->GetRightMargin();
-    float b = pad->GetBottomMargin();
-    float e = 0.055;
-
-    float relPosX    = 0.045;
-    float relPosY    = 0.035;
-    float relExtraDY = 1.2;
-
-    float posX_ =   l + relPosX*(1-l-r);
-    float posY_ = 1-t - relPosY*(1-t-b);
-    
-    int alignY_=1;
-    int alignX_=1;
-    int align_ = 10*alignX_ + alignY_;
-
-
-    TString cmsText     = "CMS";
-    float cmsTextFont   = 61;  // default is helvetic-bold
-
-    bool writeExtraText = true;
-    TString extraText   = "Preliminary";
-    float extraTextFont = 52;  // default is helvetica-italics
-    
-    TString lumiText = "34.3 fb^{-1} (13 TeV)";
-
-    float lumiTextSize     = 0.6;
-    float lumiTextOffset   = 0.2;
-    float cmsTextSize      = 0.75;
-    float cmsTextOffset    = 0.1;  
-
-    TLatex latex;
-    latex.SetNDC();
-    latex.SetTextAngle(0);
-    latex.SetTextColor(kBlack);    
-
-    float extraOverCmsTextSize  = 0.76;
-
-    float extraTextSize = extraOverCmsTextSize*cmsTextSize;
-
-    latex.SetTextFont(42);
-    latex.SetTextAlign(31); 
-    latex.SetTextSize(lumiTextSize*t);    
-    latex.DrawLatex(1-r,1-t+lumiTextOffset*t,lumiText);
-
-    latex.SetTextFont(cmsTextFont);
-    latex.SetTextAlign(11); 
-    latex.SetTextSize(cmsTextSize*t);    
-    latex.DrawLatex(l,1-t+lumiTextOffset*t,cmsText);
-
-    latex.SetTextFont(extraTextFont);
-    latex.SetTextSize(extraTextSize*t);
-    latex.SetTextAlign(align_);
-    latex.DrawLatex(posX_+e, 1-t+lumiTextOffset*t, extraText);      
-    return;
 }

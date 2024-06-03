@@ -281,16 +281,16 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
 
    // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
    RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-   RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");
-   RooRealVar l("l", "Width of BW", 0.0378, 0.001, 10, "GeV");
+   RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.01, 0.1, "GeV");
+   RooRealVar l("l", "Width of BW", 0.0378, 0.01, 0.1, "GeV");
    RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
 
    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
-   RooRealVar nL("nL", "nL CB", 0.8, 0.1,15, "");
-   RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.001, 5, "");
-   RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
-   RooRealVar alphaR("alphaL", "Alpha left CB", 1.7, 0.001, 5, "");
+   RooRealVar nL("nL", "nL CB", 3, 1,15, "");
+   RooRealVar alphaL("alphaR", "Alpha right CB", 3, 1, 5, "");
+   RooRealVar nR("nR", "nR CB", 3, 1,15, "");
+   RooRealVar alphaR("alphaL", "Alpha left CB", 3, 1, 5, "");
    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");
