@@ -34,7 +34,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     //Create canvas
     TCanvas* c1 = new TCanvas("Comparison","Comparison",1200,900);
     setTDRStyle();
-    c1->SetMargin(0.15, 0.03, 0.14, 0.12);
+    c1->SetMargin(0.15, 0.03, 0.12, 0.075); //l,r,b,t
 
     //Plot
     pEffMC->SetMarkerColor(colorScheme[useScheme][0]);
@@ -66,7 +66,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     gPad->Update();
     auto graph = pEffMC->GetPaintedGraph();
     graph->SetMinimum(0.0);
-    graph->GetYaxis()->SetTitleOffset(0.85);
+    graph->GetYaxis()->SetTitleOffset(0.9);
     graph->SetMaximum(1.2);
     gPad->Update();
 
@@ -103,7 +103,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     pEffOffline->Draw("same");
 
     //Legenda
-    TLegend* tl = new TLegend(0.68,0.78,0.94,0.88);
+    TLegend* tl = new TLegend(0.62,0.28,0.88,0.38);
     tl->SetTextSize(0.03);
     tl->SetBorderSize(0);
     tl->AddEntry(pEffOffline, nameScheme[useScheme][0], "lep");
@@ -111,7 +111,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     tl->Draw();
 
     //Label
-    TPaveText label(0.68, 0.7, 0.94, 0.75, "NDC");
+    TPaveText label(0.62, 0.2, 0.94, 0.25, "NDC");
     label.SetBorderSize(0);
     label.SetFillColor(0);
     label.SetTextSize(0.031);
@@ -122,7 +122,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     // label.AddText(string(isBarrel ? "|#eta|<1.43" : "") + string(isEndcap ? "|#eta|>1.43" : "" ).c_str());
     label.Draw();     
     
-    CMS_single(c1,string("62.4"),string("13.6"),0.7);
+    CMS_single(c1,string("62.4"),string("13.6"),0.5);
 
     //Results stored in...
     string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/")  + quantity + string("/");

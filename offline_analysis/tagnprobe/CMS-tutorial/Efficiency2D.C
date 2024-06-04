@@ -1,5 +1,6 @@
 #include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/CMS.C"
 #include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/setTDRStyle.C"
+#include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/sandbox.C"
 #include "2D/create_TH2D.h"
 #include "2D/DoFit2D.cpp"
 #include "2D/McYield2D.cpp"
@@ -13,6 +14,8 @@ void compute2d(string dataset, bool DataIsMC, string xquantity, string yquantity
 
 
 void Efficiency2D(){
+
+	sandbox(); //To absorb the weirdly behaving text in the first plot
 
 	string MuonId   = "PassingProbeSoftId";
 

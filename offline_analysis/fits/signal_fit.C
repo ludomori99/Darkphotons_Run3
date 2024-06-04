@@ -16,8 +16,6 @@
 #include "TCanvas.h"
 #include "TLegend.h"
 #include <iomanip>
-
-#include "tdrstyle.C"
 #include "TH1.h"
 #include "TH1F.h"
 

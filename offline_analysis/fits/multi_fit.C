@@ -18,6 +18,7 @@ void multi_fit(int event_frac = 15)
     TTree *DataTree_Psi2 = (TTree*)File_Psi2->Get(("tree"));
 
 
+
     // Very annoying, as per root forum need to rename mass variables in ntuples if want to do simfit. 
 
     RooRealVar Mm_mass_Phi("Mm_mass_Phi", "Mm_mass_Phi", 0.85, 1.17);
@@ -77,6 +78,12 @@ void multi_fit(int event_frac = 15)
 
     //Choice to make: Gassian or Voigtian? 
 
+    // string model = "VdCB";
+    // string model = "GdCB";
+
+    string model = "VdCB_fixReso";
+    // string model = "GdCB_fixReso";
+
     //Gaussian
 
     // RooGaussian Gaussian_Phi("Gaussian_Phi", "Gaussian_Phi", Mm_mass_Phi, mu_Phi, sigma_V_Phi);
@@ -87,10 +94,10 @@ void multi_fit(int event_frac = 15)
     // RooAddPdf sigModel_Jpsi("sigModel_Jpsi", "J/psi mass model", RooArgList(Gaussian_Jpsi, CB_Jpsi), GaussFraction);
     // RooAddPdf sigModel_Psi2("sigModel_Psi2", "psi2 mass model", RooArgList(Gaussian_Psi2, CB_Psi2), GaussFraction);
 
+
     //Voigtian
 
     RooRealVar reso_l("reso_l", "Width of BW", 0.001, 0.001, 0.1, "");
-    // reso_l.setConstant(kTRUE);
 
     RooFormulaVar l_Phi("l_Phi", "reso_l*mu_Phi*q_Phi", RooArgList(reso_l, mu_Phi, q_Phi));
     RooFormulaVar l_Jpsi("l_Jpsi", "reso_l*mu_Jpsi", RooArgList(reso_l, mu_Jpsi));
@@ -103,6 +110,20 @@ void multi_fit(int event_frac = 15)
     RooAddPdf sigModel_Jpsi("sigModel_Jpsi", "J/psi mass model", RooArgList(Voigtian_Jpsi, CB_Jpsi), GaussFraction);
     RooAddPdf sigModel_Psi2("sigModel_Psi2", "psi2 mass model", RooArgList(Voigtian_Psi2, CB_Psi2), GaussFraction);
     // --------------------------------------
+
+
+    //fix reso
+
+    q_Phi.setConstant(kTRUE);
+    ql_Phi.setConstant(kTRUE);
+    qr_Phi.setConstant(kTRUE);
+    q_Psi2.setConstant(kTRUE);
+    qr_Psi2.setConstant(kTRUE);
+    ql_Psi2.setConstant(kTRUE);
+
+    // reso_l.setConstant(kTRUE);
+
+
 
     // Make three separate bkg models 
 
@@ -138,6 +159,7 @@ void multi_fit(int event_frac = 15)
     model_Jpsi      = new RooAddPdf("model_Jpsi","model_Jpsi", RooArgList(sigModel_Jpsi, bkgModel_Jpsi),RooArgList(n_signal_Jpsi, n_bkg_Jpsi));
     model_Psi2      = new RooAddPdf("model_Psi2","model_Psi2", RooArgList(sigModel_Psi2, bkgModel_Psi2),RooArgList(n_signal_Psi2, n_bkg_Psi2));
 
+
     // SIMULTANEOUS FIT
     RooCategory sample("sample","sample") ;
     sample.defineType("Phi") ;
@@ -154,21 +176,18 @@ void multi_fit(int event_frac = 15)
     simPdf.addPdf(*model_Psi2,"Psi2");
 
     //Store logs
-    string logpath =  string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/")+string("Multi_fit_output_VdCB.log");
+    string logpath =  string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/")+string("Multi_fit_output_") + model + string(".log");
     ofstream logFile((logpath).c_str());
     
     RooFitResult* fitres = new RooFitResult;
     fitres = simPdf.fitTo(combData, RooFit::Save(), RooFit::Strategy(1)); //, RooFit::Minos());
     fitres->printMultiline(logFile,0,true);
 
-    // RooRealVar* yield_ALL = (RooRealVar*) fitres->floatParsFinal().find("n_signal_total");
-    // RooRealVar* yield_PASS = (RooRealVar*) fitres->floatParsFinal().find("n_signal_total_pass");
-
     string path = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/multi_fit_";
 
-    plot("_Phi", Mm_mass_Phi, Data_Phi, model_Phi, n_signal_Phi, n_bkg_Phi, logFile, path + "Phi_VdCB.png");
-    plot("_Jpsi", Mm_mass_Jpsi, Data_Jpsi, model_Jpsi, n_signal_Jpsi, n_bkg_Jpsi, logFile,path + "Jpsi_VdCB.png");
-    plot("_Psi2", Mm_mass_Psi2, Data_Psi2, model_Psi2, n_signal_Psi2, n_bkg_Psi2, logFile,path + "Psi2_VdCB.png");
+    plot("_Phi", Mm_mass_Phi, Data_Phi, model_Phi, n_signal_Phi, n_bkg_Phi, logFile, path + "Phi_" + model + string(".png"));
+    plot("_Jpsi", Mm_mass_Jpsi, Data_Jpsi, model_Jpsi, n_signal_Jpsi, n_bkg_Jpsi, logFile,path + "Jpsi_" + model + string(".png"));
+    plot("_Psi2", Mm_mass_Psi2, Data_Psi2, model_Psi2, n_signal_Psi2, n_bkg_Psi2, logFile,path + "Psi2_" + model + string(".png"));
 
     logFile.close();
     return;

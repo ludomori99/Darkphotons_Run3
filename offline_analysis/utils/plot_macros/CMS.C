@@ -69,7 +69,7 @@ void CMS_single(TPad* pad,string lumi="62.4", string com="13.6", float extra_fac
     float t = pad->GetTopMargin();
     float r = pad->GetRightMargin();
     float b = pad->GetBottomMargin();
-    float e = 0.07;
+    float e = 0.05;
 
     float relPosX    = 0.045;
     float relPosY    = 0.045;

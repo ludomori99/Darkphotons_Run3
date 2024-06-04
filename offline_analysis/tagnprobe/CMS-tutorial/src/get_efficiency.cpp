@@ -1,5 +1,3 @@
-
-
 TEfficiency* get_efficiency(const char* filepath, TH1F* ALL, TH1F* PASS, string quantity, string MuonId, bool DataIsMc, bool isBarrel, bool isEndcap)
 {    
     TFile* pFile = ((isBarrel||isEndcap) ? (new TFile(filepath,"update")) : (new TFile(filepath,"recreate")));

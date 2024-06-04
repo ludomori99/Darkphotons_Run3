@@ -17,11 +17,6 @@
 void compute_eff(unordered_map<string, const char*>, string,bool, string, string, bool=false, bool=false);
 void full_study(string, string, bool);
 
-// const char *MinBiasPath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/MC_InclusiveMinBias/Jpsi/TP_samples_Jpsi.root";
-// const char *OfflinePath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/TP_samples_Jpsi.root";
-// const char *lmDYPath = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/lmDY/Jpsi/TP_samples_Jpsi.root";
-
-
 void Efficiency(){
 
     sandbox(); //To absorb the weirdly behaving text in the first plot 
@@ -46,8 +41,8 @@ void full_study(string quantity, string MuonId, bool barrelVsEndcap){
     paths["Eff_Offline"] = eff_offline_str.c_str();
 
 
-    // compute_eff(paths, "MinBias",true,quantity,MuonId);
-    // compute_eff(paths, "Offline",false,quantity,MuonId);
+    compute_eff(paths, "MinBias",true,quantity,MuonId);
+    compute_eff(paths, "Offline",false,quantity,MuonId);
     // if (barrelVsEndcap){
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, true,false);
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, false,true);

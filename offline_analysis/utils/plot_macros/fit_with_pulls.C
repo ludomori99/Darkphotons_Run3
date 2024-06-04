@@ -1,6 +1,8 @@
 using namespace RooFit;
 
-void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* model, RooRealVar n_signal, RooRealVar n_back, ofstream& logFile, string path="", bool save=true){
+vector<double> pulls(RooHist* hpull, string outfilename);
+
+void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* model, RooRealVar n_signal, RooRealVar n_back, ofstream& logFile, string path="", bool save=true, bool fit_pulls = false){
     TCanvas* canvas  = new TCanvas(name,name,800,800);
     setTDRStyle();
 
@@ -20,7 +22,7 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     gPad->SetTopMargin(0.075);
     gPad->SetLeftMargin(0.15);
     gPad->SetBottomMargin(0.02);
-    gPad->SetPad(0.01,0.26,0.99,0.99);
+    gPad->SetPad(0.01,0.27,0.99,0.99);
     frame->GetYaxis()->SetLabelSize(0.05);
     frame->GetYaxis()->SetTitleSize(0.058);
     frame->GetYaxis()->SetTitleOffset(1.2);
@@ -75,7 +77,7 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     frame_pulls->SetMarkerSize(0.01);
 
     gPad->SetLeftMargin(0.15);
-    gPad->SetTopMargin(0.03);
+    gPad->SetTopMargin(0.04);
     gPad->SetBottomMargin(0.4); 
     gPad->SetPad(0.01, 0.01, 0.99, 0.25);
     frame_pulls->GetYaxis()->SetNdivisions(202);
@@ -101,5 +103,59 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     {
         canvas->SaveAs(path.c_str());
     }
+
+    if (fit_pulls)
+    {
+        pulls(hpull, path+"_pulls.png");
+    }
+
     delete canvas;
+}
+
+vector<double> pulls(RooHist* hpull, string outfilename){
+   //pull distribution  
+   TCanvas* canv_pull = new TCanvas("canv_pull", "canv_pull", 800,700);
+   TH1D* hist_pull = new TH1D("hist_pull","hist_pull",120,-5,5);
+
+   for(Int_t i = 0; i<hpull->GetN();i++){
+            Double_t x, point;
+            hpull->GetPoint(i,x,point);
+            hist_pull->Fill(point);
+   }
+   
+   hist_pull->Rebin(4);
+   //hist_pull->SetMarkerStyle(4);
+   //hist_pull->SetMarkerSize(2);
+   TAxis* Xaxis = hist_pull->GetXaxis();
+   TAxis* Yaxis = hist_pull->GetYaxis();
+   Xaxis->SetTitle("Residual value");
+   Xaxis->SetTitleSize(0.045);
+   Xaxis->SetLabelSize(0.045);
+   Xaxis->SetTitleOffset(1.1);
+   Yaxis->SetTitle("Frequency");
+   Yaxis->SetTitleSize(0.045);
+   Yaxis->SetLabelSize(0.045);
+   Yaxis->SetTitleOffset(0.8);
+   //gStyle->SetOptStat(0);
+   hist_pull->Draw();
+
+   //fit it
+
+   TF1* fgauss = new TF1("fgauss","gaus",-5,5);
+   fgauss->SetLineColor(4);
+   hist_pull->Fit("fgauss");
+   fgauss->Draw("same");
+   gStyle->SetOptFit(2);
+
+   TLegend* leg3 = new TLegend(0.65, 0.7, 0.9,0.85);
+   leg3->AddEntry("hist_pull", "Entries", "l");
+   leg3->AddEntry("fgauss", "Gaussian fit", "l");
+   leg3->SetTextSize(0.04);
+   leg3->SetTextFont(42);
+   leg3->Draw();
+
+   canv_pull->SaveAs(outfilename.c_str());
+   double redchisq = fgauss->GetChisquare()/fgauss->GetNDF();
+   return vector{redchisq,fgauss->GetParameter(1),fgauss->GetParameter(2)};
+
 }
