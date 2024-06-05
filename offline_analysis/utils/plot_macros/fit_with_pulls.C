@@ -43,6 +43,7 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     RooAbsCollection *flparams = model->getParameters(Data)->selectByAttrib("Constant", kFALSE);
     Int_t nflparams = flparams->getSize();
     Double_t chisquare = -1;
+    Double_t totchisquare = frame->chiSquare("Full model", "data", 0);
     chisquare = frame->chiSquare("Full model", "data", nflparams);
 
     TPaveText label_2(0.25, 0.63, 0.34, 0.82, "NDC");
@@ -58,7 +59,10 @@ void plot(const char* name, RooRealVar Mm_mass, RooDataSet* Data, RooAbsPdf* mod
     label_2.AddText("N_{sig} = " + sYield);
     label_2.AddText("N_{bkg} = " + bYield);
     label_2.AddText("#chi^{2}_{red} = " + csquare);
-    logFile << "\nchisquare=" << chisquare<<"\n";
+    
+    logFile << "total chisquare " << totchisquare << "\n";
+    logFile << "nbins :" << frame->GetNbinsX() << "; nflpars : " << nflparams << "\n"; 
+    logFile << "chisquare/ndof=" << chisquare<<"\n";
 
     frame->Draw();
     label_2.Draw();     

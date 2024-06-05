@@ -28,8 +28,8 @@ void Efficiency2D(){
 	compute2d("Offline",false, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
 	compute2d("MinBias",true, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
 
-	compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
-	compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
+	// compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
+	// compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
 }
 
 

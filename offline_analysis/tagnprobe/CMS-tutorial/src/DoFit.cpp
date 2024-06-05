@@ -45,8 +45,8 @@ double* doFit(const char* filepath, string condition, string MuonID_str, string 
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
     RooRealVar sigma("sigma", "Width of Gaussian", 0.09, 0.007, 0.1, "GeV");
-    RooRealVar l("l", "Width of BW", 0.01, 0.01, 0.1, "GeV");
-    RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+    RooRealVar l("l", "Width of BW", 0.01, 0.001, 0.1, "GeV");
+    RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, l, sigma);
 
     RooRealVar sigmaL("sigmaL", "Width of left CB", 0.05, 0.01, 0.08, "GeV");
     RooRealVar sigmaR("sigmaR", "Width of right CB", 0.05, 0.01, 0.08, "GeV");

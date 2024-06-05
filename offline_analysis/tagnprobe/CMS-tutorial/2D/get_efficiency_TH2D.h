@@ -1,4 +1,4 @@
-
+//this script is unstable when bins are empty. We deal diretly in python to compute eff. and errs.
 TH2D* get_efficiency_TH2D(TH2D* hall, TH2D* hpass, bool DataIsMC, string xquantity, string yquantity, string MuonId, string prefix_name = "")
 {
 	TH2D* heff  = (TH2D*)hall ->Clone();

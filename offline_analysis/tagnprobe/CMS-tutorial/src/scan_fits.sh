@@ -12,6 +12,7 @@ function scan_logs() {
 }
 
 # Call the function with the directory as an argument
-# scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Probe_pt/"
-# scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Mm_dR/"
+scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Probe_pt/"
+scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Mm_dR/"
 scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Probe_pt_Mm_dR/"
+scan_logs "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/PassingProbeSoftId/Probe_pt_Probe_abs_eta/"

@@ -22,9 +22,9 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
 
     // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
     RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-    RooRealVar sigma("sigma", "Width of Gaussian", 0.06, 0.007, 0.1, "GeV");
-    RooRealVar l("l", "Width of BW", 0.01, 0.007, 0.1, "GeV");
-    RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+    RooRealVar sigma("sigma", "Width of Gaussian", 0.02, 0.007, 0.1, "GeV");
+    RooRealVar l("l", "Width of BW", 0.06, 0.007, 0.1, "GeV");
+    RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, l, sigma);
     
     // l.setConstant(kTRUE);
 

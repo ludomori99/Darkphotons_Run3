@@ -1,26 +1,26 @@
 #include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/CMS.C"
 #include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/setTDRStyle.C"
 #include "/work/submit/mori25/Darkphotons_ludo/offline_analysis/utils/plot_macros/fit_with_pulls.C"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "RooBernstein.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "RooAddition.h"
-#include "RooProduct.h"
-#include "RooAbsPdf.h"
-#include "RooFitResult.h"
-#include "RooWorkspace.h"
-#include "RooConstVar.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include <iomanip>
-#include "TH1.h"
-#include "TH1F.h"
+// #include "RooRealVar.h"
+// #include "RooDataSet.h"
+// #include "RooRealVar.h"
+// #include "RooGaussian.h"
+// #include "RooExponential.h"
+// #include "RooBernstein.h"
+// #include "RooChebychev.h"
+// #include "RooAddPdf.h"
+// #include "RooProdPdf.h"
+// #include "RooAddition.h"
+// #include "RooProduct.h"
+// #include "RooAbsPdf.h"
+// #include "RooFitResult.h"
+// #include "RooWorkspace.h"
+// #include "RooConstVar.h"
+// #include "TCanvas.h"
+// #include "TLegend.h"
+// #include <iomanip>
+// #include "TH1.h"
+// #include "TH1F.h"
 
 using namespace RooFit;
 using namespace RooStats;
@@ -39,25 +39,25 @@ void plot_fit(){ //fit all models in sequence
    ws_dCB->Print();
    plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB",outputs);
 
-   std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
-   auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
-   ws_dG->Print();
-   plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG",outputs);
+   // std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
+   // auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
+   // ws_dG->Print();
+   // plot_model(ws_dG,"dG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dG",outputs);
 
-   std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
-   auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
-   ws_VG->Print();
-   plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG",outputs);
+   // std::unique_ptr<TFile> f_VG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_VG.root", "READ")};
+   // auto ws_VG = static_cast<RooWorkspace*>(f_VG->FindObjectAny("ws_VG"));
+   // ws_VG->Print();
+   // plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG",outputs);
 
-   std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V.root", "READ")};
-   auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V"));
-   ws_dCB_V->Print();
-   plot_model(ws_dCB_V,"dCB_V","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V",outputs);
+   // std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V.root", "READ")};
+   // auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V"));
+   // ws_dCB_V->Print();
+   // plot_model(ws_dCB_V,"dCB_V","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V",outputs);
 
-   std::unique_ptr<TFile> f_dCB_V_var{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V_var.root", "READ")};
-   auto ws_dCB_V_var = static_cast<RooWorkspace*>(f_dCB_V_var->FindObjectAny("ws_dCB_V_var"));
-   ws_dCB_V_var->Print();
-   plot_model(ws_dCB_V_var,"dCB_V_var","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V_var",outputs);
+   // std::unique_ptr<TFile> f_dCB_V_var{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V_var.root", "READ")};
+   // auto ws_dCB_V_var = static_cast<RooWorkspace*>(f_dCB_V_var->FindObjectAny("ws_dCB_V_var"));
+   // ws_dCB_V_var->Print();
+   // plot_model(ws_dCB_V_var,"dCB_V_var","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V_var",outputs);
 
 
    // for (const auto& pair : *outputs) {
@@ -89,6 +89,7 @@ void plot_model(RooWorkspace* ws, const char* modelName, const char* fig_name, m
    string logpath =  "/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/models/" + string(modelName) + "_output.log";
    ofstream logFile((logpath).c_str());
    logFile << "sigYield=" << sigYield->getValV()<<"\n";
+   cout << logpath << " sigYield=" << sigYield->getValV()<<"\n";
 
    // RooRealVar a("mu", "J/Psi Mass", 3.09809, 0, 1);
    // RooRealVar b("sigma", "Width of Gaussian", 0.0378, 0.001, 10, "GeV");

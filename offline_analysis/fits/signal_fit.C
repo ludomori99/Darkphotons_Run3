@@ -1,23 +1,23 @@
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooRealVar.h"
-#include "RooGaussian.h"
-#include "RooExponential.h"
-#include "RooBernstein.h"
-#include "RooChebychev.h"
-#include "RooAddPdf.h"
-#include "RooProdPdf.h"
-#include "RooAddition.h"
-#include "RooProduct.h"
-#include "RooAbsPdf.h"
-#include "RooFitResult.h"
-#include "RooWorkspace.h"
-#include "RooConstVar.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include <iomanip>
-#include "TH1.h"
-#include "TH1F.h"
+// #include "RooRealVar.h"
+// #include "RooDataSet.h"
+// #include "RooRealVar.h"
+// #include "RooGaussian.h"
+// #include "RooExponential.h"
+// #include "RooBernstein.h"
+// #include "RooChebychev.h"
+// #include "RooAddPdf.h"
+// #include "RooProdPdf.h"
+// #include "RooAddition.h"
+// #include "RooProduct.h"
+// #include "RooAbsPdf.h"
+// #include "RooFitResult.h"
+// #include "RooWorkspace.h"
+// #include "RooConstVar.h"
+// #include "TCanvas.h"
+// #include "TLegend.h"
+// #include <iomanip>
+// #include "TH1.h"
+// #include "TH1F.h"
 
 // use this order for safety on library loading
 using namespace RooFit;
@@ -52,34 +52,34 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y
    AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
    DoFit(ws_dCB,model_name, file_name);
 
-   RooWorkspace ws_dG{"ws_dG"};
-   model_name = "dG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
-   DoFit(ws_dG,model_name, file_name);
+   // RooWorkspace ws_dG{"ws_dG"};
+   // model_name = "dG";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_dG, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_dG(ws_dG,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_dG,model_name, file_name);
 
-   RooWorkspace ws_VG{"ws_VG"};
-   model_name = "VG";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
-   DoFit(ws_VG,model_name, file_name);
+   // RooWorkspace ws_VG{"ws_VG"};
+   // model_name = "VG";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_VG, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_VG,model_name, file_name);
 
-   RooWorkspace ws_dCB_V{"ws_dCB_V"};
-   model_name = "dCB_V";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
-   DoFit(ws_dCB_V,model_name, file_name);
+   // RooWorkspace ws_dCB_V{"ws_dCB_V"};
+   // model_name = "dCB_V";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_dCB_V,model_name, file_name);
 
 
-   RooWorkspace ws_dCB_V_var{"ws_dCB_V_var"};
-   model_name = "dCB_V_var";
-   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   AddData(ws_dCB_V_var, inputfilename, lowRange, highRange, nEntries);
-   AddModelJ_dCB_V(ws_dCB_V_var,isMC, model_name, lowRange, highRange);
-   DoFit(ws_dCB_V_var,model_name, file_name);
+   // RooWorkspace ws_dCB_V_var{"ws_dCB_V_var"};
+   // model_name = "dCB_V_var";
+   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   // AddData(ws_dCB_V_var, inputfilename, lowRange, highRange, nEntries);
+   // AddModelJ_dCB_V(ws_dCB_V_var,isMC, model_name, lowRange, highRange);
+   // DoFit(ws_dCB_V_var,model_name, file_name);
 }
 
 
@@ -129,10 +129,10 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* modelName, Double_
 
    RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
    RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
-   RooRealVar nL("nL", "nL CB", 0.8, 0.1,15, "");
-   RooRealVar alphaL("alphaR", "Alpha right CB", 2.5, 0.001, 5, "");
-   RooRealVar nR("nR", "nR CB", 0.3, 0.1,15, "");
-   RooRealVar alphaR("alphaL", "Alpha left CB", 1.7, 0.001, 5, "");
+   RooRealVar nL("nL", "nL CB", 3, 1,15, "");
+   RooRealVar alphaL("alphaL", "Alpha left CB", 2.5, 1, 5, "");
+   RooRealVar nR("nR", "nR CB", 3, 1,15, "");
+   RooRealVar alphaR("alphaR", "Alpha right CB", 1.7, 1, 5, "");
    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of Gaussian", 0.5, 0, 1, "");
@@ -164,9 +164,9 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    }
 
    else{
-      sigYield.setVal(900000);
+      sigYield.setVal(400000);
       sigYield.setRange(0,100000000);
-      bkgYield.setVal(10000);
+      bkgYield.setVal(100000);
       bkgYield.setRange(0,10000000);
    }
 
@@ -235,7 +235,7 @@ void AddModelJ_VG(RooWorkspace &ws, bool isMC, const char* modelName, Double_t l
 
    RooRealVar sigma2("sigma2", "Width of Gaussian", 1, 0.001, 10, "GeV");
    RooRealVar l("l", "Width of BW", 1, 0.001, 10, "GeV");
-   RooVoigtian Voigtian("Gaussian2", "Gaussian2", Mm_mass, mu1, sigma2,l);
+   RooVoigtian Voigtian("Gaussian2", "Gaussian2", Mm_mass, mu1, l,sigma2);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of first Gaussian", 0.5, 0, 1, "");
 
@@ -278,35 +278,29 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    RooRealVar Mm_mass("Mm_mass", "Mm_mass", lowRange, highRange, "GeV");
 
    // mass model for single resonance. Gauss + dCB. In this case employed for Jpsi
-   RooRealVar mu("mu", "J/Psi Mass", 3.09809, lowRange, highRange);
-   RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.01, 0.1, "GeV");
-   RooRealVar l("l", "Width of BW", 0.0378, 0.01, 0.1, "GeV");
-   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+   RooRealVar mu("mu", "J/Psi Mass", 3.095, lowRange, highRange);
+   RooRealVar sigma("sigma", "Width of Gaussian", 0.0337, 0.02, 0.1, "GeV");
+   RooRealVar l("l", "Width of BW", 0.01, 0.001, 0.1, "GeV");
+   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, l,sigma);
 
-   RooRealVar sigmaL("sigmaL", "Width of left CB", 0.01956, 0.001, 10, "GeV");
-   RooRealVar sigmaR("sigmaR", "Width of right CB", 0.01957, 0.001, 11, "GeV");
-   RooRealVar nL("nL", "nL CB", 3, 1,15, "");
-   RooRealVar alphaL("alphaR", "Alpha right CB", 3, 1, 5, "");
-   RooRealVar nR("nR", "nR CB", 3, 1,15, "");
-   RooRealVar alphaR("alphaL", "Alpha left CB", 3, 1, 5, "");
+   RooRealVar sigmaL("sigmaL", "Width of left CB", 0.0214613, 0.01, 0.5, "GeV");
+   RooRealVar sigmaR("sigmaR", "Width of right CB", 0.0198, 0.01, 0.5, "GeV");
+   RooRealVar nL("nL", "nL CB", 1.7, 1,15, "");
+   RooRealVar alphaL("alphaL", "Alpha left CB", 1.47, 1, 5, "");
+   RooRealVar nR("nR", "nR CB", 6.79, 1,15, "");
+   RooRealVar alphaR("alphaR", "Alpha right CB", 1.47, 1, 5, "");
    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
 
-   RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.5, 0, 1, "");
+   RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.4, 0, 1, "");
 
    // Final model is sigModel
    RooAddPdf sigModel("sigModel", "J/psi mass model", RooArgList(Voigtian, CB), GaussFraction);
    // --------------------------------------
    // make bkg model
    std::cout << "make bkg model" << std::endl;
-   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
+   RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -1.35, -100, 100, "1/GeV");
    RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);   
 
-   // RooRealVar c0("c0","c0",1,-100,100,"");
-   // RooRealVar c1("c1","c1",1,-100,100,"");
-   // RooRealVar c2("c2","c2",1,-100,100,"");
-   // RooRealVar c3("c3","c3",1,-100,100,"");
-   // RooBernstein bkgModel("bkgModel", "bkg Mass Model", Mm_mass,RooArgList(c0,c1,c2,c3));
- 
    // --------------------------------------
    //Signal and bkg yields
    RooRealVar sigYield("sigYield", "fitted yield for Signal",0);
@@ -320,9 +314,9 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    }
 
    else{
-      sigYield.setVal(1500000);
+      sigYield.setVal(373699);
       sigYield.setRange(0,10000000);
-      bkgYield.setVal(100000);
+      bkgYield.setVal(77600);
       bkgYield.setRange(0,1000000);
    }
 
@@ -342,14 +336,14 @@ void AddModelJ_dCB_V_var(RooWorkspace &ws, bool isMC, const char* modelName, Dou
    RooRealVar sigma("sigma", "Width of Gaussian", 0.0378, 0.01, 0.1, "GeV");
    RooRealVar resl("resl", "resolution of BW", 1,0.2, 2, "GeV");
    RooFormulaVar l("l", "l", "@0*@1", RooArgList(sigma,resl));
-   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu, sigma,l);
+   RooVoigtian Voigtian("Voigtian", "Voigtian", Mm_mass, mu,l,sigma);
 
    RooRealVar sigmaL_res("sigmaL_res", "reso of left CB", 1, 0.2, 2, "GeV");
    RooRealVar sigmaR_res("sigmaR_res", "reso of right CB", 1, 0.2, 2, "GeV");
    RooFormulaVar sigmaL("sigmaL", "sigmaL", "@0*@1", RooArgList(sigma,sigmaL_res));
    RooFormulaVar sigmaR("sigmaR", "sigmaR", "@0*@1", RooArgList(sigma,sigmaR_res));
    RooRealVar nL("nL", "nL CB", 4, 3,15, "");
-   RooRealVar alphaL("alphaR", "Alpha right CB", 5, 2, 5, "");
+   RooRealVar alphaL("alphaL", "Alpha left CB", 5, 2, 5, "");
    RooRealVar nR("nR", "nR CB", 4, 3,15, "");
    RooRealVar alphaR("alphaL", "Alpha left CB", 5, 2, 5, "");
    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
@@ -364,12 +358,6 @@ void AddModelJ_dCB_V_var(RooWorkspace &ws, bool isMC, const char* modelName, Dou
    RooRealVar bkgDecayConst("bkgDecayConst", "Decay const for bkg mass spectrum", -2., -100, 100, "1/GeV");
    RooExponential bkgModel("bkgModel", "bkg Mass Model", Mm_mass, bkgDecayConst);   
 
-   // RooRealVar c0("c0","c0",1,-100,100,"");
-   // RooRealVar c1("c1","c1",1,-100,100,"");
-   // RooRealVar c2("c2","c2",1,-100,100,"");
-   // RooRealVar c3("c3","c3",1,-100,100,"");
-   // RooBernstein bkgModel("bkgModel", "bkg Mass Model", Mm_mass,RooArgList(c0,c1,c2,c3));
- 
    // --------------------------------------
    //Signal and bkg yields
    RooRealVar sigYield("sigYield", "fitted yield for Signal",0);
@@ -578,7 +566,25 @@ void DoFit(RooWorkspace &ws, const char* modelname, const char* file_name)
  
    sigYield->setConstant(false);
    bkgYield->setConstant(false);
-   massModel->fitTo(data_mass);
+
+
+   // if (string(modelname)=="dCB_V"){
+      // RooRealVar *l = ws.var("l");
+      // RooRealVar *sigma = ws.var("sigma");
+      // RooRealVar *nL = ws.var("nL");
+      // RooRealVar *nR = ws.var("nR");
+      // RooRealVar *alphaR = ws.var("alphaR");
+      // RooRealVar *alphaL = ws.var("alphaL");
+      // l->setConstant(true);
+      // nR->setConstant(true);
+      // alphaR->setConstant(true);
+      // massModel->fitTo(data_mass, Strategy(2));
+      // l->setConstant(false);
+      // nR->setConstant(false);
+      // alphaR->setConstant(false);
+      // massModel->fitTo(data_mass, Strategy(2)); //Minos(RooArgSet(*l,*nL,*nR,*alphaL,*alphaR))
+   // }
+   massModel->fitTo(data_mass, Strategy(2));
    // massModel->graphVizTree(modelname);
 
    // std::cout<<massModel->getParameters();

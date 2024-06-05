@@ -41,8 +41,8 @@ void full_study(string quantity, string MuonId, bool barrelVsEndcap){
     paths["Eff_Offline"] = eff_offline_str.c_str();
 
 
-    compute_eff(paths, "MinBias",true,quantity,MuonId);
-    compute_eff(paths, "Offline",false,quantity,MuonId);
+    // compute_eff(paths, "MinBias",true,quantity,MuonId);
+    // compute_eff(paths, "Offline",false,quantity,MuonId);
     // if (barrelVsEndcap){
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, true,false);
     //     compute_eff(paths, "MinBias",true,quantity,MuonId, false,true);

@@ -93,7 +93,7 @@ void CMS_single(TPad* pad,string lumi="62.4", string com="13.6", float extra_fac
     TString lumiText = lumi + " fb^{-1} (" + com + " TeV)";
 
     float lumiTextSize     = 1.15;
-    float lumiTextOffset   = 0.3;
+    float lumiTextOffset   = 0.2;
     float cmsTextSize      = 1.35;
     float cmsTextOffset    = 0.1;  
 

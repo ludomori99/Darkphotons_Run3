@@ -1,10 +1,3 @@
-#include "src/compare_efficiency.C"
-#include "src/DoFit.cpp"
-#include "src/get_conditions.cpp"
-#include "src/get_efficiency.cpp"
-#include "src/change_bin.cpp"
-#include "src/make_hist.cpp"
-#include "src/McYield.cpp"
 #include <unordered_map>
 using namespace std;
 
@@ -100,7 +93,11 @@ void Compute_Factor(string quantity_str,bool isBarrel=false, bool isEndcap=false
     // Multiply the number of events in each bin by a scale factor and add them up
     double kin_integral_sf = 0.0;
     double total_events = 0.0;
-    double kin_integral_sf_unc = 0.0;
+    double kin_integral_sf_unc_A = 0.0;
+    double kin_integral_sf_unc_B_up = 0.0;
+    double kin_integral_sf_unc_B_low = 0.0;
+    double kin_integral_sf_unc_C = 0.0;
+    
     for (int i = 0; i < bin_n; i++) {
         string condition = trigger_str + massCut + barrelOrEndcap + quantity_str + ">" + to_string(bins[i]).substr(0,4) + "&&" + quantity_str + "<" + to_string(bins[i+1]).substr(0,4);
         RooFormulaVar* reduce = new RooFormulaVar("PPTM", condition.c_str(), ((isBarrel||isEndcap) ? RooArgList(trigger,Mm_mass,isBarrelMuon,quantity) : RooArgList(trigger,Mm_mass,quantity)));
