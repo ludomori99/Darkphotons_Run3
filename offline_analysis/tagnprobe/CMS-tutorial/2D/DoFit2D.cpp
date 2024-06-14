@@ -34,7 +34,13 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     RooRealVar alphaL("alphaR", "Alpha right CB", 5, 1, 5, "");
     RooRealVar nR("nR", "nR CB", 2, 2,15, "");
     RooRealVar alphaR("alphaL", "Alpha left CB", 5, 1, 5, "");
-    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+
+
+    // CHECK FIXS OR NOT 
+
+    // RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+    RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigma, sigma, alphaL,nL,alphaR,nR);
 
     RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.55, 0, 0.8, "");
 
@@ -65,8 +71,6 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     RooDataHist* dh_ALL     = new RooDataHist(Data_ALL->GetName(),    Data_ALL->GetTitle(),     RooArgSet(Mm_mass), *Data_ALL);
 	RooDataHist* dh_PASSING = new RooDataHist(Data_PASSING->GetName(),Data_PASSING->GetTitle(), RooArgSet(Mm_mass), *Data_PASSING);
 	
-    // RooDataHist* dh_ALL     = Data_ALL->binnedClone();
-    // RooDataHist* dh_PASSING = Data_PASSING->binnedClone();
     
     RooDataHist combData("combData","combined data",Mm_mass,Index(sample),Import("ALL",*dh_ALL),Import("PASSING",*dh_PASSING));
 
@@ -76,7 +80,7 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     simPdf.addPdf(*model_pass,"PASSING");
 
     //Store logs
-    string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition + "_output.log";
+    string logpath =  "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits_fixS/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition + "_output.log";
     ofstream logFile((logpath).c_str());
     
     RooFitResult* fitres = new RooFitResult;
@@ -95,13 +99,15 @@ double* doFit2D(const char* filepath, string condition, string MuonID_str, strin
     output[2] = yield_ALL->getError();
     output[3] = yield_PASS->getError();
 
-    string path = "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition;
+
+
+    /// CHECK FIXS OR NOT
+    string path = "/work/submit/mori25/Darkphotons_ludo/offline_analysis/tagnprobe/CMS-tutorial/Fits_fixS/" + MuonID_str + "/" + quantx+"_"+quanty + "/" + condition;
 
     plot("", Mm_mass, Data_ALL, model, n_signal_total, n_back, logFile, path+"_ALL.png");
     plot("", Mm_mass, Data_PASSING, model, n_signal_total_pass, n_back_pass, logFile, path+"_PASS.png");
 
-    // // DELETING ALLOCATED MEMORY
-    // //
+
     delete Data_ALL;
     delete Data_PASSING;
     //

@@ -49,7 +49,6 @@ def write_tree_data(particle,MC=False,reduction_factor = 0.05):
                 #define mass cut 
                 mass = intree["Mm_mass"].array()
                 mass_cut = ((mass>mass_range[0])&(mass<mass_range[1]))
-                print
 
                 #define reduction factor cut
                 num_events_surviving = int(np.sum(mass_cut)*reduction_factor)

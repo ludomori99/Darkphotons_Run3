@@ -32,18 +32,22 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     }
 
     //Create canvas
-    TCanvas* c1 = new TCanvas("Comparison","Comparison",1200,900);
+    TCanvas* canvas = new TCanvas("Comparison","Comparison",1000,1000);
     setTDRStyle();
-    c1->SetMargin(0.15, 0.03, 0.12, 0.075); //l,r,b,t
+
+    canvas->Divide(1,2);
+    canvas->cd(1);
+    gPad->SetMargin(0.15, 0.03, 0.02, 0.075); //l,r,b,t
+    gPad->SetPad(0.01,0.27,0.99,0.99);
 
     //Plot
     pEffMC->SetMarkerColor(colorScheme[useScheme][0]);
     pEffMC->SetLineColor(colorScheme[useScheme][0]);
     pEffMC->SetMarkerStyle(21);
-    pEffMC->Draw("E");
     // MarkerSize(0.7)
     gPad->Update();
-    
+    pEffMC->Draw("E");
+
     if (quantity == "Probe_pt")
     {
         pEffMC->SetTitle(";p_{T} [GeV/c];Efficiency");
@@ -66,49 +70,55 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     gPad->Update();
     auto graph = pEffMC->GetPaintedGraph();
     graph->SetMinimum(0.0);
-    graph->GetYaxis()->SetTitleOffset(0.9);
+    graph->GetYaxis()->SetTitleOffset(1.05);
+    graph->GetXaxis()->SetTitleSize(0.);
+    graph->GetXaxis()->SetLabelSize(0.);
     graph->SetMaximum(1.2);
+
     gPad->Update();
+
+
+    pEffOffline->SetMarkerColor(colorScheme[useScheme][1]);
+    pEffOffline->SetLineColor(colorScheme[useScheme][1]);
+    pEffOffline->SetMarkerStyle(21);
+
 
      if (quantity == "Probe_pt")
      {
-        graph->GetHistogram()->GetXaxis()->SetRangeUser(0.,40.);
+        gPad->SetLogx();
+        graph->GetHistogram()->GetXaxis()->SetLimits(4.,40.);
         graph->SetMinimum(0.86);
         graph->SetMaximum(1.02);
+
      }
     
     if (quantity == "Probe_eta")
     {
-        pEffMC->GetPaintedGraph()->GetHistogram()->GetXaxis()->SetRangeUser(-1.8,1.8);
+        graph->GetHistogram()->GetXaxis()->SetRangeUser(-1.8,1.8);
         graph->SetMinimum(0.8);
         graph->SetMaximum(1.08);
     }
     
    if (quantity == "Probe_abs_eta")
     {
-        pEffMC->GetPaintedGraph()->GetHistogram()->GetXaxis()->SetRangeUser(0,1.8);
+        graph->GetHistogram()->GetXaxis()->SetRangeUser(0,1.8);
         graph->SetMinimum(0.8);
         graph->SetMaximum(1.08);
     }
     if (quantity == "Mm_dR")
     {
-        pEffMC->GetPaintedGraph()->GetHistogram()->GetXaxis()->SetRangeUser(0,0.8);
+        graph->GetHistogram()->GetXaxis()->SetRangeUser(0,0.8);
         graph->SetMinimum(0.8);
         graph->SetMaximum(1.05);
     }
 
-    pEffOffline->SetMarkerColor(colorScheme[useScheme][1]);
-    pEffOffline->SetLineColor(colorScheme[useScheme][1]);
-    pEffOffline->SetMarkerStyle(21);
-    pEffOffline->Draw("Esame");
-
+    
     //Legenda
     TLegend* tl = new TLegend(0.62,0.28,0.88,0.38);
     tl->SetTextSize(0.03);
     tl->SetBorderSize(0);
     tl->AddEntry(pEffOffline, nameScheme[useScheme][0], "lep");
     tl->AddEntry(pEffMC, nameScheme[useScheme][1], "lep");
-    tl->Draw();
 
     //Label
     TPaveText label(0.62, 0.2, 0.94, 0.25, "NDC");
@@ -119,9 +129,72 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     gStyle->SetStripDecimals(kTRUE);
     label.SetTextAlign(11);
     label.AddText(("Probe: "+MuonId).c_str());
-    label.Draw();     
     
-    CMS_single(c1,string("62.4"),string("13.6"),0.5);
+    pEffMC->Draw("E");
+    pEffOffline->Draw("Esame");
+    tl->Draw();
+    label.Draw();     
+
+    CMS(canvas,string("62.4"),string("13.6"));
+    // CMS_single(c1,string("62.4"),string("13.6"),0.5);
+
+    canvas->cd(2);
+    TH1* effOffHist = pEffOffline->GetCopyPassedHisto();
+    effOffHist->Divide(pEffOffline->GetCopyPassedHisto(),pEffOffline->GetCopyTotalHisto(), 1, 1, "B");
+    TH1* effMCHist  = pEffMC->GetCopyPassedHisto();
+    effMCHist->Divide(pEffMC->GetCopyPassedHisto(),pEffMC->GetCopyTotalHisto(),1,1,"B");
+
+    effOffHist->Sumw2();
+
+    effOffHist->Divide(effMCHist); //massModel->GetName());
+    effOffHist->Draw("E");
+
+    TLine* line = new TLine(effOffHist->GetXaxis()->GetXmin(), 0,effOffHist->GetXaxis()->GetXmax(), 0);
+    line->SetLineColor(kBlue);
+    effOffHist->SetMarkerStyle(20);
+    effOffHist->SetMarkerSize(1);
+
+    gPad->SetLeftMargin(0.15);
+    gPad->SetRightMargin(0.03);
+    gPad->SetTopMargin(0.06);
+    gPad->SetBottomMargin(0.4); 
+    gPad->SetPad(0.01, 0.01, 0.99, 0.25);
+
+
+    effOffHist->GetYaxis()->SetNdivisions(202);
+    effOffHist->SetMinimum(0.96);
+    effOffHist->SetMaximum(1.02);
+    effOffHist->GetXaxis()->SetTitle(graph->GetXaxis()->GetTitle());
+    effOffHist->GetYaxis()->SetTitle("Data/MC");
+    effOffHist->GetXaxis()->SetTitleSize(0.16);
+    effOffHist->GetYaxis()->SetTitleSize(0.16);
+    effOffHist->GetXaxis()->SetLabelSize(0.14);
+    effOffHist->GetYaxis()->SetLabelSize(0.14);
+    effOffHist->GetXaxis()->SetLabelOffset(0.02);
+    effOffHist->GetYaxis()->SetLabelOffset(0.01);
+    effOffHist->GetXaxis()->SetTitleOffset(1.1);
+    effOffHist->GetYaxis()->SetTitleOffset(0.4);
+    effOffHist->GetXaxis()->SetTickLength(0.1);
+
+    if (quantity == "Probe_pt")
+    {
+        effOffHist->GetXaxis()->SetLimits(4.,40.);
+        gPad->SetLogx();
+        effOffHist->GetXaxis()->SetMoreLogLabels();
+        effOffHist->GetXaxis()->SetLabelOffset(0.01);
+        effOffHist->GetXaxis()->SetTitleOffset(1.2);
+    }
+
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+    gPad->SetFrameFillColor(0);
+    gPad->SetFrameBorderMode(0);
+
+    gPad->Update();
+
+    effOffHist->Draw("E");
+    line->Draw();
+
 
     //Results stored in...
     string dir = string("/data/submit/mori25/dark_photons_ludo/DimuonTrees/tagnprobe/") + MuonId + string("/")  + quantity + string("/");
@@ -146,9 +219,9 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     }
 
     //stores file as .png
-    string saveAs = string(directoryToSave) + string(pEffMC->GetName()) + ".png";
+    string saveAs = string(directoryToSave) + string(pEffMC->GetName()) + "_logx.png";
 
-    c1->SaveAs(saveAs.data());
+    canvas->SaveAs(saveAs.data());
 }
 
 

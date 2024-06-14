@@ -45,8 +45,8 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y
    Double_t lowRange;
    Double_t highRange;
 
-   RooWorkspace ws_dCB{"ws_dCB"};
-   model_name = "dCB";
+   RooWorkspace ws_dCB{"ws_dCB_fixS"};
+   model_name = "dCB_fixS";
    load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
    AddData(ws_dCB, inputfilename, lowRange, highRange, nEntries);
    AddModelJ_dCB_G(ws_dCB,isMC, model_name, lowRange, highRange);
@@ -66,12 +66,12 @@ void signal_fit(const char* meson, bool isMC, int nEntries = 0)  // "Jpsi" or "Y
    // AddModelJ_VG(ws_VG,isMC, model_name, lowRange, highRange);
    // DoFit(ws_VG,model_name, file_name);
 
-   // RooWorkspace ws_dCB_V{"ws_dCB_V"};
-   // model_name = "dCB_V";
-   // load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
-   // AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
-   // AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
-   // DoFit(ws_dCB_V,model_name, file_name);
+   RooWorkspace ws_dCB_V{"ws_dCB_V_fixS"};
+   model_name = "dCB_V_fixS";
+   load_config(meson, isMC, file_name, model_name, inputfilename, lowRange, highRange);
+   AddData(ws_dCB_V, inputfilename, lowRange, highRange, nEntries);
+   AddModelJ_dCB_V(ws_dCB_V,isMC, model_name, lowRange, highRange);
+   DoFit(ws_dCB_V,model_name, file_name);
 
 
    // RooWorkspace ws_dCB_V_var{"ws_dCB_V_var"};
@@ -133,7 +133,13 @@ void AddModelJ_dCB_G(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    RooRealVar alphaL("alphaL", "Alpha left CB", 2.5, 1, 5, "");
    RooRealVar nR("nR", "nR CB", 3, 1,15, "");
    RooRealVar alphaR("alphaR", "Alpha right CB", 1.7, 1, 5, "");
-   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+
+   //choose whether to fix or not the sigmas 
+   // RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+
+   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigma, sigma, alphaL,nL,alphaR,nR);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of Gaussian", 0.5, 0, 1, "");
 
@@ -289,7 +295,11 @@ void AddModelJ_dCB_V(RooWorkspace &ws, bool isMC, const char* modelName, Double_
    RooRealVar alphaL("alphaL", "Alpha left CB", 1.47, 1, 5, "");
    RooRealVar nR("nR", "nR CB", 6.79, 1,15, "");
    RooRealVar alphaR("alphaR", "Alpha right CB", 1.47, 1, 5, "");
-   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+   //choose whether to fix sigma or not 
+   // RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigmaL, sigmaR, alphaL,nL,alphaR,nR);
+
+   RooCrystalBall CB("CB", "CB", Mm_mass, mu, sigma, sigma, alphaL,nL,alphaR,nR);
 
    RooRealVar GaussFraction("GaussFraction", "Fraction of Voigtian", 0.4, 0, 1, "");
 

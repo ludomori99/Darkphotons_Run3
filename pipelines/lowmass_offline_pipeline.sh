@@ -34,6 +34,7 @@ test_or_depl='depl'
 
 ### Condor section 
 # condor_submit $DPUSER/pull_data/offline/offline.sub
+# condor_submit $DPUSER/pull_data/offline/offline_full.sub
 
 # bash $DPUSER/pull_data/offline_normal/run_merge_off_normal.sh
 
@@ -51,9 +52,9 @@ test_or_depl='depl'
 
 # TODO : implement check that extraction is complete (probably monitor .out files)
 
-# bash $DPUSER/utils/scan_logs.sh "offline/logs"
-# bash $DPUSER/utils/scan_logs.sh "MC_InclusiveMinBias/logs"
-# bash $DPUSER/utils/scan_logs.sh "MC_lmDY/logs"
+# bash $DPUSER/utils/scan_logs.sh "offline"
+# bash $DPUSER/utils/scan_logs.sh "MC_InclusiveMinBias/"
+# bash $DPUSER/utils/scan_logs.sh "MC_lmDY/"
 
 # need to wait until extraction is completed
 # bash $DPUSER/pull_data/MC_InclusiveMinBias/merge_final.sh
@@ -89,17 +90,15 @@ test_or_depl='depl'
 
 ######## LOOK AT SIGNAL MODEL #############
 
-
 # root -l -b -q ${DPUSER}fits/signal_fit.C\(\"Jpsi\"\,0\,500000\)
 # root -l -b -q ${DPUSER}fits/plot_fit.C\(\)
 # root -l -b -q ${DPUSER}fits/multi_fit.C\(\)
-# root -l -b -q ${DPUSER}fits/sandbox.C\(\)
 
 
 ########## Tag and probe #################
 
-root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C 
-root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency2D.C
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency.C 
+# root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency2D.C
 # source ${DPUSER}tagnprobe/CMS-tutorial/src/scan_fits.sh
 
 # root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Compute_Factor.C\(\"Probe_pt\"\)
@@ -138,8 +137,10 @@ root -l -b -q  ${DPUSER}tagnprobe/CMS-tutorial/Efficiency2D.C
 
 # # #### run combine (need to install it. see https://cms-analysis.github.io/HiggsAnalysis-CombinedLimit/)
 # python3 ${DPUSER}limits/limitprocessing.py
-# mv higgsCombinea* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/22_5/output_expected
-# mv roostats* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/22_5/stats/
+# mv higgsCombinea* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/full_no_nuisances/output_expected
+# mv roostats* /data/submit/mori25/dark_photons_ludo/DimuonTrees/limits/full_no_nuisances/stats/
 
-# # ### plot limits
+# # # ### plot limits
 # python3 ${DPUSER}limits/plot_limits.py
+python3 ${DPUSER}limits/plot_limit_plt.py
+# 

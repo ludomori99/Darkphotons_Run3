@@ -12,9 +12,6 @@ using namespace std;
 
 void generateOffDimuonTree(TString inputfilename, const char* outfilename, int event_fraction = 10) {
 
-    TFile* outfile = new TFile(outfilename, "RECREATE");
-    TTree* outtree = new TTree("tree","tree");
-
     TFile *inputfile = TFile::Open(inputfilename);
     TTreeReader reader("Events", inputfile);
     TTreeReaderValue<int>          nmm (reader, "nmm");
@@ -234,6 +231,9 @@ bool L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4;
     bool Muon_isTracker1;
     bool Muon_isTracker2;
 
+
+    TFile* outfile = new TFile(outfilename, "RECREATE");
+    TTree* outtree = new TTree("tree","tree");
 
     outtree->Branch("run"   , &run   , "run/i");
     outtree->Branch("lumSec", &luminosityBlock);

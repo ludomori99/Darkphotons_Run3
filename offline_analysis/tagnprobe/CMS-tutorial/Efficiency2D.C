@@ -28,8 +28,8 @@ void Efficiency2D(){
 	compute2d("Offline",false, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
 	compute2d("MinBias",true, "Probe_pt", "Probe_abs_eta", xbins_Probe_pt, ybins_Probe_abs_eta, 6,9,MuonId);
 
-	// compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
-	// compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
+	compute2d("Offline",false, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
+	compute2d("MinBias",true, "Probe_pt", "Mm_dR", xbins_Probe_pt, ybins_Mm_dR,6,6, MuonId);
 }
 
 
@@ -61,8 +61,8 @@ void compute2d(string dataset, bool DataIsMC, string xquantity, string yquantity
 	// const int nbinsx = sizeof(xbins)/sizeof(*xbins) - 1;
 	// const int nbinsy = sizeof(ybins)/sizeof(*ybins) - 1;
 
-
-	string file_path = directoryToSave + xquantity + "_" + yquantity + "/" + isMC + ".root";
+// CHECK FIXS OR NOT
+	string file_path = directoryToSave + xquantity + "_" + yquantity + "/" + isMC + "_fixS.root";
 	cout<<"file_path: "<<file_path<<endl;
 	TFile* generatedFile = new TFile(file_path.c_str(),"recreate");
 	generatedFile->mkdir("histograms/");

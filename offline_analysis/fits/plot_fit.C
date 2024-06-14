@@ -34,10 +34,10 @@ void plot_fit(){ //fit all models in sequence
    
    map<const char*, vector<Double_t>> *outputs = new map<const char*, vector<Double_t>>; //dictionary with: {model: {Nsig,Nbkg,chi2}}
 
-   std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB.root", "READ")};
-   auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB"));  
+   std::unique_ptr<TFile> f_dCB{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_fixS.root", "READ")};
+   auto ws_dCB = static_cast<RooWorkspace*>(f_dCB->FindObjectAny("ws_dCB_fixS"));  
    ws_dCB->Print();
-   plot_model(ws_dCB,"dCB","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB",outputs);
+   plot_model(ws_dCB,"dCB_fixS","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_fixS",outputs);
 
    // std::unique_ptr<TFile> f_dG{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dG.root", "READ")};
    // auto ws_dG = static_cast<RooWorkspace*>(f_dG->FindObjectAny("ws_dG"));
@@ -49,10 +49,10 @@ void plot_fit(){ //fit all models in sequence
    // ws_VG->Print();
    // plot_model(ws_VG,"VG","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_VG",outputs);
 
-   // std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V.root", "READ")};
-   // auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V"));
-   // ws_dCB_V->Print();
-   // plot_model(ws_dCB_V,"dCB_V","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V",outputs);
+   std::unique_ptr<TFile> f_dCB_V{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V_fixS.root", "READ")};
+   auto ws_dCB_V = static_cast<RooWorkspace*>(f_dCB_V->FindObjectAny("ws_dCB_V_fixS"));
+   ws_dCB_V->Print();
+   plot_model(ws_dCB_V,"dCB_V_fixS","/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/figures/fit_Jpsi_dCB_V_fixS",outputs);
 
    // std::unique_ptr<TFile> f_dCB_V_var{TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/fits/files/Jpsi_data_dCB_V_var.root", "READ")};
    // auto ws_dCB_V_var = static_cast<RooWorkspace*>(f_dCB_V_var->FindObjectAny("ws_dCB_V_var"));

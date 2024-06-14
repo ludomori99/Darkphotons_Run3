@@ -9,13 +9,14 @@
 
 using namespace std;
 
-void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/*.root", const char* outfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram.root") {
+void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_full_post_BDT/*.root", const char* outfilename = "
+") {
 
     TFile* outfile = new TFile(outfilename, "RECREATE");
     TTree* outtree = new TTree("tree", "tree");
     
-    int num_mass_regions = 278;
-    float growth_factor = 0.005;
+    int num_mass_regions = 139 ;// for 0.05 278;
+    float growth_factor = 0.01;
     float m = 2;
 
 	double id_wp = 0.4;
@@ -24,12 +25,14 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     TH1F* massforLimitFull = new TH1F("massforLimitFull","massforLimitFull",1000,0., 8.);
     TH1D* massforLimit_CatA[num_mass_regions];
     TH1D* massforLimit_CatB[num_mass_regions];
+    TH1D* massforLimit_CatC[num_mass_regions];
 
     float m_tmp = m;
     for(int j=0; j<num_mass_regions; j++){
       m_tmp = m_tmp+(m_tmp*growth_factor);
       massforLimit_CatA[j] = new TH1D(Form("massforLimit_CatA%d",j),Form("massforLimit_CatA%d",j),100,m_tmp-(m_tmp*0.013*5.),m_tmp+(m_tmp*0.013*5.));  massforLimit_CatA[j]->Sumw2();
       massforLimit_CatB[j] = new TH1D(Form("massforLimit_CatB%d",j),Form("massforLimit_CatB%d",j),100,m_tmp-(m_tmp*0.013*5.),m_tmp+(m_tmp*0.013*5.));  massforLimit_CatB[j]->Sumw2();
+      massforLimit_CatC[j] = new TH1D(Form("massforLimit_CatC%d",j),Form("massforLimit_CatC%d",j),100,m_tmp-(m_tmp*0.013*5.),m_tmp+(m_tmp*0.013*5.));  massforLimit_CatC[j]->Sumw2();
     }
 
     TChain* chain = new TChain("tree");
@@ -68,6 +71,7 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
         m_tmp = m;
         for(int j=0; j<num_mass_regions; j++){
             m_tmp = m_tmp+(m_tmp*growth_factor);
+            massforLimit_CatC[j]->Fill(*mass,weight);
             if(*mass > m_tmp-(m_tmp*0.013*5.) && *mass < m_tmp+(m_tmp*0.013*5.)) {
                 //cout << "filling catAB "<< j<< " with *mass " << mass << endl;
                 if(maxEta<0.9){ massforLimit_CatA[j]->Fill(*mass,weight); }
@@ -84,6 +88,7 @@ void make_hist(TString dump = "/data/submit/mori25/dark_photons_ludo/DimuonTrees
     for(int j=0; j<num_mass_regions;j++){
         massforLimit_CatA[j]->Write();
         massforLimit_CatB[j]->Write();
+        massforLimit_CatC[j]->Write();
     }
     // htotal->Write();
     outfile->Close();

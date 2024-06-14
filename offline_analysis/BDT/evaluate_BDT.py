@@ -103,46 +103,50 @@ def evaluate_BDT_lmDY(model):
 
     return
 
-def evaluate_dump(njob,dataset,model,verbose=False):
+def evaluate_dump(njob,dataset,model,verbose=False,full=True):
     #to be used in batch system, njob is the job number
 
     if dataset not in ["MC_lmDY","MC_InclusiveMinBias","offline"]:
         raise ValueError(f"dataset {dataset} not recognized")
     
     #extract file
-    infile_name = os.path.join(config["locations"][dataset]["dump"], f"DimuonTree{njob}.root")
-    infile=up.open(infile_name)
-    intree = infile["tree"]
-    indata = intree.arrays()
-    if verbose: print(f'successfully extracted MC data: {infile_name}')
+    infile_name = os.path.join(config["locations"][dataset]["dump" + "_full"*full*(dataset=="offline")], f"DimuonTree{njob}.root:tree")
+    try:
+        outvars = ["Mm_mass", "Muon_softMva1","Muon_softMva2","Mm_mu1_eta","Mm_mu2_eta","HLT_DoubleMu4_3_LowMass"]
+        infile=up.open(infile_name)
+        if verbose: print(f'successfully extracted data: {infile_name}')
 
-    #load model
-    method = model[:model.rfind("_")]
-    train_meson = model[1+model.rfind("_"):]
-    vars = config["BDT_training"][train_meson]["models"][method]["train_vars"] 
-    bst = xgb.Booster()
-    bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
-    if verbose: print(f"Model {model} loaded")
+        #load model
+        method = model[:model.rfind("_")]
+        train_meson = model[1+model.rfind("_"):]
+        vars = config["BDT_training"][train_meson]["models"][method]["train_vars"] 
+        bst = xgb.Booster()
+        bst.load_model(DP_USER + "BDT/trained_models/" + model+".json")
+        if verbose: print(f"Model {model} loaded")
 
-    #Create new file 
-    outfile_name = os.path.join(config["locations"][dataset]["dump_post_BDT"], f"DimuonTree{njob}.root")
+        #Create new file 
+        outfile_name = os.path.join(config["locations"][dataset]["dump_" + "full_"*(dataset=="offline")*full + "post_BDT"], f"DimuonTree{njob}.root")
 
-    if verbose: print(f"\nBegin processing file {infile_name}")
-    pred=bst.predict(xgb.DMatrix(ak.to_dataframe(indata[vars])))
-    indata[model+"_mva"] = pred
-    with up.recreate(outfile_name) as output_file:
-        dic_mm = {branch: "float" for branch in intree.keys()}
-        dic = {**dic_mm, model+"_mva" : "float"}
-        output_file.mktree("tree", dic)
-        output_file["tree"].extend(indata)
-    if verbose: print(f"Finished processing data, output file is {outfile_name}\n\n")
+        if verbose: print(f"\nBegin processing file {infile_name}")
 
+        pred=bst.predict(xgb.DMatrix( infile.arrays(vars, library="pd")))
+        indata=infile.arrays(outvars)
+        indata[model+"_mva"] = pred
+
+        with up.recreate(outfile_name) as output_file:
+            dic_mm = {branch: "float" for branch in outvars}
+            dic = {**dic_mm, model+"_mva" : "float"}
+            output_file.mktree("tree", dic)
+            output_file["tree"].extend(indata)
+        if verbose: print(f"Finished processing data, output file is {outfile_name}\n\n")
+    except Exception as e:
+        print(f"Error processing file {infile_name}",e)
     return
 
-def evaluate_dumps(model = "forest_prompt_Jpsi"):
+def evaluate_dumps(model = "forest_prompt_Jpsi", full=True,check_output_off=True):
 
     #Switch for each type of dataset
-    bools = "111"
+    bools = "100"
 
     num = int(bools, 2)
     do_off =     bool(num & 0b100)
@@ -153,11 +157,22 @@ def evaluate_dumps(model = "forest_prompt_Jpsi"):
     njobs_MC_lmDY = config["extraction"]["MC_lmDY"]["njobs"]
     njobs_MC_InclusiveMinBias = config["extraction"]["MC_InclusiveMinBias"]["njobs"]
 
+    if check_output_off:
+        already_processed = []
+        for N in range(njobs_offline):
+            outfile_name = os.path.join(config["locations"]["offline"]["dump_full_post_BDT"], f"DimuonTree{N}.root")
+            if os.path.isfile(outfile_name):
+                already_processed.append(N)
+        print(f"Already processed offline: {already_processed}")
+    print("check")
     if do_off:
         print(f"\nBegin processing offline")
         for i in range(njobs_offline):
+            if check_output_off and i in already_processed:
+                # print(f"Job {i}/{njobs_offline} already processed")
+                continue
             print(f"Job {i}/{njobs_offline}", end = '\r')
-            evaluate_dump(i,"offline",model, verbose=False)
+            evaluate_dump(i,"offline",model, verbose=False, full=full)
         print("Finished processing offline\n\n")
     if do_lmDY:
         print(f"\nBegin processing MC_lmDY")
@@ -177,7 +192,7 @@ if __name__=="__main__":
     # print("")
     # evaluate_BDT("Y", "forest_standard_Y")
     # evaluate_BDT("Jpsi", "forest_standard_Y")
-    evaluate_BDT("Y", "forest_prompt_Jpsi")
-    evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
+    # evaluate_BDT("Y", "forest_prompt_Jpsi")
+    # evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
     # evaluate_BDT_lmDY("forest_prompt_Jpsi")
-    # evaluate_dumps()
+    evaluate_dumps()

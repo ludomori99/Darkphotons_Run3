@@ -1,19 +1,10 @@
 import numpy as np
 import mplhep as hep
-import xgboost as xgb
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, accuracy_score
-import uproot as up
-import pandas as pd 
-import awkward as ak
+import matplotlib.patches as mpatches
 import os
-import subprocess
 import yaml
-from numba_stats import expon # crystalball,crystalball_ex, norm, expon, voigt, truncexpon
-from iminuit.cost import LeastSquares #,  ExtendedBinnedNLL,ExtendedUnbinnedNLL,
-from iminuit import Minuit
-from numba import jit,njit,vectorize
+# from numba import jit,njit,vectorize
 from typing import Literal
 
 """
@@ -95,7 +86,8 @@ class Systematics:
         print("Total MC signal yield: ", MCTotalYield, "\n\n")
 
         #compute corrected weights
-        self.normalized_sweights_data_bkg = np.where(self.data["bkgYield_sw"]<0,0,self.data["bkgYield_sw"]/np.sum(self.data["bkgYield_sw"]))
+        self.normalized_sweights_data_bkg = np.where(self.data["bkgYield_sw"]<0,0,self.data["bkgYield_sw"])
+        self.normalized_sweights_data_bkg = self.normalized_sweights_data_bkg/np.sum(self.normalized_sweights_data_bkg)
         self.normalized_sweights_data_signal = self.data["sigYield_sw"]/np.sum(self.data["sigYield_sw"])
         self.normalized_sweights_MC = np.ones_like(self.MC["Mm_mass"])/len(self.MC["Mm_mass"])#self.MC["sigYield_sw"]/np.sum(self.MC["sigYield_sw"])
 
@@ -105,6 +97,9 @@ class Systematics:
         self.combined_weights_data = (self.data["weights_prompt"]*self.normalized_sweights_data_signal)/np.sum(self.data["weights_prompt"]*self.normalized_sweights_data_signal) #Normalized product
         self.combined_weights_MC = (self.MC["weights_prompt"]*self.normalized_sweights_MC)/np.sum(self.MC["weights_prompt"]*self.normalized_sweights_MC) #Normalized product
         
+        self.prompt_signal_norm_data = np.sum(self.data["weights_prompt"]*self.data["sigYield_sw"])
+        self.prompt_signal_norm_MC = np.sum(self.MC["weights_prompt"])
+
         self.MC_label = "MinBias simulation (prompt)"
         self.MC_label2 = "prompt"
         if MC_correction_var is not None:
@@ -151,10 +146,18 @@ class Systematics:
         self.effMC = MCYield_after_cut
         self.effMC_corr = MC_corr_Yield_after_cut
 
+        self.splot_unc_data = self.data["sigYield_sw"]
+        self.bin_unc_data = np.sqrt(self.effsig_corr*(1-self.effsig_corr)/ self.prompt_signal_norm_data)
+        self.bin_unc_MC = np.sqrt(self.effMC_corr*(1-self.effMC_corr)/ self.prompt_signal_norm_MC)
+        self.tot_unc = self.effsig_corr/self.effMC_corr*np.sqrt((self.bin_unc_data/self.effsig_corr)**2 + (self.bin_unc_MC/self.effMC_corr)**2)
+
         print(f"BDT efficiency on Y peak: \n On unfolded signal: {self.effsig} \n On prompt corrected, unfolded signal: {self.effsig_corr} \n On MC: {self.effMC} \n On corrected MC: {self.effMC_corr}")
         print(f"Efficiency difference: {self.effMC_corr - self.effsig_corr}")
+        print(f"Binomial uncertainty data : {self.bin_unc_data}")
+        print(f"Binomial uncertainty MC : {self.bin_unc_MC}")
+        print(f"total uncertainty : {self.tot_unc}")
 
-    def plot(self,plot_bkg=False,plot_corr=True,plot_nonPrompt=True):
+    def plot(self,plot_bkg=False,plot_corr=True,plot_nonPrompt=True,text=None):
         hep.style.use("CMS")
         fig, ax = plt.subplots(figsize=(10,8))
         hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
@@ -173,19 +176,27 @@ class Systematics:
             ax.hist(self.scoreData, self.nbins, (0,1),  False, weights = self.combined_weights_data*(self.scoreData>self.xe[self.bin_cut])*self.nbins, color = sig_color, zorder=0, histtype='bar', linewidth = 1.8, alpha = .1)
             ax.hist(self.scoreMC, self.nbins, (0,1),  False, weights = self.combined_weights_MC*self.nbins, label=self.MC_label, color = MC_color, zorder=0, histtype='step', linewidth = 1.8)
             ax.hist(self.scoreMC, self.nbins, (0,1),  False, weights = self.combined_weights_MC*(self.scoreMC>self.xe[self.bin_cut])*self.nbins,  color = MC_color, zorder=0, histtype='bar', linewidth = 1.8 , alpha=.1)
-        text=f"""
+        if text is None:
+            text=f"""
             sPlot unfolded BDT distribution 
             Model: {self.BDT_model}
             Data: {self.particle_name} trigger
             Cut: {self.BDT_limit}"""+plot_nonPrompt*f"""
             $\epsilon_{{data}} = ${round(self.effsig,3)} 
             $\epsilon_{{MC}} = ${round(self.effMC,3)}"""+plot_corr*f"""
-            $\epsilon_{{data}}^{{prompt}} = ${round(self.effsig_corr,3)} 
-            $\epsilon_{{MC}}^{{{self.MC_label2}}} = ${round(self.effMC_corr,3)}
-            $\Delta\epsilon = ${round(np.abs(self.effMC_corr - self.effsig_corr),3)}"""
+            $\epsilon_{{data}}^{{prompt}} = ${round(self.effsig_corr,3)} $\pm$ {round(self.bin_unc_data,3)} 
+            $\epsilon_{{MC}}^{{{self.MC_label2}}} = ${round(self.effMC_corr,3)} $\pm$ {round(self.bin_unc_MC,3)} 
+            $\zeta_{{MVA}} = ${round(self.effsig_corr/self.effMC_corr,3)}  $\pm$ {round(self.tot_unc,3)}  """
+            # $\Delta\epsilon = ${round(np.abs(self.effMC_corr - self.effsig_corr),3)}
         ax.text(0.25,0.3, text, fontsize=14,  transform=ax.transAxes)
-        ax.grid()
-        ax.legend()    
+            # ax.grid()
+
+        handles, labels = plt.gca().get_legend_handles_labels()
+        gray_box = mpatches.Patch(color='green', alpha=0.1, label='Selection')
+        handles.append(gray_box)
+        labels.append('Selection')
+        print(labels)
+        ax.legend(handles=handles, labels=labels)    
         ax.set_xlabel("BDT score")
         ax.set_ylabel("Normalized frequency")
         return
@@ -282,8 +293,7 @@ class Systematics:
         max_significance = significance_vals[0][max_idx]
         sig_eff = significance_vals[1][max_idx]/stot
         bkg_eff = 1 - significance_vals[2][max_idx]/btot
-        text = rf"""W.p. = {round(max_cut,3)}
-$\varepsilon_{{sig}}$ = {round(sig_eff,3)}
+        text = rf"""$\varepsilon_{{sig}}$ = {round(sig_eff,3)}
 $\varepsilon_{{bkg}}$ = {round(bkg_eff,3)}"""
         
         text_id_ar = fr"""$\varepsilon_{{sig}}^*$ = {round(sig_eff,3)}
@@ -306,12 +316,12 @@ $\varepsilon_{{bkg}}^{{ar.}}$ = {round(bkg_eff_alt,3)}"""
         if mva_or_ID == "ID":
             plt.scatter([alt_cut],[alt_significance],label="Used w.p.",c='green')
             # plt.text(0.1,0.45,text_tuned, fontsize=14, bbox=dict(facecolor='white', edgecolor='black'),transform=ax.transAxes) 
-            plt.text(0.38,0.85,text_id_ar, fontsize=14) 
-            plt.text(0.31,0.85,text_tuned, fontsize=14) 
+            plt.text(0.38,alt_significance*0.9,text_id_ar, fontsize=14) 
+            plt.text(0.31,alt_significance*0.9,text_tuned, fontsize=14) 
         else:
-            plt.text(0.1,0.76,text, fontsize=14, bbox=dict(facecolor='white'),transform=ax.transAxes) 
+            plt.text(0.77,max_significance*0.9,text, fontsize=14) 
         print("working point : ",  max_cut)
-        plt.xlabel('Prompt Jpsi BDT cut' if mva_or_ID=="mva" else 'Muon Soft MVA cut')
+        plt.xlabel(r'Prompt $J/\psi$ BDT cut' if mva_or_ID=="mva" else 'Muon Soft MVA cut')
         plt.ylabel('Significance $s/\sqrt{b}$')
         plt.legend()
         plt.show()
