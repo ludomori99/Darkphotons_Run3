@@ -1,0 +1,58 @@
+dependent_variables:
+- header:
+    name: acceptance (DY)
+  values:
+  - value: 0.004412
+  - value: 0.004296
+  - value: 0.006022
+  - value: 0.01751
+  - value: 0.02157
+  - value: 0.02835
+  - value: 0.03904
+  - value: 0.07901
+- header:
+    name: acceptance (ggF)
+  values:
+  - value: 0.0035
+  - value: 0.0047
+  - value: 0.010975
+  - value: 0.02795
+  - value: 0.0344
+  - value: 0.04105
+  - value: 0.04675
+  - value: 0.0524625
+- header:
+    name: acceptance x effiency(DY)
+  values:
+  - value: 0.00243379
+  - value: 0.00224685
+  - value: 0.00305533
+  - value: 0.00587469
+  - value: 0.00740396
+  - value: 0.0099735
+  - value: 0.0134655
+  - value: 0.0249837
+- header:
+    name: acceptance x effiency(ggF)
+  values:
+  - value: 0.002141
+  - value: 0.00318025
+  - value: 0.00739555
+  - value: 0.0172348
+  - value: 0.0213636
+  - value: 0.0251432
+  - value: 0.0289658
+  - value: 0.0335157
+independent_variables:
+- header:
+    name: $m_{\mu\mu}$
+    units: GeV
+  values:
+  - value: 1.1
+  - value: 1.5
+  - value: 2.5
+  - value: 4.5
+  - value: 5.5
+  - value: 6.5
+  - value: 7.5
+  - value: 8.5

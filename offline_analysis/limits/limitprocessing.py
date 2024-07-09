@@ -13,4 +13,6 @@ for d in range(0,N):
 	print('now at mass', m)
 	# os.system(f"combine -M AsymptoticLimits {path+str(d)}.txt -m {str(m)} -n asympMassIndex_{str(d)} --run blind")
 	# os.system(f"combine -M AsymptoticLimits {path+str(d)}.txt -m {str(m)} -n asympMassIndex_{str(d)} --run expected")
-	os.system(f"combine -M AsymptoticLimits {path}_{str(d)}.txt -m {str(m)} -n asympMassIndex_{str(d)} --cminDefaultMinimizerStrategy 0 --rAbsAcc=0.0001 --rRelAcc=0.0001 --setParameters pdf_index=0 --run blind") # --rMin -1 --rMax 1 +
+	# os.system(f"combine -M AsymptoticLimits {path}_{str(d)}.txt -m {str(m)} -n asympMassIndex_{str(d)} --cminDefaultMinimizerStrategy 0 --rAbsAcc=0.0001 --rRelAcc=0.0001 --setParameters pdf_index=0 --run blind") # --rMin -1 --rMax 1 +
+	os.system(f"combine -M AsymptoticLimits {path}_{str(d)}.txt -m {str(m)} -n asympMassIndex_CLs90_{str(d)} --cl 0.9 --cminDefaultMinimizerStrategy 0 --rAbsAcc=0.0001 --rRelAcc=0.0001 --setParameters pdf_index=0 --run blind") # --rMin -1 --rMax 1 +
+	

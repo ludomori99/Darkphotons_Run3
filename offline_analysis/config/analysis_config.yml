@@ -20,12 +20,15 @@ extraction:
 
 #Folders for dumping large number of events
 locations:
+  data: /data/submit/mori25/dark_photons_ludo/DimuonTrees/
   public_html: /home/submit/mori25/public_html/
   offline:  
     #have root://submit50.mit.edu// in front 
     dump: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump/
+    dump_full: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_full/
     dump_short: mori25/dark_photons_ludo/DimuonTrees/offline/dump/
     dump_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_post_BDT/
+    dump_full_post_BDT: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_full_post_BDT/
     logs: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/logs/
     Jpsi: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Jpsi/
     Y: /data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/Y/
