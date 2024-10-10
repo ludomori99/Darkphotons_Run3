@@ -201,20 +201,23 @@ class Systematics:
         ax.set_ylabel("Normalized frequency")
         return
 
-    def plot_quantities(self,quantities,nbins=200,density=False,log=False,plot_selection=False,ylim=None):
+    def plot_quantities(self,quantities,nbins=200,density=False,log=False,plot_selection=False,ylim=None,xlabel=None):
         c = plt.cm.tab10.colors
         for d in quantities.keys():
             hep.style.use("CMS")
-            fig, ax = plt.subplots(figsize=(12,9))
+            fig, ax = plt.subplots(figsize=(10,8))
             hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"],com=config["com"])
             print(d," done")
-            ax.hist(self.data[d], bins =nbins,weights=self.combined_weights_data, range = quantities[d]['l'], label=f"Unfolded data signal ({self.particle_name})", color=c[1], density = density, log=log, histtype='step', linewidth=2)
-            ax.hist(self.MC[d], bins = nbins, weights = self.combined_weights_MC, range = quantities[d]['l'], label=f"MinBias simulation ({self.particle_name})", color=c[2], density = density, log=log, histtype='step', linewidth=2)
+            ax.hist(self.data[d], bins =nbins,weights=self.combined_weights_data, range = quantities[d]['l'], label=fr"Unfolded data signal $J/\psi$", color="blue", density = density, log=log, histtype='step', linewidth=2)
+            ax.hist(self.data[d], bins =nbins,weights=self.normalized_sweights_data_bkg, range = quantities[d]['l'], label=fr"Unfolded data background $J/\psi$", color='orange', density = density, log=log, histtype='step', linewidth=2)
+            # ax.hist(self.MC[d], bins = nbins, weights = self.combined_weights_MC, range = quantities[d]['l'], label=f"MinBias simulation ({self.particle_name})", color=c[2], density = density, log=log, histtype='step', linewidth=2)
             if plot_selection:
                 ax.hist(self.data[d], bins = nbins, weights=self.combined_weights_data*(self.scoreData>self.BDT_limit), range = quantities[d]['l'], label=f"Unfolded data signal selection ({self.particle_name})", color=c[3], density = density, log=log, histtype='step', linewidth=2)
                 ax.hist(self.MC[d], bins = nbins, weights=self.combined_weights_MC*(self.scoreMC>self.BDT_limit), range = quantities[d]['l'], label=f"MinBias simulation selection ({self.particle_name})", color=c[4], density = density, log=log, histtype='step', linewidth=2)
             # ax.hist(d, bins = nbins, range = xlim, color=c, density = density, log=log, alpha = 0.5)# hatch = '*',
             ax.set_xlabel(d)
+            if xlabel is not None:
+                ax.set_xlabel(xlabel)
             # if text!=None: ax.text(0.02, .8, text, fontsize=13, bbox=dict(facecolor='white'), transform=ax.transAxes) 
             if quantities[d]['t']=='i': ax.xaxis.get_major_locator().set_params(integer=True)
             l = density*'Normalized f'+ (density==False)*'F'+'requency'
@@ -292,21 +295,21 @@ class Systematics:
         max_cut = BDT_vals[max_idx]
         max_significance = significance_vals[0][max_idx]
         sig_eff = significance_vals[1][max_idx]/stot
-        bkg_eff = 1 - significance_vals[2][max_idx]/btot
+        bkg_eff = significance_vals[2][max_idx]/btot
         text = rf"""$\varepsilon_{{sig}}$ = {round(sig_eff,3)}
 $\varepsilon_{{bkg}}$ = {round(bkg_eff,3)}"""
         
-        text_id_ar = fr"""$\varepsilon_{{sig}}^*$ = {round(sig_eff,3)}
-$\varepsilon_{{bkg}}^*$ = {round(bkg_eff,3)}"""
+        text_id_ar = fr"""$\varepsilon_{{sig}}^{{ar}}$ = {round(sig_eff,3)}
+$\varepsilon_{{bkg}}^{{ar}}$ = {round(bkg_eff,3)}"""
         
         if mva_or_ID == 'ID' :
             alt_cut = 0.4
             alt_significance = significance_vals[0][np.argmin(np.abs(BDT_vals-alt_cut))]
             sig_eff_alt = significance_vals[1][np.argmin(np.abs(BDT_vals-alt_cut))]/stot
-            bkg_eff_alt = 1 - significance_vals[2][np.argmin(np.abs(BDT_vals-alt_cut))]/btot
+            bkg_eff_alt = significance_vals[2][np.argmin(np.abs(BDT_vals-alt_cut))]/btot
             # text_tuned = fr"Cut point (tuned) = {round(alt_cut,3)}\n $\varepsilon_{{sig}}^{{t}}$ = {round(sig_eff_alt,3)}\n$\varepsilon_{{bkg}}^{{t}}$ = {round(bkg_eff_alt,3)}"
-            text_tuned=fr"""$\varepsilon_{{sig}}^{{ar.}}$ = {round(sig_eff_alt,3)}
-$\varepsilon_{{bkg}}^{{ar.}}$ = {round(bkg_eff_alt,3)}"""
+            text_tuned=fr"""$\varepsilon_{{sig}}^{{*}}$ = {round(sig_eff_alt,3)}
+$\varepsilon_{{bkg}}^{{*}}$ = {round(bkg_eff_alt,3)}"""
         hep.style.use("CMS")
         plt.figure(figsize=(10, 8))
         hep.cms.label("Preliminary",data=True,lumi=config["lumi"]["offline"], com=config["com"])
@@ -316,10 +319,10 @@ $\varepsilon_{{bkg}}^{{ar.}}$ = {round(bkg_eff_alt,3)}"""
         if mva_or_ID == "ID":
             plt.scatter([alt_cut],[alt_significance],label="Used w.p.",c='green')
             # plt.text(0.1,0.45,text_tuned, fontsize=14, bbox=dict(facecolor='white', edgecolor='black'),transform=ax.transAxes) 
-            plt.text(0.38,alt_significance*0.9,text_id_ar, fontsize=14) 
-            plt.text(0.31,alt_significance*0.9,text_tuned, fontsize=14) 
-        else:
-            plt.text(0.77,max_significance*0.9,text, fontsize=14) 
+            plt.text(0.37,alt_significance*0.97,text_tuned, fontsize=15) 
+            plt.text(0.29,alt_significance*0.97,text_id_ar, fontsize=15) 
+        else:   
+            plt.text(0.77,max_significance*0.9,text, fontsize=15) 
         print("working point : ",  max_cut)
         plt.xlabel(r'Prompt $J/\psi$ BDT cut' if mva_or_ID=="mva" else 'Muon Soft MVA cut')
         plt.ylabel('Significance $s/\sqrt{b}$')

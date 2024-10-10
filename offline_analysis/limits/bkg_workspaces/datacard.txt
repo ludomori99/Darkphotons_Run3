@@ -1,0 +1,26 @@
+# Datacard example for like bias study 
+imax 1
+jmax 1
+kmax *
+---------------
+shapes data_obs   * /work/submit/mori25/Darkphotons_ludo/offline_analysis/limits/bkg_workspaces/workspace.root workspace:data
+shapes signal     * /work/submit/mori25/Darkphotons_ludo/offline_analysis/limits/bkg_workspaces/workspace.root workspace:signalModel
+shapes background * /work/submit/mori25/Darkphotons_ludo/offline_analysis/limits/bkg_workspaces/workspace.root workspace:bkg_model
+---------------
+# take event count from dataset (use -1)
+bin           catC 
+observation  -1
+---------------
+# 10 expected events from H->gg in the signal (just a simple gaussian)
+# background normalisation freely floating, taken from _norm, so leave rate as 1
+
+bin      catC catC 
+process  signal   background
+process  0        1
+rate     10       1000
+
+---------------
+# usual systematics .... note, we advertise the pdf changing parameter as a discrete nuisance
+lumi lnN 1.02   - 
+
+pdf_index discrete

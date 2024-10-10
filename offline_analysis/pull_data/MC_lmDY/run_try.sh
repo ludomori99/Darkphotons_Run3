@@ -1,1 +1,1 @@
-root -l -b -q /work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_lmDY/generateMCDimuonTree.C\(\"/data/submit/wangzqe/lowDY/1to10/nano/nano_5015.root\"\,\"/work/submit/mori25/Darkphotons_ludo/r3tree_lmDY_try.root\"\,443\,1\)
+root -l -b -q /work/submit/mori25/Darkphotons_ludo/offline_analysis/pull_data/MC_lmDY/generateMCDimuonTree.C\(\"/home/submit/wangzqe/research/darkphoton/run3/generator/condor/1GeV/nano.root\"\,\"/work/submit/mori25/Darkphotons_ludo/r3tree_lmDY_try.root\"\,443\,1\)

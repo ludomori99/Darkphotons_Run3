@@ -76,13 +76,12 @@ def evaluate_BDT(meson, model):
     return
 
 
-def evaluate_BDT_lmDY(model):
+def evaluate_BDT_lmDY(path,model):
     
     #extract MC lmDY
-    MC_file_name = os.path.join(config["locations"]["MC_lmDY"]["inclusive"], "merged_A.root")
-    MC_file=up.open(MC_file_name)
+    MC_file=up.open(path)
     MC_data = MC_file["tree"].arrays()#,library = 'pd')
-    print(f'successfully extracted MC data: {MC_file_name}')
+    print(f'successfully extracted MC data: {path}')
 
 
     #load model
@@ -97,7 +96,7 @@ def evaluate_BDT_lmDY(model):
     print("\nBegin processing MC")
     pred_MC=bst.predict(xgb.DMatrix(ak.to_dataframe(MC_data[vars])))
     MC_data[model+"_mva"] = pred_MC
-    with up.recreate(MC_file_name) as output_file:
+    with up.recreate(path) as output_file:
         output_file["tree"] = MC_data
     print("Finished processing MC\n\n")
 
@@ -194,5 +193,5 @@ if __name__=="__main__":
     # evaluate_BDT("Jpsi", "forest_standard_Y")
     # evaluate_BDT("Y", "forest_prompt_Jpsi")
     # evaluate_BDT("Jpsi", "forest_prompt_Jpsi")
-    # evaluate_BDT_lmDY("forest_prompt_Jpsi")
-    evaluate_dumps()
+    evaluate_BDT_lmDY("/work/submit/mori25/Darkphotons_ludo/tree_lmDY_try.root","forest_prompt_Jpsi")
+    # evaluate_dumps()

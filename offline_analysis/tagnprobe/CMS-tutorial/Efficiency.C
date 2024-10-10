@@ -24,9 +24,9 @@ void Efficiency(){
     string MuonId = "PassingProbeSoftId";
 
     full_study("Probe_pt", MuonId, false);
-    // full_study("Mm_dR", MuonId, false);
-    // full_study("Probe_eta", MuonId, false);
-    // full_study("Probe_abs_eta", MuonId, false);
+    full_study("Mm_dR", MuonId, false);
+    full_study("Probe_eta", MuonId, false);
+    full_study("Probe_abs_eta", MuonId, false);
 }
 
 void full_study(string quantity, string MuonId, bool barrelVsEndcap){

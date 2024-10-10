@@ -1,0 +1,11 @@
+ ==== START CONDOR WRAPPER =======================
+ Running on: t3btch085.mit.edu
+t3btch085.mit.edu
+ Executing the following command: /condor/execute/dir_39482/glide_9dUdrG/execute/dir_309/condor_exec.exe 0
+ ==== from this machine
+ OSVERSION:       el7
+ ==== from this jobad
+SingularityImage: 
+REQUIRED_OS:      
+ ==== EXECUTE CONDOR_WRAPPER ====
+ exec "/condor/execute/dir_39482/glide_9dUdrG/execute/dir_309/condor_exec.exe 0" 

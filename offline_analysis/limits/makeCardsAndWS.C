@@ -62,14 +62,14 @@ void makeCardsAndWS(){
   	TString year="2022-2023";
 	TString suff="full";
   //INPUT FILE WITH HISTOGRAMS TO FIT BACKGROUND
-  	TFile* file=TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram_full.root");
+  	TFile* file=TFile::Open("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram_full_1to8.root");
 	
   //PREPARE EXPECTED NUMBER OF SIGNAL EVENTS PER CATEGORY
 
 	//LUMINOSITY
 	double luminosity = 62400;//pb-1
 
-	int num_mass_regions = 139 ; //278;
+	int num_mass_regions = 199 ; //139 from m=2
     float growth_factor = 0.01;
 
 	//WORKING POINTS
@@ -262,7 +262,7 @@ void makeCardsAndWS(){
 		dpworkspace.import(signalModel_catC);
 		dpworkspace.import(bkg_model);
 		// dpworkspace.import(bkg_model_bern4);
-		dpworkspace.writeToFile(Form("/data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit/dpWorkspace"+year+suff+"_%d.root",i));
+		dpworkspace.writeToFile(Form("/data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit_1to8/dpWorkspace"+year+suff+"_%d.root",i));
 
 		//write the datacard
 		char inputShape[200];
@@ -272,16 +272,16 @@ void makeCardsAndWS(){
         newcardShape << Form("imax 1 number of channels\n");
         newcardShape << Form("jmax * number of background\n");
         newcardShape << Form("kmax * number of nuisance parameters\n");
-		newcardShape << Form("shapes data_obs	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit/dpWorkspace"+year+suff+"_%d.root dpworkspace:data_obs_catC\n",i);
-		newcardShape << Form("shapes bkg_mass	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit/dpWorkspace"+year+suff+"_%d.root dpworkspace:bkg_model\n",i);
-		newcardShape << Form("shapes signalModel	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit/dpWorkspace"+year+suff+"_%d.root dpworkspace:signalModel_catC\n",i);
+		newcardShape << Form("shapes data_obs	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit_1to8/dpWorkspace"+year+suff+"_%d.root dpworkspace:data_obs_catC\n",i);
+		newcardShape << Form("shapes bkg_mass	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit_1to8/dpWorkspace"+year+suff+"_%d.root dpworkspace:bkg_model\n",i);
+		newcardShape << Form("shapes signalModel	catC /data/submit/mori25/dark_photons_ludo/DimuonTrees/workspaces/dCB_V_multibkg_fit_1to8/dpWorkspace"+year+suff+"_%d.root dpworkspace:signalModel_catC\n",i);
         newcardShape << Form("bin		catC \n");
         newcardShape << Form("observation 	-1.0\n");
         newcardShape << Form("bin     		catC		catC \n");
         newcardShape << Form("process 		signalModel  	bkg_mass\n");
         newcardShape << Form("process 		0    		1 \n");
         newcardShape << Form("rate    		%f  		%f	\n", global_eff_lmDY*trigger_sf*ID_sf*mva_sf*luminosity*xSec, catC->Integral()); 
-		newcardShape << Form("lumi13p6TeV lnN 	1.02 	-\n");
+		newcardShape << Form("lumi13p6TeV lnN 	1.014 	-\n");
 		newcardShape << Form("sig_model_unc lnN	1.0314 	-\n");
 		newcardShape << Form("sig_width_unc lnN	1.2486 	-\n");
 		newcardShape << Form("trigger_sf lnN %f	 -\n", trigger_sf_unc);
@@ -295,7 +295,7 @@ void makeCardsAndWS(){
 	}
 
 	if (save_efficiency){
-		// histChi2_A->SaveAs("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/dCB_V_multibkg_fit/histAchi2_"+year+".root");
+		// histChi2_A->SaveAs("/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/dCB_V_multibkg_fit_1to8/histAchi2_"+year+".root");
 		ofstream effs_file("/work/submit/mori25/Darkphotons_ludo/offline_analysis/limits/efficiencies.csv");
 		if (!effs_file.is_open()) {
 			std::cerr << "Could not open the effs_file." << std::endl;

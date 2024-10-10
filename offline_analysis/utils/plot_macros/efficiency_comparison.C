@@ -87,29 +87,29 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
      {
         gPad->SetLogx();
         graph->GetHistogram()->GetXaxis()->SetLimits(4.,40.);
-        graph->SetMinimum(0.86);
-        graph->SetMaximum(1.02);
+        graph->SetMinimum(0.5);
+        graph->SetMaximum(1.2);
 
      }
     
     if (quantity == "Probe_eta")
     {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(-1.8,1.8);
-        graph->SetMinimum(0.8);
-        graph->SetMaximum(1.08);
+        graph->SetMinimum(0.5);
+        graph->SetMaximum(1.2);
     }
     
    if (quantity == "Probe_abs_eta")
     {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(0,1.8);
-        graph->SetMinimum(0.8);
-        graph->SetMaximum(1.08);
+        graph->SetMinimum(0.5);
+        graph->SetMaximum(1.2);
     }
     if (quantity == "Mm_dR")
     {
         graph->GetHistogram()->GetXaxis()->SetRangeUser(0,0.8);
-        graph->SetMinimum(0.8);
-        graph->SetMaximum(1.05);
+        graph->SetMinimum(0.5);
+        graph->SetMaximum(1.2);
     }
 
     
@@ -219,7 +219,7 @@ void compare_plot(TFile *fileMC, TFile *fileOffline, const char* path, string qu
     }
 
     //stores file as .png
-    string saveAs = string(directoryToSave) + string(pEffMC->GetName()) + "_logx.png";
+    string saveAs = string(directoryToSave) + string(pEffMC->GetName()) + "_logx_var.png";
 
     canvas->SaveAs(saveAs.data());
 }
@@ -381,6 +381,6 @@ void compare_plot_BarrelVsEndcap(TFile *fileMC, TFile *fileOffline, const char* 
     }
     else cout << "\"" << directoryToSave << "\" directory OK" << endl;
     //stores file as .png
-    string saveAs = string(directoryToSave) + string(pEffMCBarrel->GetName()) + ".png";
+    string saveAs = string(directoryToSave) + string(pEffMCBarrel->GetName()) + "_var.png";
     c1->SaveAs(saveAs.data());
 }

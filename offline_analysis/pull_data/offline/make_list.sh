@@ -8,3 +8,5 @@ while IFS= read -r line; do
   ((i++))
 done < "$DPUSER/pull_data/offline/dataset.txt"
 
+
+#correggi legenda 4.10

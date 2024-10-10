@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void make_hist( const char* outfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram_full_new.root") {
+void make_hist( const char* outfilename = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/histograms/offline/output_histogram_full_1to8.root") {
 
     TString dump_post = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_full_post_BDT/*.root";
     // TString dump_pre = "/data/submit/mori25/dark_photons_ludo/DimuonTrees/offline/dump_full/*.root";
